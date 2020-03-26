@@ -1,0 +1,518 @@
+package net.lamgc.cgj;
+
+import com.github.monkeywie.proxyee.proxy.ProxyConfig;
+import com.github.monkeywie.proxyee.proxy.ProxyType;
+import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import net.lamgc.cgj.pixiv.*;
+import net.lamgc.cgj.proxy.PixivAccessProxyServer;
+import net.lamgc.cgj.proxy.PixivLoginProxyServer;
+import net.lamgc.utils.base.ArgumentsProperties;
+import net.lamgc.utils.base.runner.Argument;
+import net.lamgc.utils.base.runner.ArgumentsRunner;
+import net.lamgc.utils.base.runner.Command;
+import org.apache.commons.io.IOUtils;
+import org.apache.http.HttpHost;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.CookieStore;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.message.BasicHeader;
+import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+
+import java.io.*;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.*;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
+
+@SpringBootApplication
+public class Main {
+
+    private final static Logger log = LoggerFactory.getLogger("Main");
+
+    private final static File storeDir = new File("store/");
+
+    public static CookieStore cookieStore;
+
+    public static HttpHost proxy;
+
+    static {
+        if(!storeDir.exists() && !storeDir.mkdirs()) {
+            log.error("创建文件夹失败!");
+        }
+    }
+
+    public static void main(String[] args) throws IOException, ClassNotFoundException {
+        ArgumentsProperties argsProp = new ArgumentsProperties(args);
+        if(argsProp.containsKey("proxy")) {
+            URL proxyUrl = new URL(argsProp.getValue("proxy"));
+            proxy = new HttpHost(proxyUrl.getHost(), proxyUrl.getPort());
+            log.info("已启用Http协议代理：{}", proxy.toHostString());
+        } else {
+            proxy = null;
+        }
+
+        if(argsProp.containsKey("cqRootDir")) {
+            log.info("cqRootDir: {}", argsProp.getValue("cqRootDir"));
+            System.setProperty("cgj.cqRootDir", argsProp.getValue("cqRootDir"));
+        } else {
+            log.info("未设置cqRootDir");
+        }
+
+        File cookieStoreFile = new File("cookies.store");
+        if(!cookieStoreFile.exists()) {
+            log.error("未找到cookies.store文件, 请确保文件存在于运行目录下!");
+            System.exit(1);
+            return;
+        }
+        ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cookieStoreFile));
+        cookieStore = (CookieStore) ois.readObject();
+        ois.close();
+        log.info("已载入CookieStore");
+
+        log.debug(Arrays.toString(args));
+
+        ArgumentsRunner.run(Main.class, args);
+    }
+
+    @Command
+    public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
+        if(!System.getProperty("cgj.cqRootDir").endsWith("\\") && !System.getProperty("cgj.cqRootDir").endsWith("/")) {
+            System.setProperty("cgj.cqRootDir", System.getProperty("cgj.cqRootDir") + "/");
+        }
+        log.info("酷Q机器人根目录: {}", System.getProperty("cgj.cqRootDir"));
+        CQConfig.init();
+        Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
+        Matcher matcher = pattern.matcher(Strings.nullToEmpty(argsStr));
+        ArrayList<String> argsList = new ArrayList<>();
+        while (matcher.find()) {
+            argsList.add(matcher.group());
+        }
+        String[] args = new String[argsList.size()];
+        argsList.toArray(args);
+        SpringApplication.run(Main.class, args);
+    }
+
+    @Command
+    public static void collectionDownload() throws IOException {
+        PixivDownload pixivDownload = new PixivDownload(Objects.requireNonNull(cookieStore), proxy);
+        File outputFile = new File(storeDir, "collection.zip");
+        if(!outputFile.exists() && !outputFile.createNewFile()) {
+            log.error("文件创建失败: " + outputFile.getAbsolutePath());
+        }
+        ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outputFile));
+        zos.setLevel(9);
+        log.info("正在调用方法...");
+        pixivDownload.getCollectionAsInputStream(PixivDownload.PageQuality.ORIGINAL, (link, inputStream) -> {
+            try {
+                ZipEntry entry = new ZipEntry(link.substring(link.lastIndexOf("/") + 1));
+                log.info("正在写入: " + entry.getName());
+                zos.putNextEntry(entry);
+                IOUtils.copy(inputStream, zos);
+                zos.flush();
+            } catch (IOException e) {
+                log.error("写入文件项时发生异常", e);
+            }
+        });
+        log.info("调用完成.");
+        zos.close();
+    }
+
+    @Command
+    public static void getRecommends() throws IOException {
+        PixivDownload pixivDownload = new PixivDownload(Objects.requireNonNull(cookieStore), proxy);
+        String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
+        int id = 1;
+        File outputFile = new File(storeDir, "recommends-" + date + "-" + id + ".zip");
+        while(outputFile.exists()) {
+            id++;
+            outputFile = new File(storeDir, "recommends-" + date + "-" + id + ".zip");
+        }
+
+        if(!outputFile.createNewFile()) {
+            log.error("文件创建失败: " + outputFile.getAbsolutePath());
+        }
+        ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outputFile));
+        zos.setLevel(9);
+        log.info("正在调用方法...");
+        pixivDownload.getRecommendAsInputStream(PixivDownload.PageQuality.ORIGINAL, (link, inputStream) -> {
+            try {
+                ZipEntry entry = new ZipEntry(link.substring(link.lastIndexOf("/") + 1));
+                log.info("正在写入: " + entry.getName());
+                zos.putNextEntry(entry);
+                IOUtils.copy(inputStream, zos);
+                zos.flush();
+                log.info("已成功写入 {}", entry.getName());
+            } catch (IOException e) {
+                log.error("写入文件项时发生异常", e);
+            }
+        });
+        log.info("调用完成.");
+        zos.close();
+    }
+
+    @Command
+    public static void getRankingIllust(@Argument(name = "range", force = false, defaultValue = "100") int range,
+                                        @Argument(name = "mode", force = false) String mode,
+                                        @Argument(name = "content", force = false) String content,
+                                        @Argument(name = "queryTime", force = false) String queryTime) throws IOException, ParseException {
+        PixivDownload pixivDownload = new PixivDownload(cookieStore, proxy);
+        SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
+        Date queryDate;
+        String date;
+        if (queryTime == null) {
+            GregorianCalendar gregorianCalendar = new GregorianCalendar();
+            gregorianCalendar.setTime(new Date());
+            gregorianCalendar.add(Calendar.DATE, -1);
+            queryDate = gregorianCalendar.getTime();
+        } else {
+            queryDate = format.parse(queryTime);
+        }
+
+        date = format.format(queryDate);
+
+        log.info("查询时间: {}", date);
+        PixivURL.RankingMode rankingMode = PixivURL.RankingMode.MODE_DAILY;
+        PixivURL.RankingContentType contentType = null;
+        if(mode != null) {
+            try {
+                rankingMode = PixivURL.RankingMode.valueOf(mode);
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的RankingMode: {}", mode);
+            }
+        }
+        if(content != null) {
+            try {
+                contentType = PixivURL.RankingContentType.valueOf(content);
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的RankingContentType: {}", content);
+            }
+        }
+
+        int id = 1;
+        File outputFile = new File(storeDir, "ranking" + rankingMode.modeParam + "-" + date + "-" + id + ".zip");
+        while(outputFile.exists()) {
+            id++;
+            outputFile = new File(storeDir, "ranking" + rankingMode.modeParam + "-" + date + "-" + id + ".zip");
+        }
+
+        if(!outputFile.createNewFile()) {
+            log.error("文件创建失败: " + outputFile.getAbsolutePath());
+            return;
+        }
+        ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(outputFile));
+        zos.setLevel(9);
+
+        log.info("正在调用方法...");
+        try {
+            pixivDownload.getRankingAsInputStream(contentType, rankingMode, queryDate, range, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
+                try {
+                    ZipEntry entry = new ZipEntry("Rank" + rank + "-" + link.substring(link.lastIndexOf("/") + 1));
+                    entry.setComment(rankInfo.toString());
+                    log.info("正在写入: " + entry.getName());
+                    zos.putNextEntry(entry);
+                    IOUtils.copy(inputStream, zos);
+                    zos.flush();
+                    log.info("已成功写入 {}", entry.getName());
+                } catch (IOException e) {
+                    log.error("写入文件项时发生异常", e);
+                }
+            });
+        } finally {
+            zos.finish();
+            zos.flush();
+            zos.close();
+        }
+        log.info("调用完成.");
+    }
+
+    @Command
+    public static void search(
+            @Argument(name = "content") String content,
+            @Argument(name = "type", force = false) String type,
+            @Argument(name = "area", force = false) String area,
+            @Argument(name = "includeKeywords", force = false) String includeKeywords,
+            @Argument(name = "excludeKeywords", force = false) String excludeKeywords,
+            @Argument(name = "contentOption", force = false) String contentOption
+    ) throws IOException {
+        PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
+        if (type != null) {
+            try {
+                searchBuilder.setSearchType(PixivSearchBuilder.SearchType.valueOf(type.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的SearchType: {}", type);
+            }
+        }
+        if(area != null) {
+            try {
+                searchBuilder.setSearchArea(PixivSearchBuilder.SearchArea.valueOf(area));
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的SearchArea: {}", area);
+            }
+        }
+        if(contentOption != null) {
+            try {
+                searchBuilder.setSearchContentOption(PixivSearchBuilder.SearchContentOption.valueOf(contentOption));
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的SearchContentOption: {}", contentOption);
+            }
+        }
+
+        if(!Strings.isNullOrEmpty(includeKeywords)) {
+            for (String keyword : includeKeywords.split(";")) {
+                searchBuilder.removeExcludeKeyword(keyword);
+                searchBuilder.addIncludeKeyword(keyword);
+                log.info("已添加关键字: {}", keyword);
+            }
+        }
+        if(!Strings.isNullOrEmpty(excludeKeywords)) {
+            for (String keyword : excludeKeywords.split(";")) {
+                searchBuilder.removeIncludeKeyword(keyword);
+                searchBuilder.addExcludeKeyword(keyword);
+                log.info("已添加排除关键字: {}", keyword);
+            }
+        }
+
+        log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
+
+        String requestUrl = searchBuilder.buildURL();
+        log.info("RequestUrl: {}", requestUrl);
+        PixivDownload pixivDownload = new PixivDownload(cookieStore, proxy);
+        HttpGet httpGetRequest = pixivDownload.createHttpGetRequest(requestUrl);
+        HttpResponse response = pixivDownload.getHttpClient().execute(httpGetRequest);
+
+        String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+        log.info("ResponseBody: {}", responseBody);
+        JsonObject jsonObject = new Gson().fromJson(responseBody, JsonObject.class);
+        if(jsonObject.get("error").getAsBoolean()) {
+            log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
+            return;
+        }
+
+        JsonObject resultBody = jsonObject.getAsJsonObject("body");
+
+        for(PixivSearchBuilder.SearchArea searchArea : PixivSearchBuilder.SearchArea.values()) {
+            if(!resultBody.has(searchArea.jsonKey) || resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
+                //log.info("返回数据不包含 {}", searchArea.jsonKey);
+                continue;
+            }
+            JsonArray illustsArray = resultBody
+                    .getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data");
+            log.info("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
+            int count = 1;
+            for (JsonElement jsonElement : illustsArray) {
+                JsonObject illustObj = jsonElement.getAsJsonObject();
+                if(!illustObj.has("illustId")) {
+                    continue;
+                }
+                int illustId = illustObj.get("illustId").getAsInt();
+                StringBuilder builder = new StringBuilder("[");
+                illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
+                builder.replace(builder.length() - 2, builder.length(), "]");
+                log.info("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t作品链接: {}",
+                        searchArea.name(),
+                        count++,
+                        illustsArray.size(),
+                        illustId,
+                        illustObj.get("userName").getAsString(),
+                        illustObj.get("userId").getAsInt(),
+                        illustObj.get("illustTitle").getAsString(),
+                        builder,
+                        PixivURL.getPixivRefererLink(illustId)
+                );
+
+                /*log.info("正在下载...");
+                List<String> list = PixivDownload.getIllustAllPageDownload(
+                        HttpClientBuilder.create()
+                                .setProxy(proxy)
+                                .build(),
+                        illustId, PixivDownload.PageQuality.ORIGINAL);*/
+            }
+        }
+        /*
+
+        if(searchBuilder.getSearchArea().equals(PixivSearchBuilder.SearchArea.TOP)) {
+
+        } else {
+            JsonArray illustsArray = resultBody
+                    .getAsJsonObject(searchBuilder.getSearchArea().jsonKey).getAsJsonArray("data");
+            log.info("已找到与 {} 相关插图信息：", content);
+            int count = 1;
+            for (JsonElement jsonElement : illustsArray) {
+                JsonObject illustObj = jsonElement.getAsJsonObject();
+                //TODO: 防止数据内混入无效内容, 需要检查对象是否有illustId
+                if(!illustObj.has("illustId")) {
+                    continue;
+                }
+                int illustId = illustObj.get("illustId").getAsInt();
+                StringBuilder builder = new StringBuilder("[");
+                illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
+                builder.replace(builder.length() - 2, builder.length(), "]");
+                log.info("({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t作品链接: {}",
+                        count++,
+                        illustsArray.size(),
+                        illustId,
+                        illustObj.get("userName").getAsString(),
+                        illustObj.get("userId").getAsInt(),
+                        illustObj.get("illustTitle").getAsString(),
+                        builder,
+                        PixivURL.getPixivRefererLink(illustId)
+                );
+            }
+        }
+        */
+    }
+
+
+    @Command(defaultCommand = true)
+    public static void testRun() throws IOException {
+        /*loadCookieStoreFromFile();
+
+        if(cookieStore == null){
+            startPixivLoginProxyServer();
+        }*/
+
+        //accessPixivToFile();
+
+        //startPixivAccessProxyServer();
+
+        //saveCookieStoreToFile();
+        log.info("这里啥都没有哟w");
+    }
+
+    private static void loadCookieStoreFromFile() throws IOException {
+        log.info("正在加载CookieStore...");
+        File storeFile = new File("./cookies.store");
+        if(!storeFile.exists()){
+            log.info("未找到CookieStore, 跳过加载.");
+            return;
+        }
+        ObjectInputStream stream = new ObjectInputStream(new FileInputStream(storeFile));
+        Object result;
+        try {
+            result = stream.readObject();
+        } catch (ClassNotFoundException e) {
+            log.error("加载出错", e);
+            return;
+        }
+        cookieStore = (CookieStore) result;
+        cookieStore.getCookies().forEach(cookie -> log.debug(cookie.getName() + ": " + cookie.getValue() + ", isExpired: " + cookie.isExpired(new Date())));
+        log.info("CookieStore加载完成.");
+    }
+
+    private static void saveCookieStoreToFile() throws IOException {
+        log.info("正在保存CookieStore...");
+        File outputFile = new File("./cookies.store");
+        if(!outputFile.exists() && !outputFile.delete() && !outputFile.createNewFile()){
+            log.error("保存CookieStore失败.");
+            return;
+        }
+        ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(outputFile));
+        stream.writeObject(cookieStore);
+        stream.flush();
+        stream.close();
+        log.info("CookieStore保存成功.");
+    }
+
+    private static void startPixivLoginProxyServer(){
+        ProxyConfig proxyConfig = new ProxyConfig(ProxyType.SOCKS5, "127.0.0.1", 1080);
+        PixivLoginProxyServer proxyServer = new PixivLoginProxyServer(proxyConfig);
+        Thread proxyServerStartThread = new Thread(() -> {
+            log.info("启动代理服务器...");
+            proxyServer.start(1006);
+            log.info("代理服务器已关闭.");
+        });
+        proxyServerStartThread.setName("LoginProxyServerThread");
+        proxyServerStartThread.start();
+        //System.console().readLine();
+        new Scanner(System.in).nextLine();
+        log.info("关闭PLPS服务器...");
+        proxyServer.close();
+        cookieStore = proxyServer.getCookieStore();
+    }
+
+    private static void accessPixivToFile() throws IOException {
+        File cookieStoreFile = new File("./cookie.txt");
+        if (!cookieStoreFile.exists() && !cookieStoreFile.createNewFile()) {
+            log.info("Cookie文件存储失败");
+        }
+        /*log.info("正在写出Cookie, Cookie count: " + cookieStore.getCookies().size());
+        FileWriter cookieWriter = new FileWriter(cookieStoreFile);
+        cookieStore.getCookies().forEach(cookie -> {
+            try {
+                StringBuilder sb = new StringBuilder().append(cookie.getName()).append(" = ").append(cookie.getValue());
+                log.info("正在导出Cookie: " + sb.toString());
+                cookieWriter.append(sb.toString()).append("\n").flush();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
+        log.info("Cookie写出完成");*/
+
+        log.info("尝试通过捕获的Cookie访问Pixiv...");
+        HttpClient httpClient = new PixivSession(new HttpHost("127.0.0.1", 1080), cookieStore).getHttpClient();
+        HttpGet request = new HttpGet("https://www.pixiv.net");
+        request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0");
+        request.addHeader(new BasicHeader("accept-encoding", "gzip, deflate, br"));
+        request.addHeader(new BasicHeader("accept-language", "zh-CN,zh;q=0.9"));
+        StringBuilder cookieBuilder = new StringBuilder();
+        cookieStore.getCookies().forEach(cookie -> {
+            if(cookie.isExpired(new Date())){
+                return;
+            }
+            cookieBuilder.append(cookie.getName()).append("=").append(cookie.getValue()).append("; ");
+        });
+        request.addHeader("cookie", cookieBuilder.toString());
+
+        HttpResponse response = httpClient.execute(request);
+        log.info("正在写入文件...");
+        File outFile = new File("./pixiv.html");
+        if (outFile.createNewFile() && !outFile.exists()) {
+            log.info("文件创建失败!");
+        }else {
+            new FileWriter(outFile).append(EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8)).flush();
+        }
+
+        Pixiv pixiv = new Pixiv(httpClient);
+        pixiv.getRecommend().forEach(illustMap -> {
+            StringBuilder builder = new StringBuilder();
+            illustMap.forEach((key, value) -> builder.append(key).append(": ").append(value).append("\n"));
+            try {
+                builder.append("download Link: ").append(Arrays.toString(pixiv.getAllDownloadLink(Integer.parseInt(illustMap.get(Pixiv.ATTR_ILLUST_ID)))));
+            } catch (IOException e) {
+                log.error("获取下载链接时出错!", e);
+            }
+            log.info(builder.append("\n").toString());
+        });
+
+    }
+
+    private static void startPixivAccessProxyServer(){
+        log.info("正在启动访问代理服务器, 将浏览器相关缓存清空后, 使用浏览器进行访问以尝试Cookie正确性.");
+        final PixivAccessProxyServer accessProxyServer = new PixivAccessProxyServer(cookieStore, new ProxyConfig(ProxyType.SOCKS5, "127.0.0.1", 1080));
+        Thread accessProxyServerThread = new Thread(() -> {
+            log.info("正在启动PAPS...");
+            accessProxyServer.start(1007);
+            log.info("PAPS已关闭.");
+        });
+        accessProxyServerThread.setName("AccessProxyServerThread");
+        accessProxyServerThread.start();
+        new Scanner(System.in).nextLine();
+        log.info("关闭PAPS服务器...");
+        accessProxyServer.close();
+    }
+
+}

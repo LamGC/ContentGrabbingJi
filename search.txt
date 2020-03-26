@@ -1,0 +1,24 @@
+搜索标签信息：https://www.pixiv.net/ajax/search/tags/标签名
+
+搜索接口：
+https://www.pixiv.net/ajax/search/{Type}/搜索内容
+Type = illustrations(插画) / top(顶部?) / manga(漫画) / novels(小说)
+
+word=搜索内容 [参数可能不是必须的]
+s_mode=s_tag(标签-部分一致) / s_tag_full(标签-完全一致) / s_tc(标题、说明文字)
+type= all(插画、漫画、动图_动态插图) / illust_and_ugoira(插画、动图) / illust(插画) / manga(漫画) / ugoira(动图)
+p=页数 [超出页数的情况下将获取不到数据(即"body.illust.data"是空数组)]
+order=date(按旧排序) / date_d(按新排序) / Unknown(按热门度排序, 需要会员)
+mode= all(全部) / safe(全年龄) / r18(咳咳)
+
+可选参数：
+wlt=最小宽度像素
+wgt=最高宽度像素
+hlt=最小高度像素
+hgt=最高高度像素
+ratio=0.5(横图) / -0.5(纵图) / 0(正方形) [可能不能改变参数, 三个值是固定的]
+tool=使用工具, 不是很重要晚些再加
+scd=开始时间(yyyy-MM-dd)
+ecd=结束时间(yyyy-MM-dd)
+
+最小收藏数 = 收藏数限定参数为会员功能, 无法获取
