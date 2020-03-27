@@ -247,6 +247,43 @@ public class PixivDownload {
         });
     }
 
+    /**
+     * 从JsonArray获取数据
+     * @param rankingArray JsonArray对象
+     * @param rankStart 开始索引, 从0开始
+     * @param range 范围
+     * @return 返回List对象
+     */
+    public static List<JsonObject> getRanking(JsonArray rankingArray, int rankStart, int range) {
+        //需要添加一个总量, 否则会完整跑完一次.
+        //检查是否为最后一次请求，和剩余量有多少
+        log.info("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
+        ArrayList<JsonObject> results = new ArrayList<>(rankingArray.size());
+        for (int rankIndex = rankStart; rankIndex < rankingArray.size() && rankIndex < range; rankIndex++) {
+            JsonElement jsonElement = rankingArray.get(rankIndex);
+            JsonObject rankInfo = jsonElement.getAsJsonObject();
+            int rank = rankInfo.get("rank").getAsInt();
+            int illustId = rankInfo.get("illust_id").getAsInt();
+            int authorId = rankInfo.get("user_id").getAsInt();
+            String authorName = rankInfo.get("user_name").getAsString();
+            String title = rankInfo.get("title").getAsString();
+            log.info("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+            results.add(rankInfo);
+        }
+        log.info("JsonArray读取完成.");
+        return results;
+    }
+
+    /**
+     * 获取排行榜
+     * @param contentType 排行榜类型
+     * @param mode 排行榜模式
+     * @param time 查询时间
+     * @param rankStart 开始排名, 从1开始
+     * @param range 取范围
+     * @return 成功返回有值List, 失败且无异常返回空
+     * @throws IOException 获取异常时抛出
+     */
     public List<JsonObject> getRanking(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode,
                                              Date time, int rankStart, int range) throws IOException {
         if(rankStart <= 0) {

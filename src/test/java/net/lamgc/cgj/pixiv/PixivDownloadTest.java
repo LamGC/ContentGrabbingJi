@@ -106,7 +106,7 @@ public class PixivDownloadTest {
 
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         gregorianCalendar.setTime(new Date());
-        gregorianCalendar.add(Calendar.DATE, -1);
+        gregorianCalendar.add(Calendar.DATE, -2);
         Date queryDate = gregorianCalendar.getTime();
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
         log.info("查询时间: {}", date);
@@ -126,7 +126,7 @@ public class PixivDownloadTest {
         zos.setLevel(9);
         log.info("正在调用方法...");
         try {
-            pixivDownload.getRankingAsInputStream(null, PixivURL.RankingMode.MODE_DAILY_R18, queryDate, 15, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
+            pixivDownload.getRankingAsInputStream(null, PixivURL.RankingMode.MODE_DAILY_R18, queryDate, 500, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
                 try {
                     ZipEntry entry = new ZipEntry("Rank" + rank + "-" + link.substring(link.lastIndexOf("/") + 1));
                     entry.setComment(rankInfo.toString());
@@ -153,7 +153,7 @@ public class PixivDownloadTest {
 
         GregorianCalendar gregorianCalendar = new GregorianCalendar();
         gregorianCalendar.setTime(new Date());
-        gregorianCalendar.add(Calendar.DATE, -1);
+        gregorianCalendar.add(Calendar.DATE, -2);
         Date queryDate = gregorianCalendar.getTime();
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
         log.info("查询时间: {}", date);
@@ -173,8 +173,9 @@ public class PixivDownloadTest {
 
         log.info("正在调用方法...");
         try {
-            pixivDownload.getRankingAsInputStream(null, null, queryDate, 65, 55, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
-                try {
+            pixivDownload.getRankingAsInputStream(null, null, queryDate, 5, 50, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
+                /*try {
+
                     ZipEntry entry = new ZipEntry("Rank" + rank + "-" + link.substring(link.lastIndexOf("/") + 1));
                     entry.setComment(rankInfo.toString());
                     log.info("正在写入: " + entry.getName());
@@ -182,9 +183,11 @@ public class PixivDownloadTest {
                     IOUtils.copy(inputStream, zos);
                     zos.flush();
                     log.info("已成功写入 {}", entry.getName());
+                    inputStream.close();
                 } catch (IOException e) {
                     log.error("写入文件项时发生异常", e);
-                }
+                }*/
+                log.info("空操作");
             });
         } finally {
             zos.finish();
