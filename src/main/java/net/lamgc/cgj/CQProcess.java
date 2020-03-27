@@ -48,6 +48,8 @@ public class CQProcess {
 
     private final static Hashtable<String, List<String>> pagesCache = new Hashtable<>();
 
+    private final static Hashtable<String, JsonArray> rankingCache = new Hashtable<>();
+
     private final static Object searchCacheLock = new Object();
 
     private final static Gson gson = new GsonBuilder()
@@ -113,7 +115,7 @@ public class CQProcess {
         StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ").append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
         try {
             int index = 0;
-            for (JsonObject rankInfo : pixivDownload.getRanking(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 1, 10)) {
+            for (JsonObject rankInfo : getRankingInfoByCache(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 0, 10)) {
                 index++;
                 int rank = rankInfo.get("rank").getAsInt();
                 int illustId = rankInfo.get("illust_id").getAsInt();
@@ -229,7 +231,7 @@ public class CQProcess {
         }
 
         JsonObject resultBody = searchBodyCache.get(requestUrl).get().getAsJsonObject("body");
-        StringBuilder result = new StringBuilder("搜索结果：");
+        StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
         log.info("正在处理信息...");
         int limit = 8;
         try {
@@ -412,15 +414,19 @@ public class CQProcess {
     }
 
     static void clearCache() {
-        log.warn("正在清除所有图片缓存...");
+        log.warn("正在清除所有缓存...");
         imageCache.clear();
+        illustInfoCache.clear();
+        illustPreLoadDataCache.clear();
+        pagesCache.clear();
+        searchBodyCache.clear();
         File imageStoreDir = new File(System.getProperty("cgj.cqRootDir") + "data/image/cgj/");
         File[] listFiles = imageStoreDir.listFiles();
         if (listFiles == null) {
-            log.info("图片缓存目录为空或内部文件获取失败!");
+            log.warn("图片缓存目录为空或内部文件获取失败!");
         } else {
             for (File file : listFiles) {
-                log.info("图片文件 {} 删除: {}", file.getName(), file.delete());
+                log.debug("图片文件 {} 删除: {}", file.getName(), file.delete());
             }
         }
         log.info("图片缓存目录删除: {}", imageStoreDir.delete());
@@ -441,105 +447,108 @@ public class CQProcess {
 
     private final static Object illustInfoLock = new Object();
     private static JsonObject getIllustInfo(int illustId) throws IOException {
-        synchronized (illustInfoLock) {
-            File cacheFile = new File(getImageStoreDir(), illustId + ".illustInfo.json");
-            if (!illustInfoCache.containsKey(illustId)) {
-                log.info("IllustInfoFileName: {}", cacheFile.getName());
-                JsonObject illustInfoObj;
-                if (!cacheFile.exists()) {
-                    try {
-                        cacheFile.createNewFile();
-                        illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
-                        Files.write(cacheFile.toPath(), gson.toJson(illustInfoObj).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
-                    } catch(IOException e) {
-                        cacheFile.delete();
-                        throw e;
+        if (!illustInfoCache.containsKey(illustId)) {
+            synchronized (illustInfoLock) {
+                if (!illustInfoCache.containsKey(illustId)) {
+                    File cacheFile = new File(getImageStoreDir(), illustId + ".illustInfo.json");
+                    log.info("IllustInfoFileName: {}", cacheFile.getName());
+                    JsonObject illustInfoObj;
+                    if (!cacheFile.exists()) {
+                        try {
+                            cacheFile.createNewFile();
+                            illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
+                            Files.write(cacheFile.toPath(), gson.toJson(illustInfoObj).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                        } catch (IOException e) {
+                            cacheFile.delete();
+                            throw e;
+                        }
+                    } else {
+                        illustInfoObj = gson.fromJson(new FileReader(cacheFile), JsonObject.class);
                     }
-                } else {
-                    illustInfoObj = gson.fromJson(new FileReader(cacheFile), JsonObject.class);
+                    illustInfoCache.put(illustId, illustInfoObj);
                 }
-                illustInfoCache.put(illustId, illustInfoObj);
             }
-
-            return illustInfoCache.get(illustId);
         }
+        return illustInfoCache.get(illustId);
     }
 
     private final static Object illustPreLoadDataLock = new Object();
     public static JsonObject getIllustPreLoadData(int illustId) throws IOException {
-        synchronized (illustPreLoadDataLock) {
-            File cacheFile = new File(getImageStoreDir(), illustId + ".illustPreLoadData.json");
-            CacheObject<JsonObject> cacheObject = new CacheObject<>();
-            Date currentDate = new Date();
-            if (!illustPreLoadDataCache.containsKey(illustId) || (cacheObject = illustPreLoadDataCache.get(illustId)).isExpire(currentDate)) {
-                log.info("因为到期而失效: {}", cacheObject.isExpire(new Date()));
-                log.info("因为缓存文件不存在而失效: {}", !cacheFile.exists());
-                log.info("缓存失效, 正在更新...");
-                log.info("illustPreLoadDataFileName: {}", cacheFile.getName());
-                JsonObject preLoadDataObj;
-                if (!cacheFile.exists()) {
-                    try {
-                        cacheFile.createNewFile();
-                        preLoadDataObj = pixivDownload.getIllustPreLoadDataById(illustId)
-                                .getAsJsonObject("illust")
-                                .getAsJsonObject(Integer.toString(illustId));
-                        Files.write(cacheFile.toPath(), gson.toJson(preLoadDataObj).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
-                    } catch(IOException e) {
-                        cacheFile.delete();
-                        throw e;
+        CacheObject<JsonObject> cacheObject = new CacheObject<>();
+        Date currentDate = new Date();
+        if (!illustPreLoadDataCache.containsKey(illustId) || (cacheObject = illustPreLoadDataCache.get(illustId)).isExpire(currentDate)) {
+            synchronized (illustPreLoadDataLock) {
+                if (!illustPreLoadDataCache.containsKey(illustId) || (cacheObject = illustPreLoadDataCache.get(illustId)).isExpire(currentDate)) {
+                    File cacheFile = new File(getImageStoreDir(), illustId + ".illustPreLoadData.json");
+                    log.info("因为到期而失效: {}", cacheObject.isExpire(new Date()));
+                    log.info("缓存失效, 正在更新...");
+                    log.info("illustPreLoadDataFileName: {}", cacheFile.getName());
+                    JsonObject preLoadDataObj;
+                    if (!cacheFile.exists()) {
+                        try {
+                            cacheFile.createNewFile();
+                            preLoadDataObj = pixivDownload.getIllustPreLoadDataById(illustId)
+                                    .getAsJsonObject("illust")
+                                    .getAsJsonObject(Integer.toString(illustId));
+                            Files.write(cacheFile.toPath(), gson.toJson(preLoadDataObj).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                        } catch(IOException e) {
+                            cacheFile.delete();
+                            throw e;
+                        }
+                    } else {
+                        preLoadDataObj = gson.fromJson(new FileReader(cacheFile), JsonObject.class);
                     }
-                } else {
-                    preLoadDataObj = gson.fromJson(new FileReader(cacheFile), JsonObject.class);
-                }
 
-                long expire = 7200 * 1000;
-                String propValue = CQPluginMain.globalProp.getProperty("cache.illustPreLoadData.expire", "7200000");
-                log.info("PreLoadData有效时间设定: {}", propValue);
-                try {
-                    expire = Long.parseLong(propValue);
-                } catch (Exception e) {
-                    log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
-                }
+                    long expire = 7200 * 1000;
+                    String propValue = CQPluginMain.globalProp.getProperty("cache.illustPreLoadData.expire", "7200000");
+                    log.info("PreLoadData有效时间设定: {}", propValue);
+                    try {
+                        expire = Long.parseLong(propValue);
+                    } catch (Exception e) {
+                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
+                    }
 
-                Date newExpire = new Date();
-                newExpire.setTime(newExpire.getTime() + expire);
-                cacheObject.update(preLoadDataObj, newExpire);
-                illustPreLoadDataCache.put(illustId, cacheObject);
-                log.info("作品Id {} preLoadData缓存已更新(到期时间: {})", illustId, newExpire);
+                    Date newExpire = new Date();
+                    newExpire.setTime(newExpire.getTime() + expire);
+                    cacheObject.update(preLoadDataObj, newExpire);
+                    illustPreLoadDataCache.put(illustId, cacheObject);
+                    log.info("作品Id {} preLoadData缓存已更新(到期时间: {})", illustId, newExpire);
+                }
             }
-
-            return illustPreLoadDataCache.get(illustId).get();
         }
+            return illustPreLoadDataCache.get(illustId).get();
     }
 
     private final static Object illustPagesLock = new Object();
     public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality) throws IOException {
-        synchronized (illustPagesLock) {
-            File cacheFile = new File(getImageStoreDir(), illustId + "." + quality.name() + ".illustPages.json");
-            if (!pagesCache.containsKey(illustId + "." + quality.name())) {
-                log.info("illustPagesFileName: {}", cacheFile.getName());
-                List<String> linkList;
-                if (!cacheFile.exists()) {
-                    try {
-                        cacheFile.createNewFile();
-                        linkList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
-                        JsonArray jsonArray = new JsonArray(linkList.size());
-                        linkList.forEach(jsonArray::add);
-                        Files.write(cacheFile.toPath(), gson.toJson(jsonArray).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
-                    } catch(IOException e) {
-                        cacheFile.delete();
-                        throw e;
+        if (!pagesCache.containsKey(illustId + "." + quality.name())) {
+            synchronized (illustPagesLock) {
+                if (!pagesCache.containsKey(illustId + "." + quality.name())) {
+                    File cacheFile = new File(getImageStoreDir(), illustId + "." + quality.name() + ".illustPages.json");
+                    log.info("illustPagesFileName: {}", cacheFile.getName());
+                    List<String> linkList;
+                    if (!cacheFile.exists()) {
+                        try {
+                            cacheFile.createNewFile();
+                            linkList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
+                            JsonArray jsonArray = new JsonArray(linkList.size());
+                            linkList.forEach(jsonArray::add);
+                            Files.write(cacheFile.toPath(), gson.toJson(jsonArray).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                        } catch (IOException e) {
+                            cacheFile.delete();
+                            throw e;
+                        }
+                    } else {
+                        JsonArray jsonArray = gson.fromJson(new FileReader(cacheFile), JsonArray.class);
+                        linkList = new ArrayList<>(jsonArray.size());
+                        jsonArray.forEach(jsonElement -> linkList.add(jsonElement.getAsString()));
                     }
-                } else {
-                    JsonArray jsonArray = gson.fromJson(new FileReader(cacheFile), JsonArray.class);
-                    linkList = new ArrayList<>(jsonArray.size());
-                    jsonArray.forEach(jsonElement -> linkList.add(jsonElement.getAsString()));
+                    pagesCache.put(illustId + "." + quality.name(), linkList);
                 }
-                pagesCache.put(illustId + "." + quality.name(), linkList);
             }
-
-            return pagesCache.get(illustId + "." + quality.name());
         }
+
+        return pagesCache.get(illustId + "." + quality.name());
     }
     
     private static File getImageStoreDir() {
@@ -548,6 +557,41 @@ public class CQProcess {
             throw new RuntimeException(new IOException("文件夹创建失败!"));
         }
         return imageStoreDir;
+    }
+
+    private final static Object rankingLock = new Object();
+    private static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
+        String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
+        String requestSign = "Ranking." + contentType.name() + "." + mode.name() + "." + date;
+        if(!rankingCache.containsKey(requestSign)) {
+            synchronized(rankingLock) {
+                if(!rankingCache.containsKey(requestSign)) {
+                    log.info("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
+                    File cacheFile = new File(getImageStoreDir(), date + "." + contentType.name() + "." + mode.modeParam + ".ranking.json");
+                    JsonArray rankingArr;
+                    if(!cacheFile.exists()) {
+                        List<JsonObject> rankingResult = pixivDownload.getRanking(contentType, mode, queryDate, 1, 500);
+                        rankingArr = new JsonArray(rankingResult.size());
+                        rankingResult.forEach(rankingArr::add);
+                        JsonObject cacheBody = new JsonObject();
+                        cacheBody.addProperty("updateTimestamp", new Date().getTime());
+                        cacheBody.addProperty("ContentType", contentType.name());
+                        cacheBody.addProperty("RankingMode", mode.modeParam);
+                        cacheBody.add("ranking", rankingArr);
+                        Files.write(cacheFile.toPath(), gson.toJson(cacheBody).getBytes(StandardCharsets.UTF_8), StandardOpenOption.CREATE);
+                        log.info("已从Pixiv获取数据并缓存到文件.");
+                    } else {
+                        JsonObject cacheBody = gson.fromJson(new FileReader(cacheFile), JsonObject.class);
+                        rankingArr = cacheBody.getAsJsonArray("ranking");
+                        log.info("已从文件获取缓存数据.");
+                    }
+
+                    rankingCache.put(requestSign, rankingArr);
+                }
+            }
+        }
+
+        return PixivDownload.getRanking(rankingCache.get(requestSign), start, range);
     }
 
 }
