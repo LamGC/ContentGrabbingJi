@@ -90,7 +90,7 @@ public class CQPluginMain extends CQPlugin {
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
 
-        log.info("正在处理命令...");
+        log.warn("正在处理命令...");
         long time = System.currentTimeMillis();
         Object result;
         try {
@@ -113,7 +113,7 @@ public class CQPluginMain extends CQPlugin {
             log.error("执行命令时发生异常", e);
             result = "命令执行时发生错误，无法完成！";
         }
-        log.info("命令处理完成(耗时: {}ms)", System.currentTimeMillis() - time);
+        log.warn("命令处理完成(耗时: {}ms)", System.currentTimeMillis() - time);
         if(Objects.requireNonNull(result) instanceof String) {
             sendMessage(cq, event, (String) result, false);
         }

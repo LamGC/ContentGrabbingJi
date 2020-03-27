@@ -44,11 +44,11 @@ public class CQProcess {
 
     private final static Hashtable<Integer, CacheObject<JsonObject>> illustPreLoadDataCache = new Hashtable<>();
 
-    private final static Hashtable<String, CacheObject<JsonObject>> searchBodyCache = new Hashtable<>();
+    private final static Hashtable<Integer, CacheObject<JsonObject>> searchBodyCache = new Hashtable<>();
 
-    private final static Hashtable<String, List<String>> pagesCache = new Hashtable<>();
+    private final static Hashtable<Integer, List<String>> pagesCache = new Hashtable<>();
 
-    private final static Hashtable<String, JsonArray> rankingCache = new Hashtable<>();
+    private final static Hashtable<Integer, JsonArray> rankingCache = new Hashtable<>();
 
     private final static Object searchCacheLock = new Object();
 
@@ -194,9 +194,10 @@ public class CQProcess {
         log.info("RequestUrl: {}", requestUrl);
 
         CacheObject<JsonObject> cacheObject = new CacheObject<>();
-        if(!searchBodyCache.containsKey(requestUrl) || (cacheObject = searchBodyCache.get(requestUrl)).isExpire(new Date())) {
+        int requestUrlSign = requestUrl.hashCode();
+        if(!searchBodyCache.containsKey(requestUrlSign) || (cacheObject = searchBodyCache.get(requestUrlSign)).isExpire(new Date())) {
             synchronized (searchCacheLock) {
-                if (!searchBodyCache.containsKey(requestUrl) || (cacheObject = searchBodyCache.get(requestUrl)).isExpire(new Date())) {
+                if (!searchBodyCache.containsKey(requestUrlSign) || (cacheObject = searchBodyCache.get(requestUrlSign)).isExpire(new Date())) {
                     log.info("searchBody缓存失效, 正在更新...");
                     JsonObject jsonObject;
                     HttpGet httpGetRequest = pixivDownload.createHttpGetRequest(requestUrl);
@@ -222,7 +223,7 @@ public class CQProcess {
 
                     newExpireDate.setTime(newExpireDate.getTime() + expire);
                     cacheObject.update(jsonObject, newExpireDate);
-                    searchBodyCache.put(requestUrl, cacheObject);
+                    searchBodyCache.put(requestUrlSign, cacheObject);
                     log.info("searchBody缓存已更新(到期时间: {})", newExpireDate);
                 }
             }
@@ -230,7 +231,8 @@ public class CQProcess {
             log.info("搜索缓存命中.");
         }
 
-        JsonObject resultBody = searchBodyCache.get(requestUrl).get().getAsJsonObject("body");
+        JsonObject resultBody = searchBodyCache.get(requestUrlSign).get().getAsJsonObject("body");
+
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
         log.info("正在处理信息...");
         int limit = 8;
@@ -521,9 +523,10 @@ public class CQProcess {
 
     private final static Object illustPagesLock = new Object();
     public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality) throws IOException {
-        if (!pagesCache.containsKey(illustId + "." + quality.name())) {
+        int pagesSign = (illustId + "." + quality.name()).hashCode();
+        if (!pagesCache.containsKey(pagesSign)) {
             synchronized (illustPagesLock) {
-                if (!pagesCache.containsKey(illustId + "." + quality.name())) {
+                if (!pagesCache.containsKey(pagesSign)) {
                     File cacheFile = new File(getImageStoreDir(), illustId + "." + quality.name() + ".illustPages.json");
                     log.info("illustPagesFileName: {}", cacheFile.getName());
                     List<String> linkList;
@@ -543,12 +546,12 @@ public class CQProcess {
                         linkList = new ArrayList<>(jsonArray.size());
                         jsonArray.forEach(jsonElement -> linkList.add(jsonElement.getAsString()));
                     }
-                    pagesCache.put(illustId + "." + quality.name(), linkList);
+                    pagesCache.put(pagesSign, linkList);
                 }
             }
         }
 
-        return pagesCache.get(illustId + "." + quality.name());
+        return pagesCache.get(pagesSign);
     }
     
     private static File getImageStoreDir() {
@@ -562,7 +565,7 @@ public class CQProcess {
     private final static Object rankingLock = new Object();
     private static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
-        String requestSign = "Ranking." + contentType.name() + "." + mode.name() + "." + date;
+        int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
         if(!rankingCache.containsKey(requestSign)) {
             synchronized(rankingLock) {
                 if(!rankingCache.containsKey(requestSign)) {
