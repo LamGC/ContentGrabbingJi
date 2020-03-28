@@ -36,7 +36,7 @@ public class CQProcess {
 
     private final static Logger log = LoggerFactory.getLogger("CQProcess");
 
-    private final static File imageStoreDir = new File(System.getProperty("cgj.cqRootDir") + "data/image/cgj/");
+    private final static File imageStoreDir = new File(System.getProperty("cgj.cqRootDir"), "data/image/cgj/");
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
 
@@ -78,11 +78,11 @@ public class CQProcess {
         helpStrBuilder.append("CGJ Bot使用指南").append("\n");
         helpStrBuilder.append("目前可用的命令:").append("\n");
         helpStrBuilder.append("\t").append("ranking - 获取今天或指定日期排行榜的前10名作品").append("\n");
-        helpStrBuilder.append("\t\t").append("date - 指定查询日期(年年年年-月月-日日)").append("\n");
+        helpStrBuilder.append("\t\t").append("-date - 指定查询日期(年-月-日)").append("\n");
         helpStrBuilder.append("\t").append("search - 搜索指定关键词并显示前10个作品").append("\n");
-        helpStrBuilder.append("\t\t").append("content - 搜索内容").append("\n");
+        helpStrBuilder.append("\t\t").append("-content - 搜索内容").append("\n");
         helpStrBuilder.append("\t").append("artworks - 获取作品的Pixiv页面").append("\n");
-        helpStrBuilder.append("\t\t").append("id - 作品id").append("\n");
+        helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
         return helpStrBuilder.toString();
     }
 
