@@ -3,9 +3,7 @@ package net.lamgc.cgj;
 import com.google.common.base.Strings;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import net.lamgc.cgj.cache.CacheObject;
-import net.lamgc.cgj.cache.ImageCacheHandler;
-import net.lamgc.cgj.cache.ImageCacheObject;
+import net.lamgc.cgj.cache.*;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
@@ -21,6 +19,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -38,23 +37,21 @@ public class CQProcess {
 
     private final static File imageStoreDir = new File(System.getProperty("cgj.cqRootDir"), "data/image/cgj/");
 
-    private final static Hashtable<String, File> imageCache = new Hashtable<>();
-
-    private final static Hashtable<Integer, JsonObject> illustInfoCache = new Hashtable<>();
-
-    private final static Hashtable<Integer, CacheObject<JsonObject>> illustPreLoadDataCache = new Hashtable<>();
-
-    private final static Hashtable<Integer, CacheObject<JsonObject>> searchBodyCache = new Hashtable<>();
-
-    private final static Hashtable<Integer, List<String>> pagesCache = new Hashtable<>();
-
-    private final static Hashtable<Integer, JsonArray> rankingCache = new Hashtable<>();
-
-    private final static Object searchCacheLock = new Object();
-
     private final static Gson gson = new GsonBuilder()
             .serializeNulls()
             .create();
+
+    private final static Hashtable<String, File> imageCache = new Hashtable<>();
+
+    private final static CacheStore<JsonObject> illustInfoCache = new LocalHashCacheStore<>();
+
+    private final static CacheStore<JsonObject> illustPreLoadDataCache = new LocalHashCacheStore<>();
+
+    private final static CacheStore<JsonObject> searchBodyCache = new LocalHashCacheStore<>();
+
+    private final static CacheStore<List<String>> pagesCache = new LocalHashCacheStore<>();
+
+    private final static CacheStore<JsonArray> rankingCache = new LocalHashCacheStore<>();
 
     private final static EventExecutor imageCacheExecutor = new EventExecutor(new ThreadPoolExecutor(
             1,
@@ -141,6 +138,7 @@ public class CQProcess {
         return "功能未完成";
     }
 
+    private final static Object searchCacheLock = new Object();
     @Command
     public static String search(@Argument(name = "content") String content,
                                 @Argument(name = "type", force = false) String type,
@@ -193,11 +191,9 @@ public class CQProcess {
         String requestUrl = searchBuilder.buildURL();
         log.info("RequestUrl: {}", requestUrl);
 
-        CacheObject<JsonObject> cacheObject = new CacheObject<>();
-        int requestUrlSign = requestUrl.hashCode();
-        if(!searchBodyCache.containsKey(requestUrlSign) || (cacheObject = searchBodyCache.get(requestUrlSign)).isExpire(new Date())) {
+        if(!searchBodyCache.exists(requestUrl)) {
             synchronized (searchCacheLock) {
-                if (!searchBodyCache.containsKey(requestUrlSign) || (cacheObject = searchBodyCache.get(requestUrlSign)).isExpire(new Date())) {
+                if (!searchBodyCache.exists(requestUrl)) {
                     log.info("searchBody缓存失效, 正在更新...");
                     JsonObject jsonObject;
                     HttpGet httpGetRequest = pixivDownload.createHttpGetRequest(requestUrl);
@@ -222,8 +218,7 @@ public class CQProcess {
                     }
 
                     newExpireDate.setTime(newExpireDate.getTime() + expire);
-                    cacheObject.update(jsonObject, newExpireDate);
-                    searchBodyCache.put(requestUrlSign, cacheObject);
+                    searchBodyCache.update(requestUrl, jsonObject, newExpireDate);
                     log.info("searchBody缓存已更新(到期时间: {})", newExpireDate);
                 }
             }
@@ -231,7 +226,7 @@ public class CQProcess {
             log.info("搜索缓存命中.");
         }
 
-        JsonObject resultBody = searchBodyCache.get(requestUrlSign).get().getAsJsonObject("body");
+        JsonObject resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject("body");
 
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
         log.info("正在处理信息...");
@@ -449,9 +444,10 @@ public class CQProcess {
 
     private final static Object illustInfoLock = new Object();
     private static JsonObject getIllustInfo(int illustId) throws IOException {
-        if (!illustInfoCache.containsKey(illustId)) {
+        String illustIdStr = Integer.toString(illustId);
+        if (!illustInfoCache.exists(illustIdStr)) {
             synchronized (illustInfoLock) {
-                if (!illustInfoCache.containsKey(illustId)) {
+                if (!illustInfoCache.exists(illustIdStr)) {
                     File cacheFile = new File(getImageStoreDir(), illustId + ".illustInfo.json");
                     log.info("IllustInfoFileName: {}", cacheFile.getName());
                     JsonObject illustInfoObj;
@@ -467,22 +463,20 @@ public class CQProcess {
                     } else {
                         illustInfoObj = gson.fromJson(new FileReader(cacheFile), JsonObject.class);
                     }
-                    illustInfoCache.put(illustId, illustInfoObj);
+                    illustInfoCache.update(illustIdStr, illustInfoObj, null);
                 }
             }
         }
-        return illustInfoCache.get(illustId);
+        return illustInfoCache.getCache(illustIdStr);
     }
 
     private final static Object illustPreLoadDataLock = new Object();
     public static JsonObject getIllustPreLoadData(int illustId) throws IOException {
-        CacheObject<JsonObject> cacheObject = new CacheObject<>();
-        Date currentDate = new Date();
-        if (!illustPreLoadDataCache.containsKey(illustId) || (cacheObject = illustPreLoadDataCache.get(illustId)).isExpire(currentDate)) {
+        String illustIdStr = Integer.toString(illustId);
+        if (!illustPreLoadDataCache.exists(illustIdStr)) {
             synchronized (illustPreLoadDataLock) {
-                if (!illustPreLoadDataCache.containsKey(illustId) || (cacheObject = illustPreLoadDataCache.get(illustId)).isExpire(currentDate)) {
+                if (!illustPreLoadDataCache.exists(illustIdStr)) {
                     File cacheFile = new File(getImageStoreDir(), illustId + ".illustPreLoadData.json");
-                    log.info("因为到期而失效: {}", cacheObject.isExpire(new Date()));
                     log.info("缓存失效, 正在更新...");
                     log.info("illustPreLoadDataFileName: {}", cacheFile.getName());
                     JsonObject preLoadDataObj;
@@ -512,21 +506,20 @@ public class CQProcess {
 
                     Date newExpire = new Date();
                     newExpire.setTime(newExpire.getTime() + expire);
-                    cacheObject.update(preLoadDataObj, newExpire);
-                    illustPreLoadDataCache.put(illustId, cacheObject);
+                    illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, newExpire);
                     log.info("作品Id {} preLoadData缓存已更新(到期时间: {})", illustId, newExpire);
                 }
             }
         }
-            return illustPreLoadDataCache.get(illustId).get();
+            return illustPreLoadDataCache.getCache(illustIdStr);
     }
 
     private final static Object illustPagesLock = new Object();
     public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality) throws IOException {
-        int pagesSign = (illustId + "." + quality.name()).hashCode();
-        if (!pagesCache.containsKey(pagesSign)) {
+        String pagesSign = illustId + "." + quality.name();
+        if (!pagesCache.exists(pagesSign)) {
             synchronized (illustPagesLock) {
-                if (!pagesCache.containsKey(pagesSign)) {
+                if (!pagesCache.exists(pagesSign)) {
                     File cacheFile = new File(getImageStoreDir(), illustId + "." + quality.name() + ".illustPages.json");
                     log.info("illustPagesFileName: {}", cacheFile.getName());
                     List<String> linkList;
@@ -546,12 +539,12 @@ public class CQProcess {
                         linkList = new ArrayList<>(jsonArray.size());
                         jsonArray.forEach(jsonElement -> linkList.add(jsonElement.getAsString()));
                     }
-                    pagesCache.put(pagesSign, linkList);
+                    pagesCache.update(pagesSign, linkList, null);
                 }
             }
         }
 
-        return pagesCache.get(pagesSign);
+        return pagesCache.getCache(pagesSign);
     }
     
     private static File getImageStoreDir() {
@@ -565,10 +558,11 @@ public class CQProcess {
     private final static Object rankingLock = new Object();
     private static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
-        int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
-        if(!rankingCache.containsKey(requestSign)) {
+        //int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
+        String requestSign = "Ranking." + contentType.name() + "." + mode.name() + "." + date;
+        if(!rankingCache.exists(requestSign)) {
             synchronized(rankingLock) {
-                if(!rankingCache.containsKey(requestSign)) {
+                if(!rankingCache.exists(requestSign)) {
                     log.info("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
                     File cacheFile = new File(getImageStoreDir(), date + "." + contentType.name() + "." + mode.modeParam + ".ranking.json");
                     JsonArray rankingArr;
@@ -589,12 +583,12 @@ public class CQProcess {
                         log.info("已从文件获取缓存数据.");
                     }
 
-                    rankingCache.put(requestSign, rankingArr);
+                    rankingCache.update(requestSign, rankingArr, null);
                 }
             }
         }
 
-        return PixivDownload.getRanking(rankingCache.get(requestSign), start, range);
+        return PixivDownload.getRanking(rankingCache.getCache(requestSign), start, range);
     }
 
 }
