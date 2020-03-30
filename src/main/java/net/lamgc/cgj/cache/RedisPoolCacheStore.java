@@ -23,7 +23,7 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
                 redisServerUri.getPort() <= 0 ? 6379 : redisServerUri.getPort(),
                 timeout <= 0 ? Protocol.DEFAULT_TIMEOUT : timeout, password);
         log = LoggerFactory.getLogger("RedisPoolCacheStore@" + Integer.toHexString(jedisPool.hashCode()));
-        this.keyPrefix = prefix;
+        this.keyPrefix = prefix.endsWith(".") ? prefix : prefix + ".";
     }
 
     @Override
