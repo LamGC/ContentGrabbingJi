@@ -267,7 +267,7 @@ public class PixivDownload {
             int authorId = rankInfo.get("user_id").getAsInt();
             String authorName = rankInfo.get("user_name").getAsString();
             String title = rankInfo.get("title").getAsString();
-            log.info("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+            log.info("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
             results.add(rankInfo);
         }
         log.info("JsonArray读取完成.");
@@ -326,7 +326,7 @@ public class PixivDownload {
                 int authorId = rankInfo.get("user_id").getAsInt();
                 String authorName = rankInfo.get("user_name").getAsString();
                 String title = rankInfo.get("title").getAsString();
-                log.info("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+                log.info("Download-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
                 results.add(rankInfo);
             }
             firstRequest = false;
@@ -542,7 +542,7 @@ public class PixivDownload {
      * @throws IOException 当请求发生异常, 或接口返回错误信息时抛出.
      */
     public JsonObject getIllustInfoByIllustId(int illustId) throws IOException {
-        HttpGet request = createHttpGetRequest(PixivURL.getPixivIllustInfoAPI(new int[] {illustId}));;
+        HttpGet request = createHttpGetRequest(PixivURL.getPixivIllustInfoAPI(new int[] {illustId}));
         HttpResponse response = httpClient.execute(request);
         String responseStr = EntityUtils.toString(response.getEntity());
         log.debug("Response Content: {}", responseStr);
