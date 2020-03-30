@@ -6,7 +6,27 @@ import java.util.Objects;
 
 public class LocalHashCacheStore<T> implements CacheStore<T> {
 
-    private final Hashtable<String, CacheObject<T>> cache = new Hashtable<>();
+    private final Hashtable<String, CacheObject<T>> cache;
+
+    public LocalHashCacheStore() {
+        this(0);
+    }
+
+    public LocalHashCacheStore(int initialCapacity) {
+        this(initialCapacity, 0F);
+    }
+
+    public LocalHashCacheStore(int initialCapacity, float loadFactor) {
+        if(initialCapacity != 0) {
+            if(loadFactor <= 0F) {
+                cache = new Hashtable<>(initialCapacity);
+            } else {
+                cache = new Hashtable<>(initialCapacity, loadFactor);
+            }
+        } else {
+            cache = new Hashtable<>();
+        }
+    }
 
     @Override
     public void update(String key, T value, Date expire) {
@@ -53,5 +73,10 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
     public boolean clear() {
         cache.clear();
         return true;
+    }
+
+    @Override
+    public boolean supportedPersistence() {
+        return false;
     }
 }

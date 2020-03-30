@@ -40,4 +40,10 @@ public interface CacheStore<T> {
      */
     boolean clear();
 
+    /**
+     * 是否支持持久化
+     * @return 如果支持返回true
+     */
+    boolean supportedPersistence();
+
 }
