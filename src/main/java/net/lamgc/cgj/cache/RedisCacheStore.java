@@ -32,7 +32,11 @@ public abstract class RedisCacheStore<T> implements CacheStore<T> {
         if(password != null) {
             this.jedis.auth(password);
         }
-        keyPrefix = prefix.endsWith(".") ? prefix : prefix + ".";
+        if(prefix != null) {
+            keyPrefix = prefix.endsWith(".") ? prefix : prefix + ".";
+        } else {
+            keyPrefix = "";
+        }
     }
 
     public void connect() {
