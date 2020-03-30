@@ -43,15 +43,15 @@ public class CQProcess {
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
 
-    private final static JsonRedisCacheDatabase illustInfoCache = new JsonRedisCacheDatabase(redisServerUri, "illustInfo", gson);
+    private final static JsonRedisCacheStore illustInfoCache = new JsonRedisCacheStore(redisServerUri, "illustInfo", gson);
 
-    private final static JsonRedisCacheDatabase illustPreLoadDataCache = new JsonRedisCacheDatabase(redisServerUri, "illustPreLoadData", gson);
+    private final static JsonRedisCacheStore illustPreLoadDataCache = new JsonRedisCacheStore(redisServerUri, "illustPreLoadData", gson);
 
-    private final static JsonRedisCacheDatabase searchBodyCache = new JsonRedisCacheDatabase(redisServerUri, "searchBody", gson);
+    private final static JsonRedisCacheStore searchBodyCache = new JsonRedisCacheStore(redisServerUri, "searchBody", gson);
 
     private final static CacheStore<List<String>> pagesCache = new LocalHashCacheStore<>();
 
-    private final static JsonRedisCacheDatabase rankingCache = new JsonRedisCacheDatabase(redisServerUri, "ranking", gson);
+    private final static JsonRedisCacheStore rankingCache = new JsonRedisCacheStore(redisServerUri, "ranking", gson);
 
     private final static EventExecutor imageCacheExecutor = new EventExecutor(new ThreadPoolExecutor(
             1,

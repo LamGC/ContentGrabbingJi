@@ -5,11 +5,11 @@ import com.google.gson.JsonElement;
 
 import java.net.URI;
 
-public class JsonRedisCacheDatabase extends RedisPoolCacheStore<JsonElement> {
+public class JsonRedisCacheStore extends RedisPoolCacheStore<JsonElement> {
 
     private final Gson gson;
 
-    public JsonRedisCacheDatabase(URI redisServerUri, String prefix, Gson gson) {
+    public JsonRedisCacheStore(URI redisServerUri, String prefix, Gson gson) {
         super(redisServerUri, prefix);
         this.gson = gson;
     }

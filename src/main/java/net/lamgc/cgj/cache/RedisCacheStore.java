@@ -9,13 +9,13 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import java.net.URI;
 import java.util.Date;
 
-public abstract class RedisCacheDatabase<T> implements CacheStore<T> {
+public abstract class RedisCacheStore<T> implements CacheStore<T> {
 
     private final Jedis jedis;
     private final Logger log;
     private final String keyPrefix;
 
-    public RedisCacheDatabase(URI redisServerUri, String prefix) {
+    public RedisCacheStore(URI redisServerUri, String prefix) {
         this(redisServerUri, null, prefix);
     }
 
@@ -25,7 +25,7 @@ public abstract class RedisCacheDatabase<T> implements CacheStore<T> {
      * @param password 登录密码(如果有)
      * @throws JedisConnectionException 当连接失败时抛出
      */
-    public RedisCacheDatabase(URI redisServerUri, String password, String prefix) throws JedisConnectionException {
+    public RedisCacheStore(URI redisServerUri, String password, String prefix) throws JedisConnectionException {
         this.jedis = new Jedis(redisServerUri.getHost(), redisServerUri.getPort() <= 0 ? 6379 : redisServerUri.getPort());
         log = LoggerFactory.getLogger("RedisCacheDatabase@" + Integer.toHexString(jedis.hashCode()));
         log.info("Redis数据库连接状态: {}", jedis.ping());
