@@ -112,7 +112,16 @@ public class CQProcess {
         StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ").append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
         try {
             int index = 0;
-            for (JsonObject rankInfo : getRankingInfoByCache(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 0, 10)) {
+            int limit = 10;
+            String propertyKey = "ranking.ItemCountLimit";
+            try {
+
+                limit = Integer.parseInt(CQPluginMain.globalProp.getProperty(propertyKey, "10"));
+            } catch(NumberFormatException e) {
+                log.warn("配置项 {} 的参数值格式有误!", propertyKey);
+            }
+
+            for (JsonObject rankInfo : getRankingInfoByCache(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 0, limit)) {
                 index++;
                 int rank = rankInfo.get("rank").getAsInt();
                 int illustId = rankInfo.get("illust_id").getAsInt();
@@ -285,11 +294,10 @@ public class CQProcess {
                 String imageMsg = getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1);
                 if (isNoSafe(illustId, CQPluginMain.globalProp, true)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
-                    count--;
                     continue;
                 }
 
-                result.append(searchArea.name()).append(" (").append(count).append(" / ").append(illustsList.size()).append(")\n\t作品id: ").append(illustId)
+                result.append(searchArea.name()).append(" (").append(count).append(" / ").append(limit).append(")\n\t作品id: ").append(illustId)
                         .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
                         .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString()).append("\n").append(imageMsg).append("\n");
                 count++;
@@ -442,11 +450,10 @@ public class CQProcess {
         return returnRaw || settingProp == null ? rawValue : rawValue && !settingProp.getProperty("image.allowR18", "false").equalsIgnoreCase("true");
     }
 
-    private final static Object illustInfoLock = new Object();
     private static JsonObject getIllustInfo(int illustId) throws IOException {
-        String illustIdStr = Integer.toString(illustId);
+        String illustIdStr = buildSyncKey(Integer.toString(illustId));
         if (!illustInfoCache.exists(illustIdStr)) {
-            synchronized (illustInfoLock) {
+            synchronized (illustIdStr) {
                 if (!illustInfoCache.exists(illustIdStr)) {
                     JsonObject illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
                     illustInfoCache.update(illustIdStr, illustInfoObj, null);
@@ -456,11 +463,10 @@ public class CQProcess {
         return illustInfoCache.getCache(illustIdStr).getAsJsonObject();
     }
 
-    private final static Object illustPreLoadDataLock = new Object();
     public static JsonObject getIllustPreLoadData(int illustId) throws IOException {
-        String illustIdStr = Integer.toString(illustId);
+        String illustIdStr = buildSyncKey(Integer.toString(illustId));
         if (!illustPreLoadDataCache.exists(illustIdStr)) {
-            synchronized (illustPreLoadDataLock) {
+            synchronized (illustIdStr) {
                 if (!illustPreLoadDataCache.exists(illustIdStr)) {
                     log.info("缓存失效, 正在更新...");
                     JsonObject preLoadDataObj = pixivDownload.getIllustPreLoadDataById(illustId)
@@ -486,11 +492,10 @@ public class CQProcess {
             return illustPreLoadDataCache.getCache(illustIdStr).getAsJsonObject();
     }
 
-    private final static Object illustPagesLock = new Object();
     public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality) throws IOException {
-        String pagesSign = illustId + "." + quality.name();
+        String pagesSign = buildSyncKey(Integer.toString(illustId), ".", quality.name());
         if (!pagesCache.exists(pagesSign)) {
-            synchronized (illustPagesLock) {
+            synchronized (pagesSign) {
                 if (!pagesCache.exists(pagesSign)) {
                     List<String> linkList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
                     pagesCache.update(pagesSign, linkList, null);
@@ -509,13 +514,12 @@ public class CQProcess {
         return imageStoreDir;
     }
 
-    private final static Object rankingLock = new Object();
     private static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
         //int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
-        String requestSign = "Ranking." + contentType.name() + "." + mode.name() + "." + date;
+        String requestSign = buildSyncKey("Ranking.", contentType.name(), ".", mode.name(), ".", date);
         if(!rankingCache.exists(requestSign)) {
-            synchronized(rankingLock) {
+            synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign)) {
                     log.info("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
                     List<JsonObject> rankingResult = pixivDownload.getRanking(contentType, mode, queryDate, 1, 500);
@@ -534,4 +538,11 @@ public class CQProcess {
         return PixivDownload.getRanking(rankingCache.getCache(requestSign).getAsJsonArray(), start, range);
     }
 
+    private static String buildSyncKey(String... keys) {
+        StringBuilder sb = new StringBuilder();
+        for (String string : keys) {
+            sb.append(string);
+        }
+        return sb.toString().intern();
+    }
 }
