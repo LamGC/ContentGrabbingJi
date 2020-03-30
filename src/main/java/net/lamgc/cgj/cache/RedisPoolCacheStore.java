@@ -7,6 +7,7 @@ import redis.clients.jedis.*;
 
 import java.net.URI;
 import java.util.Date;
+import java.util.List;
 
 public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
@@ -36,7 +37,7 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
         Transaction multi = jedis.multi();
         multi.set(keyPrefix + key, parse(value));
         if(expire != null) {
-            multi.expireAt(key, expire.getTime());
+            multi.expireAt(keyPrefix + key, expire.getTime());
             log.debug("已设置Key {} 的过期时间(Expire: {})", key, expire.getTime());
         }
         multi.exec();

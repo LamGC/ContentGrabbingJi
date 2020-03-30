@@ -50,7 +50,7 @@ public abstract class RedisCacheStore<T> implements CacheStore<T> {
         Transaction multi = jedis.multi();
         multi.set(keyPrefix + key, parse(value));
         if(expire != null) {
-            multi.expireAt(key, expire.getTime());
+            multi.expireAt(keyPrefix + key, expire.getTime());
             log.debug("已设置Key {} 的过期时间(Expire: {})", key, expire.getTime());
         }
         multi.exec();
