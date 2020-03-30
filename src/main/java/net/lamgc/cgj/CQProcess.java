@@ -112,16 +112,23 @@ public class CQProcess {
         StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ").append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
         try {
             int index = 0;
-            int limit = 10;
-            String propertyKey = "ranking.ItemCountLimit";
+            int itemLimit = 10;
+            String itemLimitPropertyKey = "ranking.ItemCountLimit";
             try {
-
-                limit = Integer.parseInt(CQPluginMain.globalProp.getProperty(propertyKey, "10"));
+                itemLimit = Integer.parseInt(CQPluginMain.globalProp.getProperty(itemLimitPropertyKey, "10"));
             } catch(NumberFormatException e) {
-                log.warn("配置项 {} 的参数值格式有误!", propertyKey);
+                log.warn("配置项 {} 的参数值格式有误!", itemLimitPropertyKey);
             }
 
-            for (JsonObject rankInfo : getRankingInfoByCache(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 0, limit)) {
+            int imageLimit = 3;
+            String imageLimitPropertyKey = "ranking.imageCountLimit";
+            try {
+                imageLimit = Integer.parseInt(CQPluginMain.globalProp.getProperty(imageLimitPropertyKey, "3"));
+            } catch(NumberFormatException e) {
+                log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
+            }
+
+            for (JsonObject rankInfo : getRankingInfoByCache(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 0, itemLimit)) {
                 index++;
                 int rank = rankInfo.get("rank").getAsInt();
                 int illustId = rankInfo.get("illust_id").getAsInt();
@@ -130,7 +137,7 @@ public class CQProcess {
                 String title = rankInfo.get("title").getAsString();
                 resultBuilder.append(rank).append(". (id: ").append(illustId).append(") ").append(title)
                         .append("(Author: ").append(authorName).append(",").append(authorId).append(")\n");
-                if (index < 4) {
+                if (index <= imageLimit) {
                     resultBuilder.append(getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
                 }
             }
@@ -399,7 +406,8 @@ public class CQProcess {
                     } catch (InterruptedException e) {
                         log.warn("图片下载遭到中断!", e);
                     }
-                } else {
+                } else if(CQPluginMain.globalProp.getProperty("image.downloadAllPages", "false")
+                        .equalsIgnoreCase("true")) {
                     imageCacheExecutor.executor(
                             new ImageCacheObject(imageCache, illustId, link, currentImageFile));
                 }
