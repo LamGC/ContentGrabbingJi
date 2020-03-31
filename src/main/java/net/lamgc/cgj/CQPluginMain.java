@@ -85,10 +85,26 @@ public class CQPluginMain extends CQPlugin {
         Matcher matcher = pattern.matcher(Strings.nullToEmpty(msg));
         ArrayList<String> argsList = new ArrayList<>();
         while (matcher.find()) {
-            argsList.add(matcher.group());
+            String arg = matcher.group();
+            int startIndex = 0;
+            int endIndex = arg.length();
+            if(arg.startsWith("\"")) {
+                while(arg.indexOf("\"") == startIndex) {
+                    startIndex++;
+                }
+            }
+
+            if(arg.endsWith("\"")) {
+                while(arg.lastIndexOf("\"") == endIndex - 1) {
+                    endIndex--;
+                }
+            }
+
+            argsList.add(arg.substring(startIndex, endIndex));
         }
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
+        log.debug("传入参数: {}", Arrays.toString(args));
 
         log.warn("正在处理命令...");
         long time = System.currentTimeMillis();
@@ -115,7 +131,11 @@ public class CQPluginMain extends CQPlugin {
         }
         log.warn("命令处理完成(耗时: {}ms)", System.currentTimeMillis() - time);
         if(Objects.requireNonNull(result) instanceof String) {
-            sendMessage(cq, event, (String) result, false);
+            try {
+                sendMessage(cq, event, (String) result, false);
+            } catch (Throwable e) {
+                log.error("发送消息时发生异常", e);
+            }
         }
         return MESSAGE_BLOCK;
     }
