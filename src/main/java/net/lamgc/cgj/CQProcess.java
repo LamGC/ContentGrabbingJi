@@ -74,12 +74,25 @@ public class CQProcess {
             new ThreadPoolExecutor.DiscardOldestPolicy()
     ));
 
-    static {
+    private final static RankingUpdateTimer updateTimer = new RankingUpdateTimer();
+
+    public static void initialize() {
+        log.info("正在初始化...");
         try {
             imageCacheExecutor.addHandler(new ImageCacheHandler());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+        updateTimer.schedule(null);
+        log.info("初始化完成.");
+    }
+
+    @Command
+    public static String runUpdateTimer(@Argument(force = false, name = "date") Date queryTime) {
+        log.info("正在手动触发排行榜更新任务...");
+        updateTimer.now(queryTime);
+        log.info("任务执行结束.");
+        return "操作已完成.";
     }
 
     @Command(defaultCommand = true)

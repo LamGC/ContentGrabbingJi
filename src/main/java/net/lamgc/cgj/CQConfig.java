@@ -22,6 +22,8 @@ public class CQConfig {
                         .setNameFormat("Plugin-ProcessThread-%d")
                         .build()
         );
+
+        CQProcess.initialize();
     }
 
 }
