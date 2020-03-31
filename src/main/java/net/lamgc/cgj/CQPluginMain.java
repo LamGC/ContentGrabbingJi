@@ -89,13 +89,13 @@ public class CQPluginMain extends CQPlugin {
             int startIndex = 0;
             int endIndex = arg.length();
             if(arg.startsWith("\"")) {
-                while(arg.indexOf("\"") == startIndex) {
+                while(arg.indexOf("\"", startIndex) == startIndex) {
                     startIndex++;
                 }
             }
 
             if(arg.endsWith("\"")) {
-                while(arg.lastIndexOf("\"") == endIndex - 1) {
+                while(arg.charAt(endIndex - 1) == '\"') {
                     endIndex--;
                 }
             }
