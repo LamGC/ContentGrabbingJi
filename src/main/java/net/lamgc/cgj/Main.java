@@ -69,7 +69,16 @@ public class Main {
             log.info("cqRootDir: {}", argsProp.getValue("cqRootDir"));
             System.setProperty("cgj.cqRootDir", argsProp.getValue("cqRootDir"));
         } else {
-            log.info("未设置cqRootDir");
+            log.info("未设置cqRootDir, 当前运行目录将作为酷Q机器人所在目录.");
+            System.setProperty("cgj.cqRootDir", "./");
+        }
+
+        if(argsProp.containsKey("redisAddr")) {
+            log.info("redisAddress: {}", argsProp.getValue("redisAddr"));
+            System.setProperty("cgj.redisAddress", argsProp.getValue("redisAddr"));
+        } else {
+            log.info("未设置RedisAddress, 将使用默认值连接Redis服务器(127.0.0.1:6379)");
+            System.setProperty("cgj.redisAddress", "127.0.0.1");
         }
 
         File cookieStoreFile = new File("cookies.store");

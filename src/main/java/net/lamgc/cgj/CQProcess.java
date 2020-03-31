@@ -1,6 +1,8 @@
 package net.lamgc.cgj;
 
 import com.google.common.base.Strings;
+import com.google.common.reflect.TypeToken;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.cache.*;
@@ -23,9 +25,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 public class CQProcess {
 
@@ -39,7 +39,7 @@ public class CQProcess {
             .serializeNulls()
             .create();
 
-    private final static URI redisServerUri = URI.create("redis://192.168.1.17");
+    private final static URI redisServerUri = URI.create("redis://" + System.getProperty("cgj.redisAddress"));
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
 
@@ -49,15 +49,28 @@ public class CQProcess {
 
     private final static JsonRedisCacheStore searchBodyCache = new JsonRedisCacheStore(redisServerUri, "searchBody", gson);
 
-    private final static CacheStore<List<String>> pagesCache = new LocalHashCacheStore<>();
+    private final static CacheStore<List<String>> pagesCache = new RedisPoolCacheStore<List<String>>(redisServerUri, "imagePages") {
+        @Override
+        protected String parse(List<String> dataObj) {
+            return gson.toJson(dataObj);
+        }
+
+        @Override
+        protected List<String> analysis(String dataStr) {
+            return gson.fromJson(dataStr, new TypeToken<List<String>>(){}.getType());
+        }
+    };
 
     private final static JsonRedisCacheStore rankingCache = new JsonRedisCacheStore(redisServerUri, "ranking", gson);
 
     private final static EventExecutor imageCacheExecutor = new EventExecutor(new ThreadPoolExecutor(
-            1,
+            Runtime.getRuntime().availableProcessors() >= 2 ? 2 : 1,
             (int) Math.ceil(Runtime.getRuntime().availableProcessors() / 2F),
-            15L, TimeUnit.SECONDS,
-            new ArrayBlockingQueue<>(30),
+            5L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(128),
+            new ThreadFactoryBuilder()
+                    .setNameFormat("imageCacheThread-%d")
+                    .build(),
             new ThreadPoolExecutor.DiscardOldestPolicy()
     ));
 
@@ -164,6 +177,7 @@ public class CQProcess {
                                 @Argument(name = "contentOption", force = false) String contentOption,
                                 @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
+        log.info("正在执行搜索...");
         PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
         if (type != null) {
             try {
@@ -402,6 +416,7 @@ public class CQProcess {
 
                 if (index == pageIndex) {
                     try {
+                        //TODO: 这里可以尝试改成直接提交所有所需的图片给这里，然后再获取结果
                         imageCacheExecutor.executorSync(new ImageCacheObject(imageCache, illustId, link, currentImageFile));
                     } catch (InterruptedException e) {
                         log.warn("图片下载遭到中断!", e);
@@ -522,7 +537,17 @@ public class CQProcess {
         return imageStoreDir;
     }
 
-    private static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
+    /**
+     * 获取排行榜
+     * @param contentType 排行榜类型
+     * @param mode 排行榜模式
+     * @param queryDate 查询时间
+     * @param start 开始排名, 从1开始
+     * @param range 取范围
+     * @return 成功返回有值List, 失败且无异常返回空
+     * @throws IOException 获取异常时抛出
+     */
+    public static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
         //int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
         String requestSign = buildSyncKey("Ranking.", contentType.name(), ".", mode.name(), ".", date);
