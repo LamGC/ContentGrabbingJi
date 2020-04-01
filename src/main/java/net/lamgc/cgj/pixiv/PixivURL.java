@@ -220,6 +220,10 @@ public class PixivURL {
          */
         MODE_ROOKIE("rookie"),
         /**
+         * 原创
+         */
+        MODE_ORIGINAL("original"),
+        /**
          * 受男性喜欢
          */
         MODE_MALE("male"),
@@ -277,8 +281,6 @@ public class PixivURL {
                         RankingMode.MODE_ROOKIE,
                         RankingMode.MODE_DAILY_R18,
                         RankingMode.MODE_WEEKLY_R18,
-                        RankingMode.MODE_MALE_R18,
-                        RankingMode.MODE_FEMALE_R18
                 }
         ),
         /**
@@ -305,8 +307,6 @@ public class PixivURL {
                         RankingMode.MODE_ROOKIE,
                         RankingMode.MODE_DAILY_R18,
                         RankingMode.MODE_WEEKLY_R18,
-                        RankingMode.MODE_MALE_R18,
-                        RankingMode.MODE_FEMALE_R18
                 }
         )
         ;
