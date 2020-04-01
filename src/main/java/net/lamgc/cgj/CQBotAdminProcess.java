@@ -9,6 +9,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Date;
 
 public class CQBotAdminProcess {
 
@@ -53,6 +54,17 @@ public class CQBotAdminProcess {
             log.error("全局配置项文件保存失败！", e);
             return "全局配置项文件保存失败！";
         }
+    }
+
+    @Command
+    public String runUpdateTask(@Argument(force = false, name = "date") Date queryTime) {
+        try {
+            CQProcess.runUpdateTimer(queryTime);
+        } catch (Exception e) {
+            log.error("执行更新任务时发生异常", e);
+            return "操作执行时发生错误!";
+        }
+        return "操作已完成.";
     }
 
 }

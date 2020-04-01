@@ -46,9 +46,17 @@ public class RankingUpdateTimer {
         log.info("当前时间 {}, 定时任务开始执行...", new Date());
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(queryDate == null ? new Date() : queryDate);
-        if(queryDate == null) {
-            calendar.add(Calendar.DATE, -1);
+
+        LocalDate currentLocalDate = LocalDate.now();
+        if(calendar.get(Calendar.DAY_OF_YEAR) == currentLocalDate.getDayOfYear() ||
+                calendar.get(Calendar.DAY_OF_YEAR) == currentLocalDate.getDayOfYear() - 1) {
+            if(calendar.get(Calendar.HOUR_OF_DAY) < 12) {
+                calendar.add(Calendar.DAY_OF_YEAR, -2);
+            } else {
+                calendar.add(Calendar.DAY_OF_YEAR, -1);
+            }
         }
+
         log.info("正在获取 {} 期排行榜数据...", calendar.getTime());
         for (PixivURL.RankingMode rankingMode : PixivURL.RankingMode.values()) {
             for (PixivURL.RankingContentType contentType : PixivURL.RankingContentType.values()) {
@@ -57,7 +65,7 @@ public class RankingUpdateTimer {
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
                 try {
-                    CQProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0);
+                    CQProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
                     log.info("排行榜 {}.{} 更新完成.", rankingMode.name(), contentType.name());
                 } catch (IOException e) {
                     log.error("排行榜 {}.{} 更新时发生异常", rankingMode.name(), contentType.name());
