@@ -35,6 +35,8 @@ public class CQPluginMain extends CQPlugin {
     private final static String COMMAND_PREFIX = ".cgj";
     private final Logger log = LoggerFactory.getLogger("CQPluginMain@" + Integer.toHexString(this.hashCode()));
     private final ArgumentsRunnerConfig runnerConfig = new ArgumentsRunnerConfig();
+    private final ArgumentsRunner adminRunner;
+    private final ArgumentsRunner processRunner;
     public final static Properties globalProp = new Properties();
 
     public CQPluginMain() {
@@ -42,6 +44,9 @@ public class CQPluginMain extends CQPlugin {
         runnerConfig.setCommandIgnoreCase(true);
         runnerConfig.addStringParameterParser(new DateParser(new SimpleDateFormat("yyyy-MM-dd")));
         runnerConfig.addStringParameterParser(new PagesQualityParser());
+
+        processRunner = new ArgumentsRunner(CQProcess.class, runnerConfig);
+        adminRunner = new ArgumentsRunner(CQBotAdminProcess.class, runnerConfig);
 
         File globalPropFile = new File("./global.properties");
         if(globalPropFile.exists() && globalPropFile.isFile()) {
@@ -115,11 +120,10 @@ public class CQPluginMain extends CQPlugin {
                     sendMessage(cq, event, "你没有执行该命令的权限！", false);
                     return MESSAGE_BLOCK;
                 } else {
-                    result = new ArgumentsRunner(CQBotAdminProcess.class, runnerConfig)
-                            .run(new CQBotAdminProcess(), args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
+                    result = adminRunner.run(new CQBotAdminProcess(), args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
                 }
             } else {
-                result = new ArgumentsRunner(CQProcess.class, runnerConfig).run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
+                result = processRunner.run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
             }
         } catch(NoSuchCommandException e) {
             result = "没有这个命令！请使用“.cgj”查看帮助说明！";
