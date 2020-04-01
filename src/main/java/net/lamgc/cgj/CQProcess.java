@@ -174,10 +174,11 @@ public class CQProcess {
                 int rank = rankInfo.get("rank").getAsInt();
                 int illustId = rankInfo.get("illust_id").getAsInt();
                 int authorId = rankInfo.get("user_id").getAsInt();
+                int pagesCount = rankInfo.get("illust_page_count").getAsInt();
                 String authorName = rankInfo.get("user_name").getAsString();
                 String title = rankInfo.get("title").getAsString();
                 resultBuilder.append(rank).append(". (id: ").append(illustId).append(") ").append(title)
-                        .append("(Author: ").append(authorName).append(",").append(authorId).append(")\n");
+                        .append("(Author: ").append(authorName).append(",").append(authorId).append(") ").append(pagesCount).append("p.\n");
                 if (index <= imageLimit) {
                     resultBuilder.append(getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
                 }
@@ -328,7 +329,7 @@ public class CQProcess {
                 StringBuilder builder = new StringBuilder("[");
                 illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
                 builder.replace(builder.length() - 2, builder.length(), "]");
-                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t作品链接: {}",
+                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t页数: {}, \n\t作品链接: {}",
                         searchArea.name(),
                         count,
                         illustsList.size(),
@@ -337,8 +338,11 @@ public class CQProcess {
                         illustObj.get("userId").getAsInt(),
                         illustObj.get("illustTitle").getAsString(),
                         builder,
+                        illustObj.get("pageCount").getAsInt(),
                         PixivURL.getPixivRefererLink(illustId)
                 );
+
+                //pageCount
 
                 String imageMsg = getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1);
                 if (isNoSafe(illustId, CQPluginMain.globalProp, true)) {
@@ -348,7 +352,9 @@ public class CQProcess {
 
                 result.append(searchArea.name()).append(" (").append(count).append(" / ").append(limit).append(")\n\t作品id: ").append(illustId)
                         .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
-                        .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString()).append("\n").append(imageMsg).append("\n");
+                        .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString())
+                        .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt())
+                        .append("\n").append(imageMsg).append("\n");
                 count++;
             }
             if (count > limit) {
