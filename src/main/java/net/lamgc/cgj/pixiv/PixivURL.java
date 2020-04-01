@@ -1,6 +1,7 @@
 package net.lamgc.cgj.pixiv;
 
 import java.text.SimpleDateFormat;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -175,7 +176,7 @@ public class PixivURL {
     public static String getRankingLink(RankingContentType contentType, RankingMode mode, Date time, int pageIndex, boolean json){
         StringBuilder linkBuilder = new StringBuilder(PIXIV_RANKING_LINK);
         linkBuilder.append("mode=").append(mode == null ? RankingMode.MODE_DAILY.modeParam : mode.modeParam);
-        if(contentType != null){
+        if(contentType != null && !contentType.equals(RankingContentType.ALL)){
             linkBuilder.append("&content=").append(contentType.typeName);
         }
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
@@ -263,28 +264,71 @@ public class PixivURL {
      * 排名榜类型
      */
     public enum RankingContentType{
+        ALL("", RankingMode.values()),
         /**
          * 插画
          * 支持的时间类型: 每天, 每周, 每月, 新人
          */
-        TYPE_ILLUST("illust"),
+        TYPE_ILLUST("illust",
+                new RankingMode[]{
+                        RankingMode.MODE_DAILY,
+                        RankingMode.MODE_MONTHLY,
+                        RankingMode.MODE_WEEKLY,
+                        RankingMode.MODE_ROOKIE,
+                        RankingMode.MODE_DAILY_R18,
+                        RankingMode.MODE_WEEKLY_R18,
+                        RankingMode.MODE_MALE_R18,
+                        RankingMode.MODE_FEMALE_R18
+                }
+        ),
         /**
          * 动图
          * 支持的时间类型:每天, 每周
          */
-        TYPE_UGOIRA("ugoira"),
+        TYPE_UGOIRA("ugoira",
+                new RankingMode[]{
+                        RankingMode.MODE_DAILY,
+                        RankingMode.MODE_WEEKLY,
+                        RankingMode.MODE_DAILY_R18,
+                        RankingMode.MODE_WEEKLY_R18
+                }
+        ),
         /**
          * 漫画
          * 支持的时间类型: 每天, 每周, 每月, 新人
          */
-        TYPE_MANGA("manga")
+        TYPE_MANGA("manga",
+                new RankingMode[]{
+                        RankingMode.MODE_DAILY,
+                        RankingMode.MODE_MONTHLY,
+                        RankingMode.MODE_WEEKLY,
+                        RankingMode.MODE_ROOKIE,
+                        RankingMode.MODE_DAILY_R18,
+                        RankingMode.MODE_WEEKLY_R18,
+                        RankingMode.MODE_MALE_R18,
+                        RankingMode.MODE_FEMALE_R18
+                }
+        )
         ;
 
         String typeName;
 
-        RankingContentType(String typeName){
+        private final RankingMode[] supportedMode;
+
+        RankingContentType(String typeName, RankingMode[] supportedMode){
             this.typeName = typeName;
+            this.supportedMode = supportedMode;
         }
+
+        /**
+         * 检查指定RankingMode是否支持
+         * @param mode 要检查的RankingMode项
+         * @return 如果支持返回true
+         */
+        public boolean isSupportedMode(RankingMode mode) {
+            return Arrays.binarySearch(supportedMode, mode) != -1;
+        }
+
     }
 
 }

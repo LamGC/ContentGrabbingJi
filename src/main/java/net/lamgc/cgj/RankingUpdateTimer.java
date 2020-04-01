@@ -52,6 +52,9 @@ public class RankingUpdateTimer {
         log.info("正在获取 {} 期排行榜数据...", calendar.getTime());
         for (PixivURL.RankingMode rankingMode : PixivURL.RankingMode.values()) {
             for (PixivURL.RankingContentType contentType : PixivURL.RankingContentType.values()) {
+                if(!contentType.isSupportedMode(rankingMode)) {
+                    log.debug("不支持的类型, 填空值跳过...(类型: {}.{})", rankingMode.name(), contentType.name());
+                }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
                 try {
                     CQProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0);

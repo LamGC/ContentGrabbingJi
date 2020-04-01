@@ -293,6 +293,10 @@ public class PixivDownload {
             throw new IllegalArgumentException("range cannot be less than or equal to zero");
         }
 
+        if(!contentType.isSupportedMode(mode)) {
+            throw new IllegalArgumentException("ContentType不支持指定的RankingMode: ContentType: " + contentType.name() + ", Mode: " + mode.name());
+        }
+
         int startPage = (int) Math.ceil(rankStart / 50F);
         int requestFrequency = (int) Math.ceil((rankStart + (range - 1)) / 50F);
         int surplusQuantity = range;

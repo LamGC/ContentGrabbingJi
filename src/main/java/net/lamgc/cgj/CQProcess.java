@@ -1,6 +1,7 @@
 package net.lamgc.cgj;
 
 import com.google.common.base.Strings;
+import com.google.common.base.Throwables;
 import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
@@ -112,7 +113,8 @@ public class CQProcess {
     @Command
     public static String ranking(
             @Argument(force = false, name = "date") Date queryTime,
-            @Argument(force = false, name = "contentMode", defaultValue = "DAILY") String contentMode
+            @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
+            @Argument(force = false, name = "type") String contentType
     ) {
         Date queryDate = queryTime;
         if (queryDate == null) {
@@ -135,6 +137,19 @@ public class CQProcess {
             log.warn("无效的RankingMode值: {}", contentMode);
         }
 
+        PixivURL.RankingContentType type = PixivURL.RankingContentType.TYPE_ILLUST;
+        try {
+            type = PixivURL.RankingContentType.valueOf("TYPE_" + contentMode.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            log.warn("无效的RankingContentType值: {}", contentMode);
+        }
+
+        if(!type.isSupportedMode(mode)) {
+            log.warn("RankingContentType不支持指定的RankingMode.(ContentType: {}, RankingMode: {})",
+                    type.name(), mode.name());
+            return "不支持的内容类型或模式!";
+        }
+
         StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ").append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
         try {
             int index = 0;
@@ -154,7 +169,7 @@ public class CQProcess {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
-            for (JsonObject rankInfo : getRankingInfoByCache(PixivURL.RankingContentType.TYPE_ILLUST, mode, queryDate, 0, itemLimit)) {
+            for (JsonObject rankInfo : getRankingInfoByCache(type, mode, queryDate, 1, itemLimit)) {
                 index++;
                 int rank = rankInfo.get("rank").getAsInt();
                 int illustId = rankInfo.get("illust_id").getAsInt();
@@ -561,9 +576,21 @@ public class CQProcess {
      * @throws IOException 获取异常时抛出
      */
     public static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range) throws IOException {
+        if(!contentType.isSupportedMode(mode)) {
+            log.warn("试图获取不支持的排行榜类型已拒绝.(ContentType: {}, RankingMode: {})", contentType.name(), mode.name());
+            if(log.isDebugEnabled()) {
+                try {
+                    Thread.dumpStack();
+                } catch(Exception e) {
+                    log.debug("本次非法请求的堆栈信息如下: \n{}", Throwables.getStackTraceAsString(e));
+                }
+            }
+            return new ArrayList<>(0);
+        }
+
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
         //int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
-        String requestSign = buildSyncKey("Ranking.", contentType.name(), ".", mode.name(), ".", date);
+        String requestSign = buildSyncKey(contentType.name(), ".", mode.name(), ".", date);
         if(!rankingCache.exists(requestSign)) {
             synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign)) {
