@@ -1,5 +1,6 @@
-package net.lamgc.cgj.cache;
+package net.lamgc.cgj.bot.cache;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -27,12 +28,12 @@ public abstract class RedisCacheStore<T> implements CacheStore<T> {
      */
     public RedisCacheStore(URI redisServerUri, String password, String prefix) throws JedisConnectionException {
         this.jedis = new Jedis(redisServerUri.getHost(), redisServerUri.getPort() <= 0 ? 6379 : redisServerUri.getPort());
-        log = LoggerFactory.getLogger("RedisCacheDatabase@" + Integer.toHexString(jedis.hashCode()));
+        log = LoggerFactory.getLogger(this.getClass().getSimpleName() + "@" + Integer.toHexString(jedis.hashCode()));
         log.info("Redis数据库连接状态: {}", jedis.ping());
         if(password != null) {
             this.jedis.auth(password);
         }
-        if(prefix != null) {
+        if(!Strings.isNullOrEmpty(prefix)) {
             keyPrefix = prefix.endsWith(".") ? prefix : prefix + ".";
         } else {
             keyPrefix = "";

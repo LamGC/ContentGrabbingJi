@@ -1,4 +1,4 @@
-package net.lamgc.cgj.cache;
+package net.lamgc.cgj.bot.cache;
 
 import java.util.Date;
 

@@ -1,5 +1,6 @@
-package net.lamgc.cgj.cache;
+package net.lamgc.cgj.bot.cache;
 
+import com.google.common.base.Strings;
 import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -7,7 +8,7 @@ import redis.clients.jedis.*;
 
 import java.net.URI;
 import java.util.Date;
-import java.util.List;
+import java.util.Objects;
 
 public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
@@ -23,11 +24,24 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
         jedisPool = new JedisPool(config == null ? new GenericObjectPoolConfig<JedisPool>() : config, redisServerUri.getHost(),
                 redisServerUri.getPort() <= 0 ? 6379 : redisServerUri.getPort(),
                 timeout <= 0 ? Protocol.DEFAULT_TIMEOUT : timeout, password);
-        log = LoggerFactory.getLogger("RedisPoolCacheStore@" + Integer.toHexString(jedisPool.hashCode()));
+        log = LoggerFactory.getLogger(this.getClass().getSimpleName() + "@" + Integer.toHexString(jedisPool.hashCode()));
         if(prefix != null) {
             keyPrefix = prefix.endsWith(".") ? prefix : prefix + ".";
         } else {
             keyPrefix = "";
+        }
+    }
+
+    public RedisPoolCacheStore(JedisPool pool, String keyPrefix) {
+        jedisPool = Objects.requireNonNull(pool);
+        if(jedisPool.isClosed()) {
+            throw new IllegalStateException("JedisPool is closed");
+        }
+        log = LoggerFactory.getLogger(this.getClass().getSimpleName() + "@" + Integer.toHexString(jedisPool.hashCode()));
+        if(!Strings.isNullOrEmpty(keyPrefix)) {
+            this.keyPrefix = keyPrefix.endsWith(".") ? keyPrefix : keyPrefix + ".";
+        } else {
+            this.keyPrefix = "";
         }
     }
 
