@@ -21,15 +21,11 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
     }
 
     public RedisPoolCacheStore(URI redisServerUri, JedisPoolConfig config, int timeout, String password, String prefix) {
-        jedisPool = new JedisPool(config == null ? new GenericObjectPoolConfig<JedisPool>() : config, redisServerUri.getHost(),
-                redisServerUri.getPort() <= 0 ? 6379 : redisServerUri.getPort(),
-                timeout <= 0 ? Protocol.DEFAULT_TIMEOUT : timeout, password);
-        log = LoggerFactory.getLogger(this.getClass().getSimpleName() + "@" + Integer.toHexString(jedisPool.hashCode()));
-        if(prefix != null) {
-            keyPrefix = prefix.endsWith(".") ? prefix : prefix + ".";
-        } else {
-            keyPrefix = "";
-        }
+        this(new JedisPool(config == null ? new GenericObjectPoolConfig<JedisPool>() : config, redisServerUri.getHost(),
+                redisServerUri.getPort() == -1 ? 6379 : redisServerUri.getPort(),
+                timeout <= 0 ? Protocol.DEFAULT_TIMEOUT : timeout, password),
+                prefix
+        );
     }
 
     public RedisPoolCacheStore(JedisPool pool, String keyPrefix) {
@@ -46,15 +42,18 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
     }
 
     @Override
+    public void update(String key, T value, long expire) {
+        update(key, value, expire <= 0 ? null : new Date(System.currentTimeMillis() + expire));
+    }
+
+    @Override
     public void update(String key, T value, Date expire) {
         Jedis jedis = jedisPool.getResource();
-        Transaction multi = jedis.multi();
-        multi.set(keyPrefix + key, parse(value));
+        jedis.set(keyPrefix + key, parse(value));
         if(expire != null) {
-            multi.expireAt(keyPrefix + key, expire.getTime());
+            jedis.pexpireAt(keyPrefix + key, expire.getTime());
             log.debug("已设置Key {} 的过期时间(Expire: {})", key, expire.getTime());
         }
-        multi.exec();
         jedis.close();
     }
 
@@ -105,5 +104,15 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
     @Override
     public boolean supportedPersistence() {
         return true;
+    }
+
+    /**
+     * 替换原本的分隔符(.)为(:).<br/>
+     * 即将启用
+     * @param key 要处理的键名
+     * @return 处理后的键名
+     */
+    public static String replaceKey(String key) {
+        return key.replaceAll("\\.", ":");
     }
 }

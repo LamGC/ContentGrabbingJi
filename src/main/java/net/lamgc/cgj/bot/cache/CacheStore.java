@@ -8,6 +8,14 @@ public interface CacheStore<T> {
      * 更新或添加缓存项
      * @param key 缓存键名
      * @param value 缓存值
+     * @param expire 有效期, 单位为ms(毫秒), 如不过期传入0或赋值
+     */
+    void update(String key, T value, long expire);
+
+    /**
+     * 更新或添加缓存项
+     * @param key 缓存键名
+     * @param value 缓存值
      * @param expire 过期时间, 如不过期传入null
      */
     void update(String key, T value, Date expire);

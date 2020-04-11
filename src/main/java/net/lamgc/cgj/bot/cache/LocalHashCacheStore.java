@@ -29,6 +29,11 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
     }
 
     @Override
+    public void update(String key, T value, long expire) {
+        update(key, value, expire <= 0 ? null : new Date(System.currentTimeMillis() + expire));
+    }
+
+    @Override
     public void update(String key, T value, Date expire) {
         if(cache.containsKey(key)) {
             cache.get(key).update(value, expire);
