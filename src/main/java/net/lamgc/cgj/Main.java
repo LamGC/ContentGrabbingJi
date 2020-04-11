@@ -7,6 +7,8 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.lamgc.cgj.bot.CQConfig;
+import net.lamgc.cgj.bot.MiraiMain;
 import net.lamgc.cgj.pixiv.*;
 import net.lamgc.cgj.proxy.PixivAccessProxyServer;
 import net.lamgc.cgj.proxy.PixivLoginProxyServer;
@@ -49,12 +51,6 @@ public class Main {
 
     public static HttpHost proxy;
 
-    static {
-        if(!storeDir.exists() && !storeDir.mkdirs()) {
-            log.error("创建文件夹失败!");
-        }
-    }
-
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         ArgumentsProperties argsProp = new ArgumentsProperties(args);
         if(argsProp.containsKey("proxy")) {
@@ -65,11 +61,16 @@ public class Main {
             proxy = null;
         }
 
+        if(!storeDir.exists() && !storeDir.mkdirs()) {
+            log.error("创建文件夹失败!");
+        }
+
+        // TODO: 需要修改参数名了, 大概改成类似于 workerDir这样的吧
         if(argsProp.containsKey("cqRootDir")) {
             log.info("cqRootDir: {}", argsProp.getValue("cqRootDir"));
             System.setProperty("cgj.cqRootDir", argsProp.getValue("cqRootDir"));
         } else {
-            log.info("未设置cqRootDir, 当前运行目录将作为酷Q机器人所在目录.");
+            log.warn("未设置cqRootDir, 当前运行目录将作为酷Q机器人所在目录.");
             System.setProperty("cgj.cqRootDir", "./");
         }
 
@@ -95,6 +96,11 @@ public class Main {
         log.debug(Arrays.toString(args));
 
         ArgumentsRunner.run(Main.class, args);
+    }
+
+    @Command
+    public static void botMode(@Argument(name = "args", force = false) String argsStr) {
+        new MiraiMain().init();
     }
 
     @Command
