@@ -1,4 +1,4 @@
-package net.lamgc.cgj;
+package net.lamgc.cgj.bot;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.lz1998.cq.CQGlobal;
@@ -22,8 +22,6 @@ public class CQConfig {
                         .setNameFormat("Plugin-ProcessThread-%d")
                         .build()
         );
-
-        CQProcess.initialize();
     }
 
 }

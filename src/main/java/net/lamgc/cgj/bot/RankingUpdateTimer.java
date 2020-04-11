@@ -1,4 +1,4 @@
-package net.lamgc.cgj;
+package net.lamgc.cgj.bot;
 
 import net.lamgc.cgj.pixiv.PixivURL;
 import org.slf4j.Logger;
@@ -14,7 +14,7 @@ import java.util.TimerTask;
 public class RankingUpdateTimer {
 
     private final Timer timer = new Timer("PixivRankingUpdate@" + Integer.toHexString(this.hashCode()), true);
-    private final Logger log = LoggerFactory.getLogger("RankingUpdateTimer@" + Integer.toHexString(this.hashCode()));
+    private final Logger log = LoggerFactory.getLogger(this.toString());
 
     /**
      * 启动定时任务.
@@ -33,7 +33,7 @@ public class RankingUpdateTimer {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
-        log.info("已设置排行榜定时更新, 首次运行时间: {}", cal.getTime());
+        log.warn("已设置排行榜定时更新, 首次运行时间: {}", cal.getTime());
         timer.schedule(new TimerTask() {
             @Override
             public void run() {
@@ -65,7 +65,7 @@ public class RankingUpdateTimer {
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
                 try {
-                    CQProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
+                    BotCommandProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
                     log.info("排行榜 {}.{} 更新完成.", rankingMode.name(), contentType.name());
                 } catch (IOException e) {
                     log.error("排行榜 {}.{} 更新时发生异常", rankingMode.name(), contentType.name());
