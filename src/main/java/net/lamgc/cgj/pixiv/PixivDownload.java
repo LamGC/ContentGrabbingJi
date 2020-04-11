@@ -85,13 +85,13 @@ public class PixivDownload {
         do {
             request = new HttpGet(PixivURL.PIXIV_USER_COLLECTION_PAGE.replace("{pageIndex}", Integer.toString(++pageIndex)));
             setCookieInRequest(request, cookieStore);
-            log.info("Request Link: " + request.getURI().toString());
+            log.debug("Request Link: " + request.getURI().toString());
             HttpResponse response = httpClient.execute(request);
             // 解析网页内容，获得所有的收藏信息
             document = Jsoup.parse(EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8));
             Elements items = document.select(".display_editable_works .image-item a.work");
             List<String> hrefList = items.eachAttr("href");
-            log.info("第 {} 页获取到的图片项数量: {}", pageIndex, hrefList.size());
+            log.debug("第 {} 页获取到的图片项数量: {}", pageIndex, hrefList.size());
             if(hrefList.size() == 0) {
                 break;
             }
@@ -114,10 +114,10 @@ public class PixivDownload {
                 }
             }
         } while(!document.select(".pager-container>.next").isEmpty());
-        log.info("获取完成.");
+        log.debug("获取完成.");
         AtomicInteger count = new AtomicInteger(1);
         linkList.forEach(link -> {
-            log.info("Next Link [{}]: {}", count.getAndIncrement(), link);
+            log.debug("Next Link [{}]: {}", count.getAndIncrement(), link);
             InputStream imageInputStream = null;
             int tryCount = 0;
             do {
@@ -156,12 +156,12 @@ public class PixivDownload {
         for(int illustIndex = 0; illustIndex < elements.size(); illustIndex++){
             String href = elements.get(illustIndex).attr("href");
             int illustId = Integer.parseInt(href.substring(href.lastIndexOf("/") + 1));
-            log.info("({}/{}) Href: {}, IllustID: {}", illustIndex + 1, elements.size(), href, illustId);
+            log.debug("({}/{}) Href: {}, IllustID: {}", illustIndex + 1, elements.size(), href, illustId);
             List<String> pageLinkList = getIllustAllPageDownload(httpClient, this.cookieStore, illustId, quality);
             for (int linkIndex = 0; linkIndex < pageLinkList.size(); linkIndex++) {
                 String link = pageLinkList.get(linkIndex);
                 String fileName = link.substring(link.lastIndexOf("/") + 1);
-                log.info("({}/{})正在处理 {}", linkIndex, pageLinkList.size(), fileName);
+                log.debug("({}/{}) 正在处理 {}", linkIndex, pageLinkList.size(), fileName);
                 InputStream imageInputStream = null;
                 int tryCount = 0;
                 do {
@@ -178,10 +178,10 @@ public class PixivDownload {
                 try(InputStream pageInputStream = new BufferedInputStream(imageInputStream, 256 * 1024)) {
                     fn.accept(fileName, pageInputStream);
                 }
-                log.info("Done!");
+                log.debug("Done!");
 
             }
-            log.info("IllustId {} 处理完成.", illustId);
+            log.debug("IllustId {} 处理完成.", illustId);
         }
     }
 
@@ -219,8 +219,8 @@ public class PixivDownload {
             int authorId = rankInfo.get("user_id").getAsInt();
             String authorName = rankInfo.get("user_name").getAsString();
             String title = rankInfo.get("title").getAsString();
-            log.info("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
-            log.info("正在获取PagesLink...");
+            log.debug("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+            log.debug("正在获取PagesLink...");
             List<String> linkList;
             try {
                 linkList = getIllustAllPageDownload(httpClient, this.cookieStore, illustId, quality);
@@ -232,17 +232,17 @@ public class PixivDownload {
                 }
                 return;
             }
-            log.info("PagesLink 获取完成, 总数: {}", linkList.size());
+            log.debug("PagesLink 获取完成, 总数: {}", linkList.size());
             for (int pageIndex = 0; pageIndex < linkList.size(); pageIndex++) {
                 String downloadLink = linkList.get(pageIndex);
-                log.info("当前Page: {}/{}", pageIndex + 1, linkList.size());
+                log.debug("当前Page: {}/{}", pageIndex + 1, linkList.size());
                 try(InputStream imageInputStream = new BufferedInputStream(getImageAsInputStream(HttpClientBuilder.create().build(), downloadLink), 256 * 1024)) {
                     fn.download(rank, downloadLink, rankInfo.deepCopy(), imageInputStream);
                 } catch(IOException e) {
                     log.error("下载插画时发生异常", e);
                     return;
                 }
-                log.info("完成.");
+                log.debug("完成.");
             }
         });
     }
@@ -257,7 +257,7 @@ public class PixivDownload {
     public static List<JsonObject> getRanking(JsonArray rankingArray, int rankStart, int range) {
         //需要添加一个总量, 否则会完整跑完一次.
         //检查是否为最后一次请求，和剩余量有多少
-        log.info("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
+        log.debug("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
         ArrayList<JsonObject> results = new ArrayList<>(rankingArray.size());
         for (int rankIndex = rankStart; rankIndex < rankingArray.size() && rankIndex < range; rankIndex++) {
             JsonElement jsonElement = rankingArray.get(rankIndex);
@@ -267,10 +267,10 @@ public class PixivDownload {
             int authorId = rankInfo.get("user_id").getAsInt();
             String authorName = rankInfo.get("user_name").getAsString();
             String title = rankInfo.get("title").getAsString();
-            log.info("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+            log.debug("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range, range, illustId, authorId, authorName, title);
             results.add(rankInfo);
         }
-        log.info("JsonArray读取完成.");
+        log.debug("JsonArray读取完成.");
         return results;
     }
 
@@ -305,9 +305,9 @@ public class PixivDownload {
         ArrayList<JsonObject> results = new ArrayList<>();
         for (int requestCount = startPage; requestCount <= requestFrequency && requestCount <= 10; requestCount++) {
             int rangeStart = (requestCount - 1) * 50 + 1;
-            log.info("正在请求第 {} 到 {} 位排名榜 (第{}次请求, 共 {} 次)", rangeStart, rangeStart + 49, requestCount - startPage + 1, requestFrequency - startPage);
+            log.debug("正在请求第 {} 到 {} 位排名榜 (第{}次请求, 共 {} 次)", rangeStart, rangeStart + 49, requestCount - startPage + 1, requestFrequency - startPage);
             HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, requestCount, true));
-            log.info("Request URL: {}", request.getURI());
+            log.debug("Request URL: {}", request.getURI());
             HttpResponse response = httpClient.execute(request);
             String content = EntityUtils.toString(response.getEntity());
             log.debug("Content: " + content);
@@ -317,7 +317,7 @@ public class PixivDownload {
                 break;
             }
             JsonArray rankingArray = contentObject.getAsJsonArray("contents");
-            log.info("正在解析数据...");
+            log.debug("正在解析数据...");
 
             //需要添加一个总量, 否则会完整跑完一次.
             //检查是否为最后一次请求，和剩余量有多少
@@ -330,11 +330,11 @@ public class PixivDownload {
                 int authorId = rankInfo.get("user_id").getAsInt();
                 String authorName = rankInfo.get("user_name").getAsString();
                 String title = rankInfo.get("title").getAsString();
-                log.info("Download-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+                log.debug("Download-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
                 results.add(rankInfo);
             }
             firstRequest = false;
-            log.info("第 {} 到 {} 位排名榜完成. (第{}次请求)", rangeStart, rangeStart + 49, requestCount);
+            log.debug("第 {} 到 {} 位排名榜完成. (第{}次请求)", rangeStart, rangeStart + 49, requestCount);
         }
 
         if(requestFrequency > 10) {
@@ -402,7 +402,7 @@ public class PixivDownload {
 
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
-            log.info("请求错误, 错误信息: {}", message);
+            log.debug("请求错误, 错误信息: {}", message);
             throw new IOException(message);
         }
 
@@ -410,7 +410,7 @@ public class PixivDownload {
 
         ArrayList<String> resultList = new ArrayList<>();
         String qualityType = quality == null ? "original" : quality.toString().toLowerCase();
-        log.info("已选择插画类型: {}", qualityType);
+        log.debug("已选择插画类型: {}", qualityType);
         linkArray.forEach(el -> {
             JsonObject urlObj = el.getAsJsonObject().getAsJsonObject("urls");
             resultList.add(urlObj.get(qualityType).getAsString());
@@ -476,8 +476,8 @@ public class PixivDownload {
 
         HttpResponse response = httpClient.execute(request);
         log.debug("response: {}", response);
-        log.info("Content Length: {}KB", Float.parseFloat(response.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue()) / 1024F);
-        log.info("{}", response.getFirstHeader(HttpHeaderNames.CONTENT_TYPE.toString()));
+        log.debug("Content Length: {}KB", Float.parseFloat(response.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue()) / 1024F);
+        log.debug("{}", response.getFirstHeader(HttpHeaderNames.CONTENT_TYPE.toString()));
         return response.getEntity().getContent();
     }
 
