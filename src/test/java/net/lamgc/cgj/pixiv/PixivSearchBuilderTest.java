@@ -1,5 +1,6 @@
 package net.lamgc.cgj.pixiv;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 public class PixivSearchBuilderTest {
@@ -10,6 +11,16 @@ public class PixivSearchBuilderTest {
         //builder.addExcludeKeyword("fubuki").addExcludeKeyword("minato");
         builder.addIncludeKeyword("35").addIncludeKeyword("okayu").addIncludeKeyword("百鬼あやめ");
         System.out.println(builder.buildURL());
+    }
+
+    @Test
+    public void equalsTest() {
+        Assert.assertEquals(new PixivSearchBuilder("风景"), new PixivSearchBuilder("风景"));
+    }
+
+    @Test
+    public void hashCodeTest() {
+        Assert.assertEquals(new PixivSearchBuilder("风景").hashCode(), new PixivSearchBuilder("风景").hashCode());
     }
 
 }

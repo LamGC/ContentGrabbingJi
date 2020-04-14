@@ -88,8 +88,74 @@ public class PixivSearchBuilder {
         return builder.toString();
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        PixivSearchBuilder that = (PixivSearchBuilder) o;
+        return page == that.page &&
+                wgt == that.wgt &&
+                hgt == that.hgt &&
+                wlt == that.wlt &&
+                hlt == that.hlt &&
+                content.equals(that.content) &&
+                searchArea == that.searchArea &&
+                searchMode == that.searchMode &&
+                searchType == that.searchType &&
+                searchOrder == that.searchOrder &&
+                searchContentOption == that.searchContentOption &&
+                includeKeywords.equals(that.includeKeywords) &&
+                excludeKeywords.equals(that.excludeKeywords) &&
+                ratioOption == that.ratioOption &&
+                Objects.equals(startDate, that.startDate) &&
+                Objects.equals(endDate, that.endDate);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(
+                content,
+                searchArea,
+                searchMode,
+                searchType,
+                searchOrder,
+                searchContentOption,
+                includeKeywords,
+                excludeKeywords,
+                page,
+                wgt,
+                hgt,
+                wlt,
+                hlt,
+                ratioOption,
+                startDate,
+                endDate);
+    }
+
+    @Override
+    public String toString() {
+        return "PixivSearchBuilder{" +
+                "content='" + content + '\'' +
+                ", searchArea=" + searchArea +
+                ", searchMode=" + searchMode +
+                ", searchType=" + searchType +
+                ", searchOrder=" + searchOrder +
+                ", searchContentOption=" + searchContentOption +
+                ", includeKeywords=" + includeKeywords +
+                ", excludeKeywords=" + excludeKeywords +
+                ", page=" + page +
+                ", wgt=" + wgt +
+                ", hgt=" + hgt +
+                ", wlt=" + wlt +
+                ", hlt=" + hlt +
+                ", ratioOption=" + ratioOption +
+                ", startDate=" + startDate +
+                ", endDate=" + endDate +
+                '}';
+    }
+
     public PixivSearchBuilder setSearchArea(SearchArea searchArea) {
-        this.searchArea = searchArea;
+        this.searchArea = Objects.requireNonNull(searchArea);
         return this;
     }
 
