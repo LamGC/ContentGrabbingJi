@@ -62,7 +62,7 @@ public class PixivURL {
     /**
      * 能够同时获取插图信息的用户插图列表获取API
      */
-    public static final String PIXIV_USER_ILLUSTINFO_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
+    public static final String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
 
     /**
      * P站单图详情页url
