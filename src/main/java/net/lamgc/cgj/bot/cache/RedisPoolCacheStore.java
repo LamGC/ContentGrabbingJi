@@ -9,6 +9,8 @@ import redis.clients.jedis.*;
 import java.net.URI;
 import java.util.Date;
 import java.util.Objects;
+import java.util.function.Consumer;
+import java.util.function.Function;
 
 public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
@@ -104,6 +106,43 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
     @Override
     public boolean supportedPersistence() {
         return true;
+    }
+
+    /**
+     * 执行Jedis相关操作.
+     * @param consumer 执行方法
+     */
+    protected void executeJedisCommand(Consumer<Jedis> consumer) {
+        try (Jedis jedis = this.jedisPool.getResource()) {
+            consumer.accept(jedis);
+        }
+    }
+
+    /**
+     * 执行Jedis相关操作.
+     * @param function 执行方法
+     * @param <R> 返回值类型
+     * @return 返回提供Function函数式接口所返回的东西
+     */
+    protected <R> R executeJedisCommand(Function<Jedis, R> function) {
+        try (Jedis jedis = this.jedisPool.getResource()) {
+            return function.apply(jedis);
+        }
+    }
+
+    @Override
+    public T getCache(String key, long index, long length) {
+        return getCache(key);
+    }
+
+    @Override
+    public long length(String key) {
+        return -1;
+    }
+
+    @Override
+    public boolean supportedList() {
+        return false;
     }
 
     /**

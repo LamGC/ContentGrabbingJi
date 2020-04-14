@@ -57,6 +57,11 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
     }
 
     @Override
+    public T getCache(String key, long index, long length) {
+        return getCache(key);
+    }
+
+    @Override
     public boolean exists(String key) {
         return exists(key, null);
     }
@@ -75,6 +80,11 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
     }
 
     @Override
+    public long length(String key) {
+        return -1;
+    }
+
+    @Override
     public boolean clear() {
         cache.clear();
         return true;
@@ -82,6 +92,11 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
 
     @Override
     public boolean supportedPersistence() {
+        return false;
+    }
+
+    @Override
+    public boolean supportedList() {
         return false;
     }
 }
