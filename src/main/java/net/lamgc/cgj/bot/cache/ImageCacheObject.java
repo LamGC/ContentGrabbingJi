@@ -54,4 +54,13 @@ public class ImageCacheObject implements EventObject {
     public int hashCode() {
         return Objects.hash(imageCache, illustId, downloadLink, storeFile);
     }
+
+    @Override
+    public String toString() {
+        return "ImageCacheObject@" + Integer.toHexString(hashCode()) + "{" +
+                "illustId=" + illustId +
+                ", downloadLink='" + downloadLink + '\'' +
+                ", storeFile=" + storeFile +
+                '}';
+    }
 }
