@@ -75,6 +75,11 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
     }
 
     @Override
+    public T getCache(String key, long index, long length) {
+        return getCache(key);
+    }
+
+    @Override
     public boolean exists(String key) {
         return current.exists(key) || parent.exists(key);
     }
@@ -85,6 +90,11 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
     }
 
     @Override
+    public long length(String key) {
+        return -1;
+    }
+
+    @Override
     public boolean clear() {
         return current.clear();
     }
@@ -92,5 +102,10 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
     @Override
     public boolean supportedPersistence() {
         return current.supportedPersistence() || parent.supportedPersistence();
+    }
+
+    @Override
+    public boolean supportedList() {
+        return false;
     }
 }
