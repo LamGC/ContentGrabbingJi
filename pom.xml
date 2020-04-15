@@ -11,7 +11,6 @@
     <repositories>
         <repository>
             <id>jcenter-aliyun</id>
-            <!--<url>https://jcenter.bintray.com/</url>-->
             <url>http://maven.aliyun.com/nexus/content/repositories/jcenter</url>
         </repository>
     </repositories>
@@ -36,36 +35,6 @@
                     <target>8</target>
                 </configuration>
             </plugin>
-            <!--<plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-shade-plugin</artifactId>
-                <version>3.2.2</version>
-                <executions>
-                    <execution>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>shade</goal>
-                        </goals>
-                        <configuration>
-                            <transformers>
-                                <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-                                    <mainClass>net.lamgc.cgj.Main</mainClass>
-                                </transformer>
-                            </transformers>
-                            <filters>
-                                <filter>
-                                    <artifact>*:*</artifact>
-                                    <excludes>
-                                        <exclude>META-INF/*.SF</exclude>
-                                        <exclude>META-INF/*.DSA</exclude>
-                                        <exclude>META-INF/*.RSA</exclude>
-                                    </excludes>
-                                </filter>
-                            </filters>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>-->
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
@@ -206,6 +175,11 @@
             <groupId>net.lamgc</groupId>
             <artifactId>PixivLoginProxyServer</artifactId>
             <version>1.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>gifencoder</artifactId>
+            <version>0.10.1</version>
         </dependency>
     </dependencies>
 
