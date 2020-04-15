@@ -20,13 +20,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Date;
+import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -100,6 +100,7 @@ public class BotEventHandler implements EventHandler {
 
     public void processMessage(MessageEvent event) {
         String msg = event.getMessage();
+        log.debug(event.toString());
         if(!match(msg)) {
             return;
         }
