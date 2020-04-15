@@ -1,4 +1,4 @@
-package net.lamgc.cgj;
+package net.lamgc.cgj.bot;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
@@ -6,7 +6,9 @@ import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import net.lamgc.cgj.cache.*;
+import net.lamgc.cgj.Main;
+import net.lamgc.cgj.bot.cache.*;
+import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
@@ -21,36 +23,35 @@ import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
-import java.net.URI;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.*;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class CQProcess {
+public class BotCommandProcess {
 
     private final static PixivDownload pixivDownload = new PixivDownload(Main.cookieStore, Main.proxy);
 
-    private final static Logger log = LoggerFactory.getLogger("CQProcess");
+    private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getSimpleName());
 
     private final static File imageStoreDir = new File(System.getProperty("cgj.cqRootDir"), "data/image/cgj/");
-
+    public final static Properties globalProp = new Properties();
     private final static Gson gson = new GsonBuilder()
             .serializeNulls()
             .create();
 
-    private final static URI redisServerUri = URI.create("redis://" + System.getProperty("cgj.redisAddress"));
-
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
-
-    private final static JsonRedisCacheStore illustInfoCache = new JsonRedisCacheStore(redisServerUri, "illustInfo", gson);
-
-    private final static JsonRedisCacheStore illustPreLoadDataCache = new JsonRedisCacheStore(redisServerUri, "illustPreLoadData", gson);
-
-    private final static JsonRedisCacheStore searchBodyCache = new JsonRedisCacheStore(redisServerUri, "searchBody", gson);
-
-    private final static CacheStore<List<String>> pagesCache = new RedisPoolCacheStore<List<String>>(redisServerUri, "imagePages") {
+    private final static JsonRedisCacheStore illustInfoCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
+    private final static JsonRedisCacheStore illustPreLoadDataCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson);
+    private final static JsonRedisCacheStore searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
+    private final static JsonRedisCacheStore rankingCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "ranking", gson);
+    private final static CacheStore<List<String>> pagesCache = new RedisPoolCacheStore<List<String>>(BotEventHandler.redisServer, "imagePages") {
         @Override
         protected String parse(List<String> dataObj) {
             return gson.toJson(dataObj);
@@ -62,8 +63,9 @@ public class CQProcess {
         }
     };
 
-    private final static JsonRedisCacheStore rankingCache = new JsonRedisCacheStore(redisServerUri, "ranking", gson);
-
+    /**
+     * 图片异步缓存执行器
+     */
     private final static EventExecutor imageCacheExecutor = new EventExecutor(new ThreadPoolExecutor(
             Runtime.getRuntime().availableProcessors() >= 2 ? 2 : 1,
             (int) Math.ceil(Runtime.getRuntime().availableProcessors() / 2F),
@@ -79,20 +81,38 @@ public class CQProcess {
 
     public static void initialize() {
         log.info("正在初始化...");
+
+        File globalPropFile = new File("./global.properties");
+        if(globalPropFile.exists() && globalPropFile.isFile()) {
+            log.info("正在加载全局配置文件...");
+            try {
+                globalProp.load(new FileInputStream(globalPropFile));
+                log.info("全局配置文件加载完成.");
+            } catch (IOException e) {
+                log.error("加载全局配置文件时发生异常", e);
+            }
+        } else {
+            log.info("未找到全局配置文件，跳过加载.");
+        }
+
         try {
             imageCacheExecutor.addHandler(new ImageCacheHandler());
         } catch (IllegalAccessException e) {
             e.printStackTrace();
         }
+
         updateTimer.schedule(null);
         log.info("初始化完成.");
     }
 
-    public static String runUpdateTimer(Date queryTime) {
+    /**
+     * 执行定时更新任务
+     * @param queryTime 指定更新日期
+     */
+    public static void runUpdateTimer(Date queryTime) {
         log.info("正在手动触发排行榜更新任务...");
         updateTimer.now(queryTime);
         log.info("任务执行结束.");
-        return "操作已完成.";
     }
 
     @Command(defaultCommand = true)
@@ -113,13 +133,13 @@ public class CQProcess {
     public static String ranking(
             @Argument(force = false, name = "date") Date queryTime,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
-            @Argument(force = false, name = "type") String contentType
+            @Argument(force = false, name = "type", defaultValue = "ILLUST") String contentType
     ) {
         Date queryDate = queryTime;
         if (queryDate == null) {
             queryDate = new Date();
             GregorianCalendar gregorianCalendar = new GregorianCalendar();
-            log.info("CurrentDate: {}", queryDate);
+            log.debug("CurrentDate: {}", queryDate);
             gregorianCalendar.setTime(queryDate);
             if (gregorianCalendar.get(Calendar.HOUR_OF_DAY) < 12) {
                 gregorianCalendar.add(Calendar.DATE, -2);
@@ -127,6 +147,11 @@ public class CQProcess {
                 gregorianCalendar.add(Calendar.DATE, -1);
             }
             queryDate = gregorianCalendar.getTime();
+        } else {
+            if(new Date().before(queryDate)) {
+                log.warn("查询的日期过早, 无法查询排行榜.");
+                return "查询日期过早, 暂未更新指定日期的排行榜!";
+            }
         }
 
         PixivURL.RankingMode mode = PixivURL.RankingMode.MODE_DAILY;
@@ -138,9 +163,9 @@ public class CQProcess {
 
         PixivURL.RankingContentType type = PixivURL.RankingContentType.TYPE_ILLUST;
         try {
-            type = PixivURL.RankingContentType.valueOf("TYPE_" + contentMode.toUpperCase());
+            type = PixivURL.RankingContentType.valueOf("TYPE_" + contentType.toUpperCase());
         } catch (IllegalArgumentException e) {
-            log.warn("无效的RankingContentType值: {}", contentMode);
+            log.warn("无效的RankingContentType值: {}", contentType);
         }
 
         if(!type.isSupportedMode(mode)) {
@@ -155,7 +180,7 @@ public class CQProcess {
             int itemLimit = 10;
             String itemLimitPropertyKey = "ranking.ItemCountLimit";
             try {
-                itemLimit = Integer.parseInt(CQPluginMain.globalProp.getProperty(itemLimitPropertyKey, "10"));
+                itemLimit = Integer.parseInt(globalProp.getProperty(itemLimitPropertyKey, "10"));
             } catch(NumberFormatException e) {
                 log.warn("配置项 {} 的参数值格式有误!", itemLimitPropertyKey);
             }
@@ -163,12 +188,18 @@ public class CQProcess {
             int imageLimit = 3;
             String imageLimitPropertyKey = "ranking.imageCountLimit";
             try {
-                imageLimit = Integer.parseInt(CQPluginMain.globalProp.getProperty(imageLimitPropertyKey, "3"));
+                imageLimit = Integer.parseInt(globalProp.getProperty(imageLimitPropertyKey, "3"));
             } catch(NumberFormatException e) {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
-            for (JsonObject rankInfo : getRankingInfoByCache(type, mode, queryDate, 1, itemLimit, false)) {
+            //TODO(LamGC, 2020.4.11): 将JsonRedisCacheStore更改为使用Redis的List集合, 以提高性能
+            List<JsonObject> rankingInfoList = getRankingInfoByCache(type, mode, queryDate, 0, Math.max(0, itemLimit), false);
+            if(rankingInfoList.isEmpty()) {
+                return "无法查询排行榜，可能排行榜尚未更新。";
+            }
+
+            for (JsonObject rankInfo : rankingInfoList) {
                 index++;
                 int rank = rankInfo.get("rank").getAsInt();
                 int illustId = rankInfo.get("illust_id").getAsInt();
@@ -233,32 +264,32 @@ public class CQProcess {
             for (String keyword : includeKeywords.split(";")) {
                 searchBuilder.removeExcludeKeyword(keyword);
                 searchBuilder.addIncludeKeyword(keyword);
-                log.info("已添加关键字: {}", keyword);
+                log.debug("已添加关键字: {}", keyword);
             }
         }
         if (!Strings.isNullOrEmpty(excludeKeywords)) {
             for (String keyword : excludeKeywords.split(";")) {
                 searchBuilder.removeIncludeKeyword(keyword);
                 searchBuilder.addExcludeKeyword(keyword);
-                log.info("已添加排除关键字: {}", keyword);
+                log.debug("已添加排除关键字: {}", keyword);
             }
         }
 
         log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
 
         String requestUrl = searchBuilder.buildURL();
-        log.info("RequestUrl: {}", requestUrl);
-
+        log.debug("RequestUrl: {}", requestUrl);
+        JsonObject resultBody = null;
         if(!searchBodyCache.exists(requestUrl)) {
             synchronized (searchCacheLock) {
                 if (!searchBodyCache.exists(requestUrl)) {
-                    log.info("searchBody缓存失效, 正在更新...");
+                    log.debug("searchBody缓存失效, 正在更新...");
                     JsonObject jsonObject;
                     HttpGet httpGetRequest = pixivDownload.createHttpGetRequest(requestUrl);
                     HttpResponse response = pixivDownload.getHttpClient().execute(httpGetRequest);
 
                     String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    log.info("ResponseBody: {}", responseBody);
+                    log.debug("ResponseBody: {}", responseBody);
                     jsonObject = gson.fromJson(responseBody, JsonObject.class);
 
                     if (jsonObject.get("error").getAsBoolean()) {
@@ -266,31 +297,33 @@ public class CQProcess {
                         return "处理命令时发生错误！";
                     }
 
-                    Date newExpireDate = new Date();
                     long expire = 7200 * 1000;
-                    String propValue = CQPluginMain.globalProp.getProperty("cache.searchBody.expire", "7200000");
+                    String propValue = globalProp.getProperty("cache.searchBody.expire", "7200000");
                     try {
                         expire = Long.parseLong(propValue);
                     } catch (Exception e) {
                         log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
                     }
-
-                    newExpireDate.setTime(newExpireDate.getTime() + expire);
-                    searchBodyCache.update(requestUrl, jsonObject, newExpireDate);
-                    log.info("searchBody缓存已更新(到期时间: {})", newExpireDate);
+                    resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
+                    searchBodyCache.update(requestUrl, jsonObject, expire);
+                    log.debug("searchBody缓存已更新(有效时间: {})", expire);
+                } else {
+                    log.debug("搜索缓存命中.");
                 }
             }
         } else {
-            log.info("搜索缓存命中.");
+            log.debug("搜索缓存命中.");
         }
 
-        JsonObject resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
+        if(Objects.isNull(resultBody)) {
+            resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
+        }
 
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
-        log.info("正在处理信息...");
+        log.debug("正在处理信息...");
         int limit = 8;
         try {
-            limit = Integer.parseInt(CQPluginMain.globalProp.getProperty("search.ItemCountLimit", "8"));
+            limit = Integer.parseInt(globalProp.getProperty("search.ItemCountLimit", "8"));
         } catch (Exception e) {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
@@ -304,10 +337,19 @@ public class CQProcess {
             ArrayList<JsonElement> illustsList = new ArrayList<>();
             illustsArray.forEach(illustsList::add);
             illustsList.sort((o1, o2) -> {
+                if(!o1.getAsJsonObject().has("illustId") || !o2.getAsJsonObject().has("illustId")) {
+                    if(o1.getAsJsonObject().has("illustId")) {
+                        return 1;
+                    } else if(o2.getAsJsonObject().has("illustId")) {
+                        return -1;
+                    } else {
+                        return 0;
+                    }
+                }
                 try {
-                    int illustLikeCount1 = getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false).get("likeCount").getAsInt();
-                    int illustLikeCount2 = getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false).get("likeCount").getAsInt();
-                    return Integer.compare(illustLikeCount2, illustLikeCount1);
+                    JsonObject illustPreLoadData1 = getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false);
+                    JsonObject illustPreLoadData2 = getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false);
+                    return Integer.compare(illustPreLoadData2.get("likeCount").getAsInt(), illustPreLoadData1.get("likeCount").getAsInt());
                 } catch (IOException e) {
                     e.printStackTrace();
                     return 0;
@@ -344,7 +386,7 @@ public class CQProcess {
                 //pageCount
 
                 String imageMsg = getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1);
-                if (isNoSafe(illustId, CQPluginMain.globalProp, true)) {
+                if (isNoSafe(illustId, globalProp, true)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
                 }
@@ -382,7 +424,7 @@ public class CQProcess {
     @Command(commandName = "artworks")
     public static String artworksLink(@Argument(name = "id") int illustId) {
         try {
-            if (isNoSafe(illustId, CQPluginMain.globalProp, false)) {
+            if (isNoSafe(illustId, globalProp, false)) {
                 log.warn("作品Id {} 已被屏蔽.", illustId);
                 return "由于相关设置，该作品已被屏蔽！";
             }
@@ -397,7 +439,7 @@ public class CQProcess {
     public static String getImageById(@Argument(name = "id") int illustId,
                                                    @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
                                                    @Argument(name = "page", force = false, defaultValue = "1") int pageIndex) {
-        log.info("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
+        log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
         List<String> pagesList;
         try {
             pagesList = getIllustPages(illustId, quality, false);
@@ -405,13 +447,21 @@ public class CQProcess {
             log.error("获取下载链接列表时发生异常", e);
             return "发生网络异常，无法获取图片！";
         }
+
+        if(log.isDebugEnabled()) {
+            StringBuilder logBuilder = new StringBuilder("作品Id {} 所有页面下载链接: \n");
+            AtomicInteger index = new AtomicInteger();
+            pagesList.forEach(item -> logBuilder.append(index.incrementAndGet()).append(". ").append(item).append("\n"));
+            log.debug(logBuilder.toString());
+        }
+
         if (pagesList.size() < pageIndex || pageIndex <= 0) {
             log.warn("指定的页数超出了总页数({} / {})", pageIndex, pagesList.size());
             return "指定的页数超出了范围(总共 " + pagesList.size() + " 页)";
         }
 
         try {
-            if (isNoSafe(illustId, CQPluginMain.globalProp, false)) {
+            if (isNoSafe(illustId, globalProp, false)) {
                 log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
                 pageIndex = -1;
             }
@@ -426,10 +476,12 @@ public class CQProcess {
         File currentImageFile;
         for (String link : pagesList) {
             index++;
+            log.trace("PagesIndex: {}, Link: {}", index, link);
             if (index == pageIndex) {
                 targetLink = link;
             }
             currentImageFile = new File(getImageStoreDir(), link.substring(link.lastIndexOf("/") + 1));
+            log.debug("检查图片文件是否已缓存...");
             if (!imageCache.containsKey(link)) {
                 HttpHead headRequest = new HttpHead(link);
                 headRequest.addHeader("Referer", PixivURL.getPixivRefererLink(illustId));
@@ -443,21 +495,24 @@ public class CQProcess {
                 String contentLengthStr = headResponse.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue();
                 if (currentImageFile.exists() && currentImageFile.length() == Long.parseLong(contentLengthStr)) {
                     imageCache.put(link, currentImageFile);
-                    log.info("作品Id {} 第 {} 页缓存已补充.", illustId, index);
+                    log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, index);
                     continue;
                 }
 
+                ImageCacheObject imageCacheObject = new ImageCacheObject(imageCache, illustId, link, currentImageFile);
+                log.trace("向 ImageCacheExecutor发出下载事件: \n{}", imageCacheObject);
                 if (index == pageIndex) {
                     try {
                         //TODO: 这里可以尝试改成直接提交所有所需的图片给这里，然后再获取结果
-                        imageCacheExecutor.executorSync(new ImageCacheObject(imageCache, illustId, link, currentImageFile));
+                        imageCacheExecutor.executorSync(imageCacheObject);
+                        log.debug("下载事件发出完成(Sync)");
                     } catch (InterruptedException e) {
                         log.warn("图片下载遭到中断!", e);
                     }
-                } else if(CQPluginMain.globalProp.getProperty("image.downloadAllPages", "false")
+                } else if(globalProp.getProperty("image.downloadAllPages", "false")
                         .equalsIgnoreCase("true")) {
-                    imageCacheExecutor.executor(
-                            new ImageCacheObject(imageCache, illustId, link, currentImageFile));
+                    imageCacheExecutor.executor(imageCacheObject);
+                    log.debug("下载事件发出完成(A-Sync)");
                 }
             }
         }
@@ -471,7 +526,16 @@ public class CQProcess {
         }
 
         targetFile = imageCache.get(targetLink);
-        return targetFile == null ? "未找到对应的图片！" : CQCode.image(getImageStoreDir().getName() + "/" + targetFile.getName());
+        if (targetFile == null) {
+            return "未找到对应的图片！";
+        } else {
+            String fileName = targetFile.getName();
+            BotCode code = BotCode.parse(CQCode.image(getImageStoreDir().getName() + "/" + fileName));
+            code.addParameter("absolutePath", targetFile.getAbsolutePath());
+            code.addParameter("imageName", fileName.substring(0, fileName.lastIndexOf(".")));
+            code.addParameter("updateCache", "false");
+            return code.toString();
+        }
     }
 
     static void clearCache() {
@@ -484,13 +548,13 @@ public class CQProcess {
         File imageStoreDir = new File(System.getProperty("cgj.cqRootDir") + "data/image/cgj/");
         File[] listFiles = imageStoreDir.listFiles();
         if (listFiles == null) {
-            log.warn("图片缓存目录为空或内部文件获取失败!");
+            log.debug("图片缓存目录为空或内部文件获取失败!");
         } else {
             for (File file : listFiles) {
                 log.debug("图片文件 {} 删除: {}", file.getName(), file.delete());
             }
         }
-        log.info("图片缓存目录删除: {}", imageStoreDir.delete());
+        log.debug("图片缓存目录删除: {}", imageStoreDir.delete());
         log.warn("缓存删除完成.");
     }
 
@@ -508,58 +572,75 @@ public class CQProcess {
 
     private static JsonObject getIllustInfo(int illustId, boolean flushCache) throws IOException {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
+        JsonObject illustInfoObj = null;
         if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-            synchronized (illustIdStr) {
+            synchronized (illustIdStr) { // TODO: 这里要不做成HashMap存储key而避免使用常量池?
                 if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-                    JsonObject illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
+                    illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
                     illustInfoCache.update(illustIdStr, illustInfoObj, null);
                 }
             }
         }
-        return illustInfoCache.getCache(illustIdStr).getAsJsonObject();
+
+        if(Objects.isNull(illustInfoObj)) {
+            illustInfoObj = illustInfoCache.getCache(illustIdStr).getAsJsonObject();
+            log.debug("作品Id {} IllustInfo缓存命中.", illustId);
+        }
+        return illustInfoObj;
     }
 
     public static JsonObject getIllustPreLoadData(int illustId, boolean flushCache) throws IOException {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
+        JsonObject result = null;
         if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
             synchronized (illustIdStr) {
                 if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-                    log.info("缓存失效, 正在更新...");
+                    log.info("IllustId {} 缓存失效, 正在更新...", illustId);
                     JsonObject preLoadDataObj = pixivDownload.getIllustPreLoadDataById(illustId)
                             .getAsJsonObject("illust")
                             .getAsJsonObject(Integer.toString(illustId));
 
                     long expire = 7200 * 1000;
-                    String propValue = CQPluginMain.globalProp.getProperty("cache.illustPreLoadData.expire", "7200000");
-                    log.info("PreLoadData有效时间设定: {}", propValue);
+                    String propValue = globalProp.getProperty("cache.illustPreLoadData.expire", "7200000");
+                    log.debug("PreLoadData有效时间设定: {}", propValue);
                     try {
                         expire = Long.parseLong(propValue);
                     } catch (Exception e) {
                         log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
                     }
 
-                    Date newExpire = new Date();
-                    newExpire.setTime(newExpire.getTime() + expire);
-                    illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, newExpire);
-                    log.info("作品Id {} preLoadData缓存已更新(到期时间: {})", illustId, newExpire);
+                    result = preLoadDataObj;
+                    illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, expire);
+                    log.info("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
                 }
             }
         }
-            return illustPreLoadDataCache.getCache(illustIdStr).getAsJsonObject();
+
+        if(Objects.isNull(result)) {
+            result = illustPreLoadDataCache.getCache(illustIdStr).getAsJsonObject();
+            log.debug("作品Id {} PreLoadData缓存命中.", illustId);
+        }
+        return result;
     }
 
     public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality, boolean flushCache) throws IOException {
         String pagesSign = buildSyncKey(Integer.toString(illustId), ".", quality.name());
+        List<String> result = null;
         if (!pagesCache.exists(pagesSign) || flushCache) {
             synchronized (pagesSign) {
                 if (!pagesCache.exists(pagesSign) || flushCache) {
                     List<String> linkList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
+                    result = linkList;
                     pagesCache.update(pagesSign, linkList, null);
                 }
             }
         }
 
-        return pagesCache.getCache(pagesSign);
+        if(Objects.isNull(result)) {
+            result = pagesCache.getCache(pagesSign);
+            log.debug("作品Id {} Pages缓存命中.", illustId);
+        }
+        return result;
     }
     
     private static File getImageStoreDir() {
@@ -570,6 +651,8 @@ public class CQProcess {
         return imageStoreDir;
     }
 
+
+    private final static Random expireTimeFloatRandom = new Random();
     /**
      * 获取排行榜
      * @param contentType 排行榜类型
@@ -577,7 +660,7 @@ public class CQProcess {
      * @param queryDate 查询时间
      * @param start 开始排名, 从1开始
      * @param range 取范围
-     * @param flushCache
+     * @param flushCache 是否强制刷新缓存
      * @return 成功返回有值List, 失败且无异常返回空
      * @throws IOException 获取异常时抛出
      */
@@ -595,8 +678,8 @@ public class CQProcess {
         }
 
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
-        //int requestSign = ("Ranking." + contentType.name() + "." + mode.name() + "." + date).hashCode();
         String requestSign = buildSyncKey(contentType.name(), ".", mode.name(), ".", date);
+        JsonArray result = null;
         if(!rankingCache.exists(requestSign) || flushCache) {
             synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign) || flushCache) {
@@ -604,17 +687,23 @@ public class CQProcess {
                     List<JsonObject> rankingResult = pixivDownload.getRanking(contentType, mode, queryDate, 1, 500);
                     JsonArray rankingArr = new JsonArray(rankingResult.size());
                     rankingResult.forEach(rankingArr::add);
-                    JsonObject cacheBody = new JsonObject();
-                    cacheBody.addProperty("updateTimestamp", new Date().getTime());
-                    cacheBody.addProperty("ContentType", contentType.name());
-                    cacheBody.addProperty("RankingMode", mode.modeParam);
-                    cacheBody.add("ranking", rankingArr);
-                    rankingCache.update(requestSign, rankingArr, null);
+                    if(rankingArr.size() == 0) {
+                        log.info("数据获取失败, 将设置浮动有效时间以准备下次更新.");
+                    }
+
+                    result = rankingArr;
+                    rankingCache.update(requestSign, rankingArr,
+                            rankingArr.size() == 0 ? 5400000 + expireTimeFloatRandom.nextInt(1800000) : 0);
+                    log.info("Ranking缓存更新完成.(RequestSign: {})", requestSign);
                 }
             }
         }
 
-        return PixivDownload.getRanking(rankingCache.getCache(requestSign).getAsJsonArray(), start, range);
+        if (Objects.isNull(result)) {
+            result = rankingCache.getCache(requestSign).getAsJsonArray();
+            log.debug("RequestSign [{}] 缓存命中.", requestSign);
+        }
+        return PixivDownload.getRanking(result, start, range);
     }
 
     private static String buildSyncKey(String... keys) {
