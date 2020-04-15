@@ -546,7 +546,7 @@ public class PixivDownload {
      * @throws IOException 当请求发生异常, 或接口返回错误信息时抛出.
      */
     public JsonObject getIllustInfoByIllustId(int illustId) throws IOException {
-        HttpGet request = createHttpGetRequest(PixivURL.getPixivIllustInfoAPI(new int[] {illustId}));
+        HttpGet request = createHttpGetRequest(PixivURL.getPixivIllustInfoAPI(illustId));
         HttpResponse response = httpClient.execute(request);
         String responseStr = EntityUtils.toString(response.getEntity());
         log.debug("Response Content: {}", responseStr);
@@ -569,6 +569,66 @@ public class PixivDownload {
         StringBuilder builder = new StringBuilder();
         cookieStore.getCookies().forEach(cookie -> builder.append(cookie.getName()).append("=").append(cookie.getValue()).append("; "));
         request.setHeader(HttpHeaderNames.COOKIE.toString(), builder.toString());
+    }
+
+    public enum PixivIllustType {
+        /**
+         * 插画
+         */
+        ILLUST(0),
+
+        /**
+         * 漫画
+         */
+        MANGA(1),
+
+        /**
+         * 动图
+         */
+        UGOIRA(2),
+        ;
+
+        public final int typeId;
+
+        PixivIllustType(int typeId) {
+            this.typeId = typeId;
+        }
+
+        /**
+         * 通过typeId搜索PixivIllustType
+         * @param typeId 接口属性"illustType"的值
+         * @return 如果搜索到匹配的IllustType则返回, 未找到返回null
+         */
+        public static PixivIllustType getIllustTypeById(int typeId) {
+            for (PixivIllustType illustType : PixivIllustType.values()) {
+                if(illustType.typeId == typeId) {
+                    return illustType;
+                }
+            }
+            return null;
+        }
+
+        public static PixivIllustType getIllustTypeByPreLoadData(int illustId, JsonObject preLoadDataObject) {
+            JsonObject illustData;
+            if(preLoadDataObject.has("illust")) {
+                illustData = preLoadDataObject.getAsJsonObject("illust").getAsJsonObject(String.valueOf(illustId));
+            } else if(preLoadDataObject.has(String.valueOf(illustId))) {
+                illustData = preLoadDataObject.getAsJsonObject(String.valueOf(illustId));
+            } else {
+                illustData = preLoadDataObject;
+            }
+
+            if(illustData.get("illustId").getAsInt() != illustId) {
+                return null;
+            }
+
+            if(illustData.has("illustType")) {
+                return getIllustTypeById(illustData.get("illustType").getAsInt());
+            } else {
+                return null;
+            }
+        }
+
     }
 
 }
