@@ -50,19 +50,21 @@ public class PixivURL {
      */
     public static final String PIXIV_ILLUST_API_URL = "https://www.pixiv.net/ajax/illust/{illustId}/pages";
 
-    /*
+    /**
      * P站用户插图列表获取API
      * 需要替换的文本:
      * {userId} - 用户ID
      */
     //TODO: 所需数据在 body属性内的 illusts(属性名,属性值不重要), manga(多图) pickup(精选)
     //{"error":false,"message":"","body":{"illusts":{"74369837":null,"70990542":null,"70608653":null,"69755191":null,"69729450":null,"69729416":null,"69503608":null,"69288766":null,"69083882":null,"69051458":null,"68484200":null,"68216927":null,"68216866":null,"68192333":null,"67915106":null,"67914932":null,"67854803":null,"67854745":null,"67854670":null,"67787211":null,"67772199":null,"67770637":null,"67754861":null,"67754804":null,"67754726":null,"67740486":null,"67740480":null,"67740450":null,"67740434":null,"67726337":null,"67499196":null,"67499163":null,"67499145":null,"67499111":null,"67499085":null,"67499038":null,"67498987":null,"67473178":null,"66271465":null,"63682753":null,"63682697":null,"59385148":null,"59383265":null,"59383240":null,"59383227":null,"59383173":null},"manga":[],"novels":[],"mangaSeries":[],"novelSeries":[],"pickup":[],"bookmarkCount":{"public":{"illust":1,"novel":0},"private":{"illust":0,"novel":0}}}}
-    //public static final String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
+    public static final String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
 
     /**
      * 能够同时获取插图信息的用户插图列表获取API
+     * 需要替换的文本:
+     * {userId} - 用户ID
      */
-    public static final String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
+    public static final String PIXIV_USER_TOP_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
 
     /**
      * P站单图详情页url
@@ -109,6 +111,14 @@ public class PixivURL {
     public static final String PIXIV_TAG_SEARCH_URL = "https://www.pixiv.net/ajax/search/tags/{content}";
 
     /**
+     * 获取动图下载链接和拼接数据.
+     * 该接口无需登录.
+     * 需要替换的问题:
+     * {illustId} - 作品Id
+     */
+    public final static String PIXIV_GET_UGOIRA_META_URL = "https://www.pixiv.net/ajax/illust/{illustId}/ugoira_meta";
+
+    /**
      * 请求时带上需要退出的Cookies
      * 无论成功与否都会返回302重定向到{@linkplain #PIXIV_LOGIN_PAGE_URL 登录页面}
      */
@@ -119,7 +129,7 @@ public class PixivURL {
      * @param illustIds 要查询的插图ID数组
      * @return 对应查询的API Url
      */
-    public static String getPixivIllustInfoAPI(int[] illustIds){
+    public static String getPixivIllustInfoAPI(int... illustIds){
         StringBuilder strBuilder = new StringBuilder().append(PIXIV_GET_ILLUST_INFO_URL);
         for(int illustId : illustIds){
             strBuilder.append("illust_ids[]=").append(illustId).append("&");
