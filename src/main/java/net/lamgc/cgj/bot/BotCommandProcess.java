@@ -9,9 +9,11 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.Main;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
 import net.lamgc.utils.event.EventExecutor;
@@ -336,25 +338,7 @@ public class BotCommandProcess {
                     .getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data");
             ArrayList<JsonElement> illustsList = new ArrayList<>();
             illustsArray.forEach(illustsList::add);
-            illustsList.sort((o1, o2) -> {
-                if(!o1.getAsJsonObject().has("illustId") || !o2.getAsJsonObject().has("illustId")) {
-                    if(o1.getAsJsonObject().has("illustId")) {
-                        return 1;
-                    } else if(o2.getAsJsonObject().has("illustId")) {
-                        return -1;
-                    } else {
-                        return 0;
-                    }
-                }
-                try {
-                    JsonObject illustPreLoadData1 = getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false);
-                    JsonObject illustPreLoadData2 = getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false);
-                    return Integer.compare(illustPreLoadData2.get("likeCount").getAsInt(), illustPreLoadData1.get("likeCount").getAsInt());
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    return 0;
-                }
-            });
+            illustsList.sort(new PreLoadDataComparator(PreLoadDataComparator.Attribute.LIKE));
 
             log.info("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
             int count = 1;
@@ -435,6 +419,13 @@ public class BotCommandProcess {
         return PixivURL.getPixivRefererLink(illustId);
     }
 
+    /**
+     * 通过illustId获取作品图片
+     * @param illustId 作品Id
+     * @param quality 图片质量
+     * @param pageIndex 指定页面索引, 从1开始
+     * @return 如果成功, 返回BotCode, 否则返回错误信息.
+     */
     @Command(commandName = "image")
     public static String getImageById(@Argument(name = "id") int illustId,
                                                    @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
@@ -463,27 +454,20 @@ public class BotCommandProcess {
         try {
             if (isNoSafe(illustId, globalProp, false)) {
                 log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
-                pageIndex = -1;
+                return "（根据设置，该作品已被屏蔽！）";
             }
         } catch (IOException e) {
             log.warn("作品信息无法获取!", e);
             return "发生网络异常，无法获取图片！";
         }
 
-        int index = 0;
-        String targetLink = null;
-        File targetFile;
-        File currentImageFile;
-        for (String link : pagesList) {
-            index++;
-            log.trace("PagesIndex: {}, Link: {}", index, link);
-            if (index == pageIndex) {
-                targetLink = link;
-            }
-            currentImageFile = new File(getImageStoreDir(), link.substring(link.lastIndexOf("/") + 1));
-            log.debug("检查图片文件是否已缓存...");
-            if (!imageCache.containsKey(link)) {
-                HttpHead headRequest = new HttpHead(link);
+        String downloadLink = pagesList.get(pageIndex - 1);
+        String fileName = URLs.getResourceName(Strings.nullToEmpty(downloadLink));
+        File imageFile = new File(getImageStoreDir(), downloadLink.substring(downloadLink.lastIndexOf("/") + 1));
+        log.debug("FileName: {}, DownloadLink: {}", fileName, downloadLink);
+        if(!imageCache.containsKey(fileName)) {
+            if(imageFile.exists()) {
+                HttpHead headRequest = new HttpHead(downloadLink);
                 headRequest.addHeader("Referer", PixivURL.getPixivRefererLink(illustId));
                 HttpResponse headResponse;
                 try {
@@ -493,49 +477,35 @@ public class BotCommandProcess {
                     return "图片获取失败!";
                 }
                 String contentLengthStr = headResponse.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue();
-                if (currentImageFile.exists() && currentImageFile.length() == Long.parseLong(contentLengthStr)) {
-                    imageCache.put(link, currentImageFile);
-                    log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, index);
-                    continue;
-                }
-
-                ImageCacheObject imageCacheObject = new ImageCacheObject(imageCache, illustId, link, currentImageFile);
-                log.trace("向 ImageCacheExecutor发出下载事件: \n{}", imageCacheObject);
-                if (index == pageIndex) {
-                    try {
-                        //TODO: 这里可以尝试改成直接提交所有所需的图片给这里，然后再获取结果
-                        imageCacheExecutor.executorSync(imageCacheObject);
-                        log.debug("下载事件发出完成(Sync)");
-                    } catch (InterruptedException e) {
-                        log.warn("图片下载遭到中断!", e);
-                    }
-                } else if(globalProp.getProperty("image.downloadAllPages", "false")
-                        .equalsIgnoreCase("true")) {
-                    imageCacheExecutor.executor(imageCacheObject);
-                    log.debug("下载事件发出完成(A-Sync)");
+                log.debug("图片大小: {}B", contentLengthStr);
+                if (imageFile.length() == Long.parseLong(contentLengthStr)) {
+                    imageCache.put(URLs.getResourceName(downloadLink), imageFile);
+                    log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, pageIndex);
+                    return getImageToBotCode(imageFile, false).toString();
                 }
             }
-        }
 
-        if (pageIndex == -1) {
-            return "（根据设置，该作品已被屏蔽！）";
-        }
-
-        if (targetLink == null) {
-            return "未找到对应的图片！";
-        }
-
-        targetFile = imageCache.get(targetLink);
-        if (targetFile == null) {
-            return "未找到对应的图片！";
+            ImageCacheObject taskObject = new ImageCacheObject(imageCache, illustId, downloadLink, imageFile);
+            try {
+                imageCacheExecutor.executorSync(taskObject);
+            } catch (InterruptedException e) {
+                log.error("等待图片下载时发生中断", e);
+                return "图片获取失败!";
+            }
         } else {
-            String fileName = targetFile.getName();
-            BotCode code = BotCode.parse(CQCode.image(getImageStoreDir().getName() + "/" + fileName));
-            code.addParameter("absolutePath", targetFile.getAbsolutePath());
-            code.addParameter("imageName", fileName.substring(0, fileName.lastIndexOf(".")));
-            code.addParameter("updateCache", "false");
-            return code.toString();
+            log.debug("图片 {} 缓存命中.", fileName);
         }
+
+        return getImageToBotCode(imageCache.get(fileName), false).toString();
+    }
+
+    private static BotCode getImageToBotCode(File targetFile, boolean updateCache) {
+        String fileName = targetFile.getName();
+        BotCode code = BotCode.parse(CQCode.image(getImageStoreDir().getName() + "/" + fileName));
+        code.addParameter("absolutePath", targetFile.getAbsolutePath());
+        code.addParameter("imageName", fileName.substring(0, fileName.lastIndexOf(".")));
+        code.addParameter("updateCache", updateCache ? "true" : "false");
+        return code;
     }
 
     static void clearCache() {
