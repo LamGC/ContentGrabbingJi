@@ -47,10 +47,10 @@ public class BotCommandProcess {
             .create();
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
-    private final static JsonRedisCacheStore illustInfoCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
-    private final static JsonRedisCacheStore illustPreLoadDataCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson);
-    private final static JsonRedisCacheStore searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
-    private final static JsonRedisCacheStore rankingCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "ranking", gson);
+    private final static CacheStore<JsonElement> illustInfoCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
+    private final static CacheStore<JsonElement> illustPreLoadDataCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson);
+    private final static CacheStore<JsonElement> searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
+    private final static CacheStore<List<JsonObject>> rankingCache = new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
     private final static CacheStore<List<String>> pagesCache = new RedisPoolCacheStore<List<String>>(BotEventHandler.redisServer, "imagePages") {
         @Override
         protected String parse(List<String> dataObj) {
@@ -194,7 +194,7 @@ public class BotCommandProcess {
             }
 
             //TODO(LamGC, 2020.4.11): 将JsonRedisCacheStore更改为使用Redis的List集合, 以提高性能
-            List<JsonObject> rankingInfoList = getRankingInfoByCache(type, mode, queryDate, 0, Math.max(0, itemLimit), false);
+            List<JsonObject> rankingInfoList = getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
             }
@@ -679,31 +679,29 @@ public class BotCommandProcess {
 
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
         String requestSign = buildSyncKey(contentType.name(), ".", mode.name(), ".", date);
-        JsonArray result = null;
+        List<JsonObject> result = null;
         if(!rankingCache.exists(requestSign) || flushCache) {
             synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign) || flushCache) {
                     log.info("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
                     List<JsonObject> rankingResult = pixivDownload.getRanking(contentType, mode, queryDate, 1, 500);
-                    JsonArray rankingArr = new JsonArray(rankingResult.size());
-                    rankingResult.forEach(rankingArr::add);
-                    if(rankingArr.size() == 0) {
+                    if(rankingResult.size() == 0) {
                         log.info("数据获取失败, 将设置浮动有效时间以准备下次更新.");
                     }
-
-                    result = rankingArr;
-                    rankingCache.update(requestSign, rankingArr,
-                            rankingArr.size() == 0 ? 5400000 + expireTimeFloatRandom.nextInt(1800000) : 0);
+                    result = new ArrayList<>(rankingResult).subList(start - 1, range);
+                    rankingCache.update(requestSign, rankingResult,
+                            rankingResult.size() == 0 ? 5400000 + expireTimeFloatRandom.nextInt(1800000) : 0);
                     log.info("Ranking缓存更新完成.(RequestSign: {})", requestSign);
                 }
             }
         }
 
         if (Objects.isNull(result)) {
-            result = rankingCache.getCache(requestSign).getAsJsonArray();
+            result = rankingCache.getCache(requestSign, start - 1, range);
             log.debug("RequestSign [{}] 缓存命中.", requestSign);
         }
-        return PixivDownload.getRanking(result, start, range);
+        log.debug("Result-Length: {}", result.size());
+        return PixivDownload.getRanking(result, start - 1, range);
     }
 
     private static String buildSyncKey(String... keys) {
