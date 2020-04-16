@@ -98,7 +98,7 @@ public class Main {
         ois.close();
         log.info("已载入CookieStore");
 
-        log.debug(Arrays.toString(args));
+        log.debug("传入参数: {}", Arrays.toString(args));
 
         ArgumentsRunner.run(Main.class, args);
     }
