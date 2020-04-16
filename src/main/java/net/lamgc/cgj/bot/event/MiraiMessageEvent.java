@@ -55,6 +55,11 @@ public class MiraiMessageEvent extends MessageEvent {
     }
 
     @Override
+    public String getImageUrl(String imageId) {
+        return messageObject.getBot().queryImageUrl(MessageUtils.newImage(imageId));
+    }
+
+    @Override
     public Object getRawMessage() {
         return messageObject;
     }
@@ -151,8 +156,12 @@ public class MiraiMessageEvent extends MessageEvent {
                 log.debug("ImageName: [{}] 缓存命中.", imageName);
             }
 
-            String cache = imageIdCache.getCache(imageName);
-            return image != null ? image : MessageUtils.newImage(cache);
+            if(image == null) {
+                image = MessageUtils.newImage(imageIdCache.getCache(imageName));
+            }
+
+            log.debug("ImageName: {}, ImageId: {}", imageName, image.getImageId());
+            return image;
         } else {
             log.debug("未设置imageName, 无法使用缓存.");
             return uploadImage0(new File(absolutePath));
