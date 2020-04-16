@@ -25,10 +25,10 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
      * 构造热点缓存存储对象
      * @param parent 上级缓存存储库
      * @param current 热点缓存存储库, 最好使用本地缓存(例如 {@linkplain LocalHashCacheStore LocalHashCacheStore})
-     * @param expireTime 本地缓存库的缓存项过期时间,
+     * @param expireTime 本地缓存库的缓存项过期时间, 单位毫秒;
      *                   该时间并不是所有缓存项的最终过期时间, 还需要根据expireFloatRange的设定随机设置, 公式:
      *                   {@code expireTime + new Random().nextInt(expireFloatRange)}
-     * @param expireFloatRange 过期时间的浮动范围, 用于防止短时间内大量缓存项失效导致的缓存雪崩
+     * @param expireFloatRange 过期时间的浮动范围(单位毫秒), 用于防止短时间内大量缓存项失效导致的缓存雪崩
      */
     public HotDataCacheStore(CacheStore<T> parent, CacheStore<T> current, long expireTime, int expireFloatRange) {
         this.parent = parent;
