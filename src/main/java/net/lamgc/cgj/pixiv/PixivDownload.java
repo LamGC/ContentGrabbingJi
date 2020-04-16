@@ -161,7 +161,7 @@ public class PixivDownload {
             for (int linkIndex = 0; linkIndex < pageLinkList.size(); linkIndex++) {
                 String link = pageLinkList.get(linkIndex);
                 String fileName = link.substring(link.lastIndexOf("/") + 1);
-                log.debug("({}/{}) 正在处理 {}", linkIndex, pageLinkList.size(), fileName);
+                log.trace("({}/{}) 正在处理 {}", linkIndex, pageLinkList.size(), fileName);
                 InputStream imageInputStream = null;
                 int tryCount = 0;
                 do {
@@ -178,8 +178,7 @@ public class PixivDownload {
                 try(InputStream pageInputStream = new BufferedInputStream(imageInputStream, 256 * 1024)) {
                     fn.accept(fileName, pageInputStream);
                 }
-                log.debug("Done!");
-
+                log.trace("Done!");
             }
             log.debug("IllustId {} 处理完成.", illustId);
         }
@@ -249,14 +248,37 @@ public class PixivDownload {
 
     /**
      * 从JsonArray获取数据
+     * @param rankingList JsonArray对象
+     * @param rankStart 开始索引, 从0开始
+     * @param range 范围
+     * @return 返回List对象
+     */
+    public static List<JsonObject> getRanking(List<JsonObject> rankingList, int rankStart, int range) {
+        log.debug("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
+        ArrayList<JsonObject> results = new ArrayList<>(rankingList.size());
+        for (int rankIndex = rankStart; rankIndex < rankingList.size() && rankIndex < range; rankIndex++) {
+            JsonElement jsonElement = rankingList.get(rankIndex);
+            JsonObject rankInfo = jsonElement.getAsJsonObject();
+            int rank = rankInfo.get("rank").getAsInt();
+            int illustId = rankInfo.get("illust_id").getAsInt();
+            int authorId = rankInfo.get("user_id").getAsInt();
+            String authorName = rankInfo.get("user_name").getAsString();
+            String title = rankInfo.get("title").getAsString();
+            log.debug("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range, range, illustId, authorId, authorName, title);
+            results.add(rankInfo);
+        }
+        log.debug("JsonArray读取完成.");
+        return results;
+    }
+
+    /**
+     * 从JsonArray获取数据
      * @param rankingArray JsonArray对象
      * @param rankStart 开始索引, 从0开始
      * @param range 范围
      * @return 返回List对象
      */
     public static List<JsonObject> getRanking(JsonArray rankingArray, int rankStart, int range) {
-        //需要添加一个总量, 否则会完整跑完一次.
-        //检查是否为最后一次请求，和剩余量有多少
         log.debug("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
         ArrayList<JsonObject> results = new ArrayList<>(rankingArray.size());
         for (int rankIndex = rankStart; rankIndex < rankingArray.size() && rankIndex < range; rankIndex++) {
@@ -305,7 +327,7 @@ public class PixivDownload {
         ArrayList<JsonObject> results = new ArrayList<>();
         for (int requestCount = startPage; requestCount <= requestFrequency && requestCount <= 10; requestCount++) {
             int rangeStart = (requestCount - 1) * 50 + 1;
-            log.debug("正在请求第 {} 到 {} 位排名榜 (第{}次请求, 共 {} 次)", rangeStart, rangeStart + 49, requestCount - startPage + 1, requestFrequency - startPage);
+            log.debug("正在请求第 {} 到 {} 位排名榜 (第{}次请求, 共 {} 次)", rangeStart, rangeStart + 49, requestCount - startPage + 1, requestFrequency - startPage + 1);
             HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, requestCount, true));
             log.debug("Request URL: {}", request.getURI());
             HttpResponse response = httpClient.execute(request);
