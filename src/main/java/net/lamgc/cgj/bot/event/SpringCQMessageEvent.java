@@ -1,5 +1,6 @@
 package net.lamgc.cgj.bot.event;
 
+import net.lamgc.cgj.bot.BotCode;
 import net.lz1998.cq.event.message.CQDiscussMessageEvent;
 import net.lz1998.cq.event.message.CQGroupMessageEvent;
 import net.lz1998.cq.event.message.CQMessageEvent;
@@ -49,19 +50,24 @@ public class SpringCQMessageEvent extends MessageEvent {
     }
 
     /**
-     * 该功能在CQ上需要CQHttp插件启用http接口调用和serve_data_files为true.
-     * 如使用本方法, 则对方需开启5700端口, 且可能会影响多机器人处理.
-     * @param imageFileName 图片文件名
+     * 通过CQ码获取图片下载链接.
+     * @param imageFileName 图片完整CQ码
      * @return 图片下载链接
      */
     @Override
     public String getImageUrl(String imageFileName) {
-        InetSocketAddress remoteAddress = cq.getBotSession().getRemoteAddress();
-        if(remoteAddress == null) {
-            throw new IllegalStateException("remoteAddress failed to get");
+        BotCode code;
+        if(imageFileName.startsWith("[CQ:") && imageFileName.endsWith("]")) {
+            code = BotCode.parse(imageFileName);
+            return code.getParameter("url");
+        } else {
+            InetSocketAddress remoteAddress = cq.getBotSession().getRemoteAddress();
+            if(remoteAddress == null) {
+                throw new IllegalStateException("remoteAddress failed to get");
+            }
+            String file = cq.getImage(imageFileName).getData().getFile().replaceAll("\\\\", "/");
+            return "http://" + remoteAddress.getHostString() + ":5700/data" + file.substring(file.lastIndexOf("/data") + 5);
         }
-        String file = cq.getImage(imageFileName).getData().getFile().replaceAll("\\\\", "/");
-        return "http://" + remoteAddress.getHostString() + ":5700/data" + file.substring(file.lastIndexOf("/data") + 5);
     }
 
     @Override

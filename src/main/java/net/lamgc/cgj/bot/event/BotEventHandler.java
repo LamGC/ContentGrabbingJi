@@ -62,7 +62,19 @@ public class BotEventHandler implements EventHandler {
                     .build()
     ));
 
+    private static boolean initialled = false;
     static {
+        initial();
+    }
+
+    public synchronized static void initial() {
+        if(initialled) {
+            Logger logger = LoggerFactory.getLogger("BotEventHandler@<init>");
+            logger.warn("BotEventHandler已经执行过初始化方法, 可能存在多次执行的问题, 堆栈信息: \n {}",
+                    Throwables.getStackTraceAsString(new Exception()));
+            return;
+        }
+
         executor.setEventUncaughtExceptionHandler(new EventUncaughtExceptionHandler() {
             private final Logger log = LoggerFactory.getLogger("EventUncaughtExceptionHandler");
             @Override
@@ -77,10 +89,10 @@ public class BotEventHandler implements EventHandler {
         });
         try {
             executor.addHandler(new BotEventHandler());
-            executor.addHandler(new TestEventHandler());
         } catch (IllegalAccessException e) {
             LoggerFactory.getLogger("BotEventHandler@Static").error("添加Handler时发生异常", e);
         }
+        initialled = true;
     }
 
     private BotEventHandler() {
