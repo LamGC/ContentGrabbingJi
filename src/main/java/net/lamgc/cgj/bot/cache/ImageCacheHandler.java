@@ -2,6 +2,7 @@ package net.lamgc.cgj.bot.cache;
 
 import net.lamgc.cgj.Main;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.event.EventHandler;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
@@ -69,7 +70,7 @@ public class ImageCacheHandler implements EventHandler {
                 log.error("下载图片时发生异常", e);
                 return;
             }
-            event.getImageCache().put(event.getDownloadLink(), storeFile);
+            event.getImageCache().put(URLs.getResourceName(event.getDownloadLink()), storeFile);
         } finally {
             log.info("图片 {} Event结束({})", event.getStoreFile().getName(), Integer.toHexString(event.hashCode()));
             cacheQueue.remove(event);
