@@ -7,6 +7,10 @@ import java.util.Hashtable;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * 基于Hashtable的本地缓存库
+ * @param <T> 缓存类型
+ */
 public class LocalHashCacheStore<T> implements CacheStore<T> {
 
     private final Hashtable<String, CacheObject<T>> cache;

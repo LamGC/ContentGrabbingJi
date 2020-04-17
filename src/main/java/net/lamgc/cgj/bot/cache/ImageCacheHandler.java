@@ -27,6 +27,7 @@ public class ImageCacheHandler implements EventHandler {
 
     private final static Set<ImageCacheObject> cacheQueue = Collections.synchronizedSet(new HashSet<>());
 
+    @SuppressWarnings("unused")
     public void getImageToCache(ImageCacheObject event) {
         if(cacheQueue.contains(event)) {
             log.info("图片 {} 已存在相同缓存任务, 跳过.", event.getStoreFile().getName());

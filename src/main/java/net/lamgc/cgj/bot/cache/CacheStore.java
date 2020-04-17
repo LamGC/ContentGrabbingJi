@@ -2,6 +2,10 @@ package net.lamgc.cgj.bot.cache;
 
 import java.util.Date;
 
+/**
+ * 缓存库接口
+ * @param <T> 缓存数据类型
+ */
 public interface CacheStore<T> {
 
     /**
