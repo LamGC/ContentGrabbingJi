@@ -2,7 +2,6 @@ package net.lamgc.cgj.bot;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.reflect.TypeToken;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
@@ -55,17 +54,7 @@ public class BotCommandProcess {
             new LocalHashCacheStore<>(), 3600000, 900000);
     private final static CacheStore<JsonElement> searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
     private final static CacheStore<List<JsonObject>> rankingCache = new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
-    private final static CacheStore<List<String>> pagesCache = new RedisPoolCacheStore<List<String>>(BotEventHandler.redisServer, "imagePages") {
-        @Override
-        protected String parse(List<String> dataObj) {
-            return gson.toJson(dataObj);
-        }
-
-        @Override
-        protected List<String> analysis(String dataStr) {
-            return gson.fromJson(dataStr, new TypeToken<List<String>>(){}.getType());
-        }
-    };
+    private final static CacheStore<List<String>> pagesCache = new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
 
     /**
      * 图片异步缓存执行器
@@ -131,6 +120,34 @@ public class BotCommandProcess {
         helpStrBuilder.append("\t").append("artworks - 获取作品的Pixiv页面").append("\n");
         helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
         return helpStrBuilder.toString();
+    }
+
+    @Command(commandName = "info")
+    public static String artworkInfo(@Argument(name = "id") int illustId) {
+        try {
+            if(isNoSafe(illustId, globalProp, false)) {
+                return "阅览禁止：该作品已被封印！！";
+            }
+
+            JsonObject illustPreLoadData = getIllustPreLoadData(illustId, false);
+            StringBuilder builder = new StringBuilder("---------------- 作品信息 ----------------\n");
+            builder.append("作品Id: ").append(illustId).append("\n");
+            builder.append("作品标题：").append(illustPreLoadData.get("illustTitle").getAsString()).append("\n");
+            builder.append("作者(作者Id)：").append(illustPreLoadData.get("userName").getAsString())
+                    .append("(").append(illustPreLoadData.get("userId").getAsInt()).append(")\n");
+            builder.append("点赞数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt()).append("\n");
+            builder.append("收藏数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt()).append("\n");
+            builder.append("围观数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt()).append("\n");
+            builder.append("评论数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt()).append("\n");
+            builder.append("页数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt()).append("页\n");
+            builder.append("---------------- 作品图片 ----------------\n");
+            builder.append(getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
+            builder.append("使用 \".cgj image -id ").append(illustId).append("\" 获取原图。");
+            return builder.toString();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        return "尚未支持";
     }
 
     @Command
