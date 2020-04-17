@@ -1,10 +1,12 @@
 package net.lamgc.cgj.bot;
 
+import com.google.common.base.Throwables;
+import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.event.VirtualLoadMessageEvent;
 import net.lamgc.cgj.pixiv.PixivURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
@@ -65,11 +67,13 @@ public class RankingUpdateTimer {
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
                 try {
-                    BotCommandProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
+                    //BotCommandProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
+                    BotEventHandler.executor.executorSync(
+                            new VirtualLoadMessageEvent(0,0,
+                                    ".cgj ranking -type " + rankingMode.modeParam + " -mode " + rankingMode.modeParam));
                     log.info("排行榜 {}.{} 更新完成.", rankingMode.name(), contentType.name());
-                } catch (IOException e) {
-                    log.error("排行榜 {}.{} 更新时发生异常", rankingMode.name(), contentType.name());
-                    log.error("异常信息如下", e);
+                } catch (InterruptedException e) {
+                    log.error("排行榜 {}.{} 更新时发生异常. \n{}", rankingMode.name(), contentType.name(), Throwables.getStackTraceAsString(e));
                 }
             }
         }
