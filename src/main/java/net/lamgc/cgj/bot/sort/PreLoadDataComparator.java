@@ -71,7 +71,7 @@ public class PreLoadDataComparator implements Comparator<JsonElement> {
         VIEW("viewCount"),
         ;
 
-        final String attrName;
+        public final String attrName;
 
         Attribute(String attrName) {
             this.attrName = attrName;
