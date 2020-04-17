@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>org.example</groupId>
-    <artifactId>CGJ_2</artifactId>
+    <artifactId>ContentGrabbingJi</artifactId>
     <version>2.1.0</version>
 
     <repositories>
