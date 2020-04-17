@@ -8,6 +8,7 @@ import net.mamoe.mirai.message.FriendMessage;
 import net.mamoe.mirai.message.GroupMessage;
 import net.mamoe.mirai.qqandroid.QQAndroid;
 import net.mamoe.mirai.utils.BotConfiguration;
+import org.apache.commons.net.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -38,7 +39,7 @@ public class MiraiMain implements Closeable {
             return;
         }
 
-        bot = QQAndroid.INSTANCE.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), botProperties.getProperty("bot.password", ""), new BotConfiguration());
+        bot = QQAndroid.INSTANCE.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), new BotConfiguration());
         Events.subscribeAlways(GroupMessage.class, (msg) -> BotEventHandler.executor.executor(new MiraiMessageEvent(msg)));
         Events.subscribeAlways(FriendMessage.class, (msg) -> BotEventHandler.executor.executor(new MiraiMessageEvent(msg)));
         bot.login();
