@@ -40,7 +40,7 @@ public class BotEventHandler implements EventHandler {
     private final ArgumentsRunner processRunner;
     private final ArgumentsRunner adminRunner;
 
-    private final Logger log = LoggerFactory.getLogger("BotEventHandler@" + Integer.toHexString(this.hashCode()));
+    private final Logger log = LoggerFactory.getLogger("BotEventHandler");
 
     /**
      * 所有缓存共用的JedisPool
@@ -110,6 +110,11 @@ public class BotEventHandler implements EventHandler {
         BotCommandProcess.initialize();
     }
 
+    /**
+     * 以事件形式处理消息事件
+     * @param event 消息事件对象
+     */
+    @SuppressWarnings("unused")
     public void processMessage(MessageEvent event) {
         String msg = event.getMessage();
         log.debug(event.toString());
