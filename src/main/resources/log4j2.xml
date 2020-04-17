@@ -30,7 +30,7 @@
 
     <Loggers>
         <Logger level="INFO" name="org.apache.http"/>
-        <Root level="DEBUG">
+        <Root level="INFO">
             <AppenderRef ref="CONSOLE_STDOUT"/>
             <AppenderRef ref="CONSOLE_STDERR"/>
             <AppenderRef ref="rollingFile"/>
