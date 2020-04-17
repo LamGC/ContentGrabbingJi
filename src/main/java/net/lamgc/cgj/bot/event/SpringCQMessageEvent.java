@@ -17,7 +17,6 @@ public class SpringCQMessageEvent extends MessageEvent {
 
     private final CoolQ cq;
     private final int type;
-    private final CQMessageEvent messageEvent;
 
     public SpringCQMessageEvent(CoolQ cq, CQMessageEvent messageEvent) {
         super(messageEvent instanceof CQGroupMessageEvent ? (
@@ -33,7 +32,6 @@ public class SpringCQMessageEvent extends MessageEvent {
         } else {
             type = TYPE_PRIVATE;
         }
-        this.messageEvent = messageEvent;
     }
 
     @Override
@@ -70,8 +68,4 @@ public class SpringCQMessageEvent extends MessageEvent {
         }
     }
 
-    @Override
-    public Object getRawMessage() {
-        return messageEvent;
-    }
 }

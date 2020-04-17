@@ -59,11 +59,6 @@ public class MiraiMessageEvent extends MessageEvent {
         return messageObject.getBot().queryImageUrl(MessageUtils.newImage(imageId));
     }
 
-    @Override
-    public Object getRawMessage() {
-        return messageObject;
-    }
-
     private final static Pattern cqCodePattern = Pattern.compile("\\[.*?:.*?]");
     private Message processMessage(final String message) {
         Matcher matcher = cqCodePattern.matcher(message);

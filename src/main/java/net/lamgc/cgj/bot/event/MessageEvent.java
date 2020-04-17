@@ -29,12 +29,6 @@ public abstract class MessageEvent implements EventObject {
     public abstract String getImageUrl(String image);
 
     /**
-     * 获取原始消息对象.(不推荐使用)
-     * @return 消息对象
-     */
-    public abstract Object getRawMessage();
-
-    /**
      * 获取来源群组号
      * @return 如非群组消息, 返回0
      */
