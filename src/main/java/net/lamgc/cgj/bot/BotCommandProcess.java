@@ -50,7 +50,9 @@ public class BotCommandProcess {
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
     private final static CacheStore<JsonElement> illustInfoCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
-    private final static CacheStore<JsonElement> illustPreLoadDataCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson);
+    private final static CacheStore<JsonElement> illustPreLoadDataCache = new HotDataCacheStore<>(
+            new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson),
+            new LocalHashCacheStore<>(), 3600000, 900000);
     private final static CacheStore<JsonElement> searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
     private final static CacheStore<List<JsonObject>> rankingCache = new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
     private final static CacheStore<List<String>> pagesCache = new RedisPoolCacheStore<List<String>>(BotEventHandler.redisServer, "imagePages") {
@@ -559,6 +561,14 @@ public class BotCommandProcess {
         return illustInfoObj;
     }
 
+    /**
+     * 获取作品预加载数据.
+     * 可以获取作品的一些与用户相关的信息
+     * @param illustId 作品Id
+     * @param flushCache 是否刷新缓存
+     * @return 成功返回JsonObject对象
+     * @throws IOException 当Http请求处理发生异常时抛出
+     */
     public static JsonObject getIllustPreLoadData(int illustId, boolean flushCache) throws IOException {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
         JsonObject result = null;
