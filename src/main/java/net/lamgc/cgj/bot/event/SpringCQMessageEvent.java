@@ -1,6 +1,7 @@
 package net.lamgc.cgj.bot.event;
 
 import net.lamgc.cgj.bot.BotCode;
+import net.lamgc.cgj.bot.message.MessageSource;
 import net.lz1998.cq.event.message.CQDiscussMessageEvent;
 import net.lz1998.cq.event.message.CQGroupMessageEvent;
 import net.lz1998.cq.event.message.CQMessageEvent;
@@ -11,12 +12,8 @@ import java.util.Objects;
 
 public class SpringCQMessageEvent extends MessageEvent {
 
-    private final static int TYPE_PRIVATE = 0;
-    private final static int TYPE_GROUP = 1;
-    private final static int TYPE_DISCUSS = 2;
-
     private final CoolQ cq;
-    private final int type;
+    private final MessageSource source;
 
     public SpringCQMessageEvent(CoolQ cq, CQMessageEvent messageEvent) {
         super(messageEvent instanceof CQGroupMessageEvent ? (
@@ -26,22 +23,23 @@ public class SpringCQMessageEvent extends MessageEvent {
               messageEvent.getUserId(), messageEvent.getMessage());
         this.cq = Objects.requireNonNull(cq);
         if(messageEvent instanceof CQGroupMessageEvent) {
-            type = TYPE_GROUP;
+            source = MessageSource.Group;
         } else if (messageEvent instanceof CQDiscussMessageEvent) {
-            type = TYPE_DISCUSS;
+            source = MessageSource.Discuss;
         } else {
-            type = TYPE_PRIVATE;
+            source = MessageSource.Private;
         }
     }
 
     @Override
     public int sendMessage(final String message) {
-        switch(type) {
-            case TYPE_PRIVATE:
+        switch(source) {
+            case Private:
                 return cq.sendPrivateMsg(getFromQQ(), message, false).getData().getMessageId();
-            case TYPE_GROUP:
-            case TYPE_DISCUSS:
+            case Group:
                 return cq.sendGroupMsg(getFromGroup(), message, false).getData().getMessageId();
+            case Discuss:
+                return cq.sendDiscussMsg(getFromGroup(), message, false).getData().getMessageId();
             default:
                 return -1;
         }

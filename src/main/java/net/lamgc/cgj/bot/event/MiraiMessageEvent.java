@@ -6,6 +6,7 @@ import net.lamgc.cgj.bot.cache.CacheStore;
 import net.lamgc.cgj.bot.cache.HotDataCacheStore;
 import net.lamgc.cgj.bot.cache.LocalHashCacheStore;
 import net.lamgc.cgj.bot.cache.StringRedisCacheStore;
+import net.lamgc.cgj.bot.message.MessageSource;
 import net.mamoe.mirai.message.ContactMessage;
 import net.mamoe.mirai.message.FriendMessage;
 import net.mamoe.mirai.message.GroupMessage;
@@ -195,29 +196,6 @@ public class MiraiMessageEvent extends MessageEvent {
             log.warn("未知的ContactMessage类型: " + messageObject.toString());
             return MessageSource.Unknown;
         }
-    }
-
-    /**
-     * 消息来源
-     */
-    public enum MessageSource {
-        /**
-         * 私聊消息
-         */
-        Private,
-        /**
-         * 群组消息
-         */
-        Group,
-        /**
-         * 讨论组消息
-         * @deprecated 已被QQ取消
-         */
-        Discuss,
-        /**
-         * 未知来源
-         */
-        Unknown
     }
 
 }
