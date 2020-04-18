@@ -1,8 +1,9 @@
 package net.lamgc.cgj.bot.event;
 
+import net.lamgc.cgj.bot.MessageSender;
 import net.lamgc.utils.event.EventObject;
 
-public abstract class MessageEvent implements EventObject {
+public abstract class MessageEvent implements EventObject, MessageSender {
 
     private final long fromGroup;
     private final long fromQQ;
@@ -19,6 +20,7 @@ public abstract class MessageEvent implements EventObject {
      * @param message 消息内容
      * @return 成功返回MessageId, 如没有MessageId则返回0, 失败返回负数错误码
      */
+    @Override
     public abstract int sendMessage(final String message);
 
     /**
