@@ -554,7 +554,15 @@ public class BotCommandProcess {
     标签....标签支持搜索吧
      */
 
-    private static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw) throws IOException {
+    /**
+     * 检查指定作品是否为r18
+     * @param illustId 作品Id
+     * @param settingProp 配置项
+     * @param returnRaw 是否返回原始值
+     * @return 如果为true, 则不为全年龄
+     * @throws IOException 获取数据时发生异常时抛出
+     */
+    public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw) throws IOException {
         boolean rawValue = getIllustInfo(illustId, false).getAsJsonArray("tags").contains(new JsonPrimitive("R-18"));
         return returnRaw || settingProp == null ? rawValue : rawValue && !settingProp.getProperty("image.allowR18", "false").equalsIgnoreCase("true");
     }

@@ -19,13 +19,14 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class MiraiMessageEvent extends MessageEvent {
 
     private final ContactMessage messageObject;
-    private final Logger log = LoggerFactory.getLogger(this.getClass().getSimpleName() + "@" + Integer.toHexString(this.hashCode()));
+    private final static Logger log = LoggerFactory.getLogger(MiraiMessageEvent.class.getSimpleName());
     private final static CacheStore<String> imageIdCache = new HotDataCacheStore<>(
             new StringRedisCacheStore(BotEventHandler.redisServer, "mirai.imageId"),
             new LocalHashCacheStore<>(),
@@ -111,6 +112,17 @@ public class MiraiMessageEvent extends MessageEvent {
     }
 
     private Image uploadImage(BotCode code) {
+        return uploadImage(getMessageSource(this.messageObject), code, this::uploadImage0);
+    }
+
+    /**
+     * 存在缓存的上传图片.
+     * @param sourceType 消息来源
+     * @param code 图片BotCode
+     * @param imageUploader 图片上传器
+     * @return Image对象
+     */
+    public static Image uploadImage(MessageSource sourceType, BotCode code, Function<File, Image> imageUploader) {
         log.debug("传入BotCode信息:\n{}", code);
         String absolutePath = code.getParameter("absolutePath");
         if(Strings.isNullOrEmpty(absolutePath)) {
@@ -120,14 +132,14 @@ public class MiraiMessageEvent extends MessageEvent {
         String imageName = code.getParameter("imageName");
         if(!Strings.isNullOrEmpty(imageName)) {
             Image image = null;
-            imageName = (getMessageSource() + "." + imageName).intern();
+            imageName = (sourceType + "." + imageName).intern();
             if(!imageIdCache.exists(imageName) ||
             Strings.nullToEmpty(code.getParameter("updateCache")).equalsIgnoreCase("true")) {
                 synchronized (imageName) {
                     if(!imageIdCache.exists(imageName) ||
                      Strings.nullToEmpty(code.getParameter("updateCache")) .equalsIgnoreCase("true")) {
                         log.debug("imageName [{}] 缓存失效或强制更新, 正在更新缓存...", imageName);
-                        image = uploadImage0(new File(absolutePath));
+                        image = imageUploader.apply(new File(absolutePath));
                         if(Objects.isNull(image)) {
                             return null;
                         }
@@ -159,7 +171,7 @@ public class MiraiMessageEvent extends MessageEvent {
             return image;
         } else {
             log.debug("未设置imageName, 无法使用缓存.");
-            return uploadImage0(new File(absolutePath));
+            return imageUploader.apply(new File(absolutePath));
         }
     }
 
@@ -174,15 +186,38 @@ public class MiraiMessageEvent extends MessageEvent {
         }
     }
 
-    private String getMessageSource() {
+    public static MessageSource getMessageSource(ContactMessage messageObject) {
         if(messageObject instanceof FriendMessage) {
-            return "Private";
+            return MessageSource.Private;
         } else if(messageObject instanceof GroupMessage) {
-            return "Group";
+            return MessageSource.Group;
         } else {
             log.warn("未知的ContactMessage类型: " + messageObject.toString());
-            return "Unknown";
+            return MessageSource.Unknown;
         }
+    }
+
+    /**
+     * 消息来源
+     */
+    public enum MessageSource {
+        /**
+         * 私聊消息
+         */
+        Private,
+        /**
+         * 群组消息
+         */
+        Group,
+        /**
+         * 讨论组消息
+         * @deprecated 已被QQ取消
+         */
+        Discuss,
+        /**
+         * 未知来源
+         */
+        Unknown
     }
 
 }
