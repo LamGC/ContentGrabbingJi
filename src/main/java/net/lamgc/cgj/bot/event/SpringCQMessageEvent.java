@@ -1,7 +1,9 @@
 package net.lamgc.cgj.bot.event;
 
 import net.lamgc.cgj.bot.BotCode;
+import net.lamgc.cgj.bot.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSource;
+import net.lamgc.cgj.bot.message.SpringCQMessageSender;
 import net.lz1998.cq.event.message.CQDiscussMessageEvent;
 import net.lz1998.cq.event.message.CQGroupMessageEvent;
 import net.lz1998.cq.event.message.CQMessageEvent;
@@ -13,7 +15,7 @@ import java.util.Objects;
 public class SpringCQMessageEvent extends MessageEvent {
 
     private final CoolQ cq;
-    private final MessageSource source;
+    private final MessageSender messageSender;
 
     public SpringCQMessageEvent(CoolQ cq, CQMessageEvent messageEvent) {
         super(messageEvent instanceof CQGroupMessageEvent ? (
@@ -22,6 +24,7 @@ public class SpringCQMessageEvent extends MessageEvent {
                 ((CQDiscussMessageEvent) messageEvent).getDiscussId() : 0,
               messageEvent.getUserId(), messageEvent.getMessage());
         this.cq = Objects.requireNonNull(cq);
+        MessageSource source;
         if(messageEvent instanceof CQGroupMessageEvent) {
             source = MessageSource.Group;
         } else if (messageEvent instanceof CQDiscussMessageEvent) {
@@ -29,20 +32,12 @@ public class SpringCQMessageEvent extends MessageEvent {
         } else {
             source = MessageSource.Private;
         }
+        messageSender = new SpringCQMessageSender(cq, source, source == MessageSource.Private ? getFromQQ() : getFromGroup());
     }
 
     @Override
     public int sendMessage(final String message) {
-        switch(source) {
-            case Private:
-                return cq.sendPrivateMsg(getFromQQ(), message, false).getData().getMessageId();
-            case Group:
-                return cq.sendGroupMsg(getFromGroup(), message, false).getData().getMessageId();
-            case Discuss:
-                return cq.sendDiscussMsg(getFromGroup(), message, false).getData().getMessageId();
-            default:
-                return -1;
-        }
+        return messageSender.sendMessage(message);
     }
 
     /**
