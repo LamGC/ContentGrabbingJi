@@ -24,6 +24,7 @@ public class MiraiMain implements Closeable {
     private final static Properties botProperties = new Properties();
 
     public void init() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         try {
             Class.forName(BotEventHandler.class.getName());
         } catch (ClassNotFoundException e) {
@@ -47,7 +48,9 @@ public class MiraiMain implements Closeable {
     }
 
     public void close() {
+        log.warn("正在关闭机器人...");
         bot.close(null);
+        log.warn("机器人已关闭.");
     }
 
 }
