@@ -54,6 +54,14 @@ public class BotCode {
         return new BotCode(keys[0], keys[1], param);
     }
 
+    /**
+     * 获取BotCode所使用的匹配正则表达式
+     * @return 用于匹配BotCode的正则表达式对象
+     */
+    public static Pattern getCodePattern() {
+        return Pattern.compile(codePattern.pattern());
+    }
+
     private String platformName;
     private String functionName;
     private Hashtable<String, String> parameter = new Hashtable<>();
