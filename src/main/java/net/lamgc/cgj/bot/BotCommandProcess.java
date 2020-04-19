@@ -693,7 +693,7 @@ public class BotCommandProcess {
                     if(rankingResult.size() == 0) {
                         log.info("数据获取失败, 将设置浮动有效时间以准备下次更新.");
                     }
-                    result = new ArrayList<>(rankingResult).subList(start - 1, range);
+                    result = new ArrayList<>(rankingResult).subList(start - 1, start + range - 1);
                     rankingCache.update(requestSign, rankingResult,
                             rankingResult.size() == 0 ? 5400000 + expireTimeFloatRandom.nextInt(1800000) : 0);
                     log.info("Ranking缓存更新完成.(RequestSign: {})", requestSign);
@@ -702,7 +702,7 @@ public class BotCommandProcess {
         }
 
         if (Objects.isNull(result)) {
-            result = rankingCache.getCache(requestSign, start - 1, range);
+            result = rankingCache.getCache(requestSign, start, range);
             log.debug("RequestSign [{}] 缓存命中.", requestSign);
         }
         log.debug("Result-Length: {}", result.size());
