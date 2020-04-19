@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import com.google.gson.reflect.TypeToken;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
@@ -256,8 +257,8 @@ public class PixivDownload {
     public static List<JsonObject> getRanking(List<JsonObject> rankingList, int rankStart, int range) {
         log.debug("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
         ArrayList<JsonObject> results = new ArrayList<>(rankingList.size());
-        for (int rankIndex = rankStart; rankIndex < rankingList.size() && rankIndex < range; rankIndex++) {
-            JsonElement jsonElement = rankingList.get(rankIndex);
+        for (int rankIndex = rankStart; rankIndex < rankStart + range; rankIndex++) {
+            JsonElement jsonElement = rankingList.get(rankIndex - rankStart);
             JsonObject rankInfo = jsonElement.getAsJsonObject();
             int rank = rankInfo.get("rank").getAsInt();
             int illustId = rankInfo.get("illust_id").getAsInt();
@@ -279,21 +280,8 @@ public class PixivDownload {
      * @return 返回List对象
      */
     public static List<JsonObject> getRanking(JsonArray rankingArray, int rankStart, int range) {
-        log.debug("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
-        ArrayList<JsonObject> results = new ArrayList<>(rankingArray.size());
-        for (int rankIndex = rankStart; rankIndex < rankingArray.size() && rankIndex < range; rankIndex++) {
-            JsonElement jsonElement = rankingArray.get(rankIndex);
-            JsonObject rankInfo = jsonElement.getAsJsonObject();
-            int rank = rankInfo.get("rank").getAsInt();
-            int illustId = rankInfo.get("illust_id").getAsInt();
-            int authorId = rankInfo.get("user_id").getAsInt();
-            String authorName = rankInfo.get("user_name").getAsString();
-            String title = rankInfo.get("title").getAsString();
-            log.debug("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range, range, illustId, authorId, authorName, title);
-            results.add(rankInfo);
-        }
-        log.debug("JsonArray读取完成.");
-        return results;
+        List<JsonObject> list = new Gson().fromJson(rankingArray, new TypeToken<List<JsonObject>>(){}.getType());
+        return getRanking(list, rankStart, range);
     }
 
     /**
@@ -304,65 +292,44 @@ public class PixivDownload {
      * @param rankStart 开始排名, 从1开始
      * @param range 取范围
      * @return 成功返回有值List, 失败且无异常返回空
-     * @throws IOException 获取异常时抛出
+     * @throws IllegalArgumentException 当{@linkplain net.lamgc.cgj.pixiv.PixivURL.RankingContentType RankingContentType}
+     *                                  与{@linkplain net.lamgc.cgj.pixiv.PixivURL.RankingMode RankingMode}互不兼容时抛出
+     * @throws IndexOutOfBoundsException 当排行榜选取范围超出排行榜范围时抛出(排行榜范围为 1 ~ 500 名)
+     * @throws IOException 当Http请求发生异常时抛出, 或Http请求响应码非200时抛出
      */
     public List<JsonObject> getRanking(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode,
-                                             Date time, int rankStart, int range) throws IOException {
-        if(rankStart <= 0) {
-            throw new IllegalArgumentException("rankStart cannot be less than or equal to zero");
-        }
-        if(range <= 0) {
-            throw new IllegalArgumentException("range cannot be less than or equal to zero");
-        }
-
-        if(!contentType.isSupportedMode(mode)) {
+                                           Date time, int rankStart, int range) throws IOException {
+        if(!Objects.requireNonNull(contentType).isSupportedMode(Objects.requireNonNull(mode))) {
             throw new IllegalArgumentException("ContentType不支持指定的RankingMode: ContentType: " + contentType.name() + ", Mode: " + mode.name());
+        } else if(rankStart <= 0) {
+            throw new IndexOutOfBoundsException("rankStart cannot be less than or equal to zero: " + rankStart);
+        } else if(range <= 0) {
+            throw new IndexOutOfBoundsException("range cannot be less than or equal to zero:" + range);
+        } else if(rankStart + range - 1 > 500) {
+            throw new IndexOutOfBoundsException("排名选取范围超出了排行榜范围: rankStart=" + rankStart + ", range=" + range + ", length:" + (rankStart + range - 1));
         }
 
-        int startPage = (int) Math.ceil(rankStart / 50F);
-        int requestFrequency = (int) Math.ceil((rankStart + (range - 1)) / 50F);
-        int surplusQuantity = range;
-        boolean firstRequest = true;
+        int startPages = (int) Math.max(1, Math.floor(rankStart / 50F));
+        int endPages = (int) Math.min(10, Math.ceil((rankStart + range) / 50F));
+        int startIndex = rankStart - 1;
+        int count = 0;
         Gson gson = new Gson();
-        ArrayList<JsonObject> results = new ArrayList<>();
-        for (int requestCount = startPage; requestCount <= requestFrequency && requestCount <= 10; requestCount++) {
-            int rangeStart = (requestCount - 1) * 50 + 1;
-            log.debug("正在请求第 {} 到 {} 位排名榜 (第{}次请求, 共 {} 次)", rangeStart, rangeStart + 49, requestCount - startPage + 1, requestFrequency - startPage + 1);
-            HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, requestCount, true));
-            log.debug("Request URL: {}", request.getURI());
+        ArrayList<JsonObject> results = new ArrayList<>(range);
+        for (int pageIndex = startPages; pageIndex <= endPages && count < range; pageIndex++) {
+            HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, pageIndex, true));
             HttpResponse response = httpClient.execute(request);
-            String content = EntityUtils.toString(response.getEntity());
-            log.debug("Content: " + content);
-            JsonObject contentObject = gson.fromJson(content, JsonObject.class);
-            if(contentObject.has("error")) {
-                log.warn("接口报错, 返回信息: {}", contentObject.get("error").getAsString());
-                break;
+
+            if(response.getStatusLine().getStatusCode() != 200) {
+                throw new IOException("Http Response Error: " + response.getStatusLine());
             }
-            JsonArray rankingArray = contentObject.getAsJsonArray("contents");
-            log.debug("正在解析数据...");
 
-            //需要添加一个总量, 否则会完整跑完一次.
-            //检查是否为最后一次请求，和剩余量有多少
-            int firstRequestStartIndex = (rankStart % 50) - 1;
-            for (int rankIndex = firstRequest ? firstRequestStartIndex : 0; rankIndex < rankingArray.size() && surplusQuantity > 0; rankIndex++, surplusQuantity--) {
-                JsonElement jsonElement = rankingArray.get(rankIndex);
-                JsonObject rankInfo = jsonElement.getAsJsonObject();
-                int rank = rankInfo.get("rank").getAsInt();
-                int illustId = rankInfo.get("illust_id").getAsInt();
-                int authorId = rankInfo.get("user_id").getAsInt();
-                String authorName = rankInfo.get("user_name").getAsString();
-                String title = rankInfo.get("title").getAsString();
-                log.debug("Download-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
-                results.add(rankInfo);
+            JsonArray resultArray = gson.fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class).getAsJsonArray("contents");
+            for (int resultIndex = startIndex; resultIndex < resultArray.size() && count < range; resultIndex++, count++) {
+                results.add(resultArray.get(resultIndex).getAsJsonObject());
             }
-            firstRequest = false;
-            log.debug("第 {} 到 {} 位排名榜完成. (第{}次请求)", rangeStart, rangeStart + 49, requestCount);
+            // 重置索引
+            startIndex = 0;
         }
-
-        if(requestFrequency > 10) {
-            log.warn("请求的排名榜范围超出所支持的范围, 已终止请求.");
-        }
-
         return results;
     }
 
