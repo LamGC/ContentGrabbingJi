@@ -8,6 +8,7 @@ import net.lamgc.cgj.bot.cache.HotDataCacheStore;
 import net.lamgc.cgj.bot.cache.LocalHashCacheStore;
 import net.lamgc.cgj.bot.cache.StringRedisCacheStore;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.data.CombinedMessage;
 import net.mamoe.mirai.message.data.Image;
@@ -18,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -32,8 +34,24 @@ public class MiraiMessageSender implements MessageSender {
             new LocalHashCacheStore<>(),
             5400000, 1800000);
 
-    public MiraiMessageSender(Contact member, MessageSource source) {
-        this.member = member;
+    /**
+     * 使用id构造发送器
+     * @param bot 机器人对象
+     * @param source 消息源类型
+     * @param id id, 将会根据消息源类型判断为什么号(QQ号或群号)
+     * @throws NoSuchElementException 当在机器人好友列表或群列表里没有这个好友或群的时候抛出
+     */
+    public MiraiMessageSender(Bot bot, MessageSource source, long id) {
+        this(source == MessageSource.Private ? bot.getFriend(id) : bot.getGroup(id), source);
+    }
+
+    /**
+     * 通过联系人对象构造发送器
+     * @param contact 联系人
+     * @param source 消息源类型
+     */
+    public MiraiMessageSender(Contact contact, MessageSource source) {
+        this.member = contact;
         this.source = source;
     }
 
