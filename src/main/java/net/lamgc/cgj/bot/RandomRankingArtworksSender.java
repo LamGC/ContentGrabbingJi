@@ -1,6 +1,7 @@
 package net.lamgc.cgj.bot;
 
 import com.google.gson.JsonObject;
+import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivURL;
 import org.slf4j.Logger;

@@ -1,6 +1,6 @@
 package net.lamgc.cgj.bot.event;
 
-import net.lamgc.cgj.bot.MessageSender;
+import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.utils.event.EventObject;
 
 public abstract class MessageEvent implements EventObject, MessageSender {

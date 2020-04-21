@@ -2,7 +2,6 @@ package net.lamgc.cgj.bot.message;
 
 import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.BotCode;
-import net.lamgc.cgj.bot.MessageSender;
 import net.lamgc.cgj.bot.cache.CacheStore;
 import net.lamgc.cgj.bot.cache.HotDataCacheStore;
 import net.lamgc.cgj.bot.cache.LocalHashCacheStore;

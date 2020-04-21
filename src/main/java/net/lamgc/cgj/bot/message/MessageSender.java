@@ -1,4 +1,4 @@
-package net.lamgc.cgj.bot;
+package net.lamgc.cgj.bot.message;
 
 public interface MessageSender {
 

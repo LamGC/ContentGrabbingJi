@@ -1,5 +1,7 @@
 package net.lamgc.cgj.bot;
 
+import net.lamgc.cgj.bot.message.MessageSender;
+
 import java.util.Objects;
 
 /**

@@ -1,6 +1,5 @@
 package net.lamgc.cgj.bot.message;
 
-import net.lamgc.cgj.bot.MessageSender;
 import net.lz1998.cq.robot.CoolQ;
 
 public class SpringCQMessageSender implements MessageSender {
