@@ -2,6 +2,8 @@ package net.lamgc.cgj.bot;
 
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.event.MiraiMessageEvent;
+import net.lamgc.cgj.bot.message.MessageSenderBuilder;
+import net.lamgc.cgj.bot.message.MiraiMessageSenderFactory;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.japt.Events;
 import net.mamoe.mirai.message.FriendMessage;
@@ -44,6 +46,8 @@ public class MiraiMain implements Closeable {
         Events.subscribeAlways(GroupMessage.class, (msg) -> BotEventHandler.executor.executor(new MiraiMessageEvent(msg)));
         Events.subscribeAlways(FriendMessage.class, (msg) -> BotEventHandler.executor.executor(new MiraiMessageEvent(msg)));
         bot.login();
+        MessageSenderBuilder.setCurrentMessageSenderFactory(new MiraiMessageSenderFactory(bot));
+        BotEventHandler.preLoad();
         bot.join();
     }
 

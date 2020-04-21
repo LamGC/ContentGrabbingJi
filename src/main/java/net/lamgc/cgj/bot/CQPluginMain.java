@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 public class CQPluginMain extends CQPlugin implements EventHandler {
 
     public CQPluginMain() {
+        // TODO(LamGC, 2020.04.21): SpringCQ无法适配MessageSenderBuilder
+        BotEventHandler.preLoad();
         LoggerFactory.getLogger(this.toString())
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
     }
