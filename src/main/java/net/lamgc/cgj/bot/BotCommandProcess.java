@@ -175,18 +175,22 @@ public class BotCommandProcess {
             }
         }
 
-        PixivURL.RankingMode mode = PixivURL.RankingMode.MODE_DAILY;
+        PixivURL.RankingMode mode;
         try {
-            mode = PixivURL.RankingMode.valueOf("MODE_" + contentMode.toUpperCase());
+            String rankingModeValue = contentMode.toUpperCase();
+            mode = PixivURL.RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ? rankingModeValue : "MODE_" + rankingModeValue);
         } catch (IllegalArgumentException e) {
             log.warn("无效的RankingMode值: {}", contentMode);
+            return "参数无效, 请查看帮助信息";
         }
 
-        PixivURL.RankingContentType type = PixivURL.RankingContentType.TYPE_ILLUST;
+        PixivURL.RankingContentType type;
         try {
-            type = PixivURL.RankingContentType.valueOf("TYPE_" + contentType.toUpperCase());
+            String contentTypeValue = contentType.toUpperCase();
+            type = PixivURL.RankingContentType.valueOf(contentTypeValue.startsWith("TYPE_") ? contentTypeValue : "TYPE_" + contentTypeValue);
         } catch (IllegalArgumentException e) {
             log.warn("无效的RankingContentType值: {}", contentType);
+            return "参数无效, 请查看帮助信息";
         }
 
         if(!type.isSupportedMode(mode)) {

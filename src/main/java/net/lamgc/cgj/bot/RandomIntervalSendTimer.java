@@ -4,9 +4,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.util.Random;
-import java.util.Timer;
-import java.util.TimerTask;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -16,6 +14,9 @@ public class RandomIntervalSendTimer extends TimerTask {
 
     private final static Timer timer = new Timer("Thread-RIST");
     private final static Logger log = LoggerFactory.getLogger("RandomIntervalSendTimer");
+    private final static Map<Long, RandomIntervalSendTimer> timerMap = new HashMap<>();
+
+    private final long timerId;
     private final Random timeRandom = new Random();
     private final AutoSender sender;
     private final long time;
@@ -23,21 +24,79 @@ public class RandomIntervalSendTimer extends TimerTask {
     private AtomicBoolean loop = new AtomicBoolean();
     private final AtomicBoolean start = new AtomicBoolean();
 
+    /**
+     * 创建一个随机延迟发送器
+     * @param timerId 该Timer的标识,
+     *                标识必须是唯一的, 当使用相同id创建时, 将会返回该id所属的Timer对象
+     * @param sender 自动发送器
+     * @param time 最低时间(ms)
+     * @param floatTime 浮动时间(ms)
+     * @param startNow 现在开始
+     * @param loop 是否循环
+     */
+    public static RandomIntervalSendTimer createTimer(long timerId, AutoSender sender, long time, int floatTime, boolean startNow, boolean loop) {
+        if(timerMap.containsKey(timerId)) {
+            return timerMap.get(timerId);
+        }
 
-    public RandomIntervalSendTimer(AutoSender sender, long time, int floatTime) {
+        RandomIntervalSendTimer timer = new RandomIntervalSendTimer(timerId, sender, time, floatTime, startNow, loop);
+        timerMap.put(timerId, timer);
+        return timer;
+    }
+
+    /**
+     * 通过Id获取Timer
+     * @param id 待获取Timer对应的Id
+     * @return 返回RandomIntervalSendTimer对象
+     * @throws NoSuchElementException 当不存在Timer时抛出
+     */
+    public static RandomIntervalSendTimer getTimerById(long id) {
+        if(!timerMap.containsKey(id)) {
+            throw new NoSuchElementException("id=" + id);
+        }
+        return timerMap.get(id);
+    }
+
+    /**
+     * 获取所有id
+     * @return 所有TimerId的集合
+     */
+    public static Set<Long> timerIdSet() {
+        return new HashSet<>(timerMap.keySet());
+    }
+
+    /**
+     * 创建一个随机延迟发送器
+     * @param timerId 该Timer的标识
+     * @param sender 自动发送器
+     * @param time 最低时间(ms)
+     * @param floatTime 浮动时间(ms)
+     * @param startNow 现在开始
+     * @param loop 是否循环
+     */
+    private RandomIntervalSendTimer(long timerId, AutoSender sender, long time, int floatTime, boolean startNow, boolean loop) {
+        this.timerId = timerId;
         this.sender = sender;
         this.time = time;
         this.floatTime = floatTime;
+        timerMap.put(timerId, this);
+        if(startNow) {
+            start(loop);
+        }
     }
 
     public void start() {
         start(this.loop.get());
     }
 
+    /**
+     * 启动定时器
+     * @param loop 是否循环, 如果为true, 则任务完成后会自动调用start方法继续循环, 直到被调用{@code #}或总定时器被销毁;
+     */
     public void start(boolean loop) {
         this.loop.set(loop);
         long nextDelay = time + timeRandom.nextInt(floatTime);
-        log.info("定时器 {} 下一延迟: {}ms", Integer.toHexString(this.hashCode()), nextDelay);
+        log.info("定时器 {} 下一延迟: {}ms ({}min)", Integer.toHexString(this.hashCode()), nextDelay, nextDelay / 1000F / 60F);
         if(start.get()) {
             try {
                 Field state = this.getClass().getSuperclass().getDeclaredField("state");
@@ -61,10 +120,22 @@ public class RandomIntervalSendTimer extends TimerTask {
         }
     }
 
+    /**
+     * 取消该定时器
+     * @return 取消成功返回true
+     */
     @Override
     public boolean cancel() {
         start.set(false);
         return super.cancel();
+    }
+
+    /**
+     * 销毁这个定时器
+     */
+    public void destroy() {
+        cancel();
+        timerMap.remove(this.timerId);
     }
 
 }

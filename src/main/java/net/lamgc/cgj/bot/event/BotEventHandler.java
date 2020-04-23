@@ -30,17 +30,19 @@ import java.util.Objects;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class BotEventHandler implements EventHandler {
 
     public final static String COMMAND_PREFIX = ".cgj ";
+    public final static String ADMIN_COMMAND_PREFIX = ".cgjadmin ";
 
     private final ArgumentsRunner processRunner;
     private final ArgumentsRunner adminRunner;
 
-    private final Logger log = LoggerFactory.getLogger("BotEventHandler");
+    private final static Logger log = LoggerFactory.getLogger("BotEventHandler");
 
     /**
      * 所有缓存共用的JedisPool
@@ -93,6 +95,21 @@ public class BotEventHandler implements EventHandler {
             LoggerFactory.getLogger("BotEventHandler@Static").error("添加Handler时发生异常", e);
         }
         initialled = true;
+    }
+
+    private final static AtomicBoolean preLoaded = new AtomicBoolean();
+    /**
+     * 预加载
+     */
+    public synchronized static void preLoad() {
+        if(preLoaded.get()) {
+            return;
+        }
+        try {
+            BotAdminCommandProcess.loadPushList();
+        } finally {
+            preLoaded.set(true);
+        }
     }
 
     private BotEventHandler() {
@@ -151,12 +168,11 @@ public class BotEventHandler implements EventHandler {
         long time = System.currentTimeMillis();
         Object result;
         try {
-            if(msg.toLowerCase().startsWith(COMMAND_PREFIX + "admin")) {
+            if(msg.toLowerCase().startsWith(ADMIN_COMMAND_PREFIX)) {
                 if(!String.valueOf(event.getFromQQ()).equals(BotCommandProcess.globalProp.getProperty("admin.adminId"))) {
-                    event.sendMessage("你没有执行该命令的权限！");
-                    return;
+                    result = "你没有执行该命令的权限！";
                 } else {
-                    result = adminRunner.run(new BotAdminCommandProcess(), args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
+                    result = adminRunner.run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
                 }
             } else {
                 result = processRunner.run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
@@ -186,7 +202,7 @@ public class BotEventHandler implements EventHandler {
      * @return 如果为true则提交
      */
     public static boolean match(String message) {
-        return message.startsWith(COMMAND_PREFIX);
+        return message.startsWith(COMMAND_PREFIX) || message.startsWith(ADMIN_COMMAND_PREFIX);
     }
 
 }

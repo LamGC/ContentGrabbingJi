@@ -70,7 +70,7 @@ public class RankingUpdateTimer {
                     //BotCommandProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
                     BotEventHandler.executor.executorSync(
                             new VirtualLoadMessageEvent(0,0,
-                                    ".cgj ranking -type " + rankingMode.modeParam + " -mode " + rankingMode.modeParam));
+                                    ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name()));
                     log.info("排行榜 {}.{} 更新完成.", rankingMode.name(), contentType.name());
                 } catch (InterruptedException e) {
                     log.error("排行榜 {}.{} 更新时发生异常. \n{}", rankingMode.name(), contentType.name(), Throwables.getStackTraceAsString(e));
