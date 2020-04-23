@@ -26,15 +26,19 @@ public class RandomRankingArtworksSender extends AutoSender {
     /**
      * 构造一个推荐作品发送器
      * @param messageSender 消息发送器
-     * @param rankingStart 排行榜开始范围(从1开始, 名次)
-     * @param rankingStop 排名榜结束范围(包括该名次)
+     * @param rankingStart 排行榜开始范围(从1开始, 名次)，如传入0或负数则为默认值，默认为1
+     * @param rankingStop 排名榜结束范围(包括该名次)，如传入0或负数则为默认值，默认为150
      * @param quality 图片质量, 详见{@link net.lamgc.cgj.pixiv.PixivDownload.PageQuality}
+     * @throws IndexOutOfBoundsException 当 rankingStart > rankingStop时抛出
      */
     public RandomRankingArtworksSender(MessageSender messageSender, int rankingStart, int rankingStop, PixivDownload.PageQuality quality) {
         super(messageSender);
         log = LoggerFactory.getLogger("RecommendArtworksSender@" + Integer.toHexString(this.hashCode()));
         this.rankingStart = rankingStart > 0 ? rankingStart : 1;
         this.rankingStop = rankingStop > 0 ? rankingStop : 150;
+        if(this.rankingStart > this.rankingStop) {
+            throw new IndexOutOfBoundsException("rankingStart=" + this.rankingStart + ", rankingStop=" + this.rankingStop);
+        }
         this.quality = quality == null ? PixivDownload.PageQuality.REGULAR : quality;
     }
 
@@ -50,7 +54,7 @@ public class RandomRankingArtworksSender extends AutoSender {
         }
         queryDate = calendar.getTime();
 
-        int selectRanking = rankingStart + new Random().nextInt(rankingStop + 1);
+        int selectRanking = rankingStart + new Random().nextInt(rankingStop - rankingStart + 1);
         try {
             List<JsonObject> rankingList = BotCommandProcess.getRankingInfoByCache(
                     PixivURL.RankingContentType.TYPE_ILLUST,
