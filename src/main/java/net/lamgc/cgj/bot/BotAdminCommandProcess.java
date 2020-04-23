@@ -119,7 +119,7 @@ public class BotAdminCommandProcess {
         setting.addProperty("pageQuality.original", original);
         if(pushInfoMap.containsKey(groupId)) {
             log.info("群 {} 已存在Timer, 删除Timer...", groupId);
-            removePushTimer(groupId);
+            removePushGroup(groupId);
         }
 
         log.info("正在增加Timer...(Setting: {})", setting);
@@ -205,9 +205,10 @@ public class BotAdminCommandProcess {
      * @throws NoSuchElementException 当这个群号没有定时器的时候抛出异常
      */
     @Command
-    public static void removePushTimer(@Argument(name = "group") long id) {
+    public static String removePushGroup(@Argument(name = "group") long id) {
         RandomIntervalSendTimer.getTimerById(id).destroy();
         pushInfoMap.remove(id);
+        return "已关闭群 " + id + " 的美图推送功能。";
     }
 
     /**
