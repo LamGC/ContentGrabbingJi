@@ -70,6 +70,9 @@ public class RandomRankingArtworksSender extends AutoSender {
             if(BotCommandProcess.isNoSafe(illustId, BotCommandProcess.globalProp, false)) {
                 log.warn("作品为r18作品, 取消本次发送.");
                 return;
+            } else if(BotCommandProcess.isReported(illustId)) {
+                log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
+                return;
             }
 
             StringBuilder message = new StringBuilder();
@@ -77,7 +80,7 @@ public class RandomRankingArtworksSender extends AutoSender {
             message.append("标题：").append(rankingInfo.get("title").getAsString()).append("(").append(illustId).append(")\n");
             message.append("作者：").append(rankingInfo.get("user_name").getAsString()).append("\n");
             message.append(BotCommandProcess.getImageById(illustId, quality, 1));
-
+            message.append("\n如有不当作品，可使用\".cgj report -id ").append(illustId).append("\"向色图姬反馈。");
             getMessageSender().sendMessage(message.toString());
         } catch (IOException e) {
             e.printStackTrace();

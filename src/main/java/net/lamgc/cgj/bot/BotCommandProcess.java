@@ -55,6 +55,7 @@ public class BotCommandProcess {
     private final static CacheStore<JsonElement> searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
     private final static CacheStore<List<JsonObject>> rankingCache = new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
     private final static CacheStore<List<String>> pagesCache = new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
+    public final static CacheStore<JsonElement> reportStore = new JsonRedisCacheStore(BotEventHandler.redisServer, "report", gson);
 
     /**
      * 图片异步缓存执行器
@@ -124,8 +125,12 @@ public class BotCommandProcess {
 
     @Command(commandName = "info")
     public static String artworkInfo(@Argument(name = "id") int illustId) {
+        if(illustId <= 0) {
+            return "错误的作品id！";
+        }
+
         try {
-            if(isNoSafe(illustId, globalProp, false)) {
+            if(isNoSafe(illustId, globalProp, false) || isReported(illustId)) {
                 return "阅览禁止：该作品已被封印！！";
             }
 
@@ -142,7 +147,10 @@ public class BotCommandProcess {
             builder.append("页数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt()).append("页\n");
             builder.append("---------------- 作品图片 ----------------\n");
             builder.append(getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
-            builder.append("使用 \".cgj image -id ").append(illustId).append("\" 获取原图。");
+            builder.append("使用 \".cgj image -id ")
+                    .append(illustId)
+                    .append("\" 获取原图。\n如有不当作品，可使用\".cgj report -id ")
+                    .append(illustId).append("\"向色图姬反馈。");
             return builder.toString();
         } catch (IOException e) {
             e.printStackTrace();
@@ -242,7 +250,7 @@ public class BotCommandProcess {
             log.error("消息处理异常", e);
             return "排名榜获取失败！详情请查看机器人控制台。";
         }
-        return resultBuilder.append("如查询当前时间获取到昨天时间，则今日排名榜未更新。").toString();
+        return resultBuilder.append("如查询当前时间获取到昨天时间，则今日排名榜未更新。\n如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。").toString();
     }
 
     @Command(commandName = "userArt")
@@ -251,7 +259,6 @@ public class BotCommandProcess {
         return "功能未完成";
     }
 
-    private final static Object searchCacheLock = new Object();
     @Command
     public static String search(@Argument(name = "content") String content,
                                 @Argument(name = "type", force = false) String type,
@@ -287,26 +294,26 @@ public class BotCommandProcess {
 
         if (!Strings.isNullOrEmpty(includeKeywords)) {
             for (String keyword : includeKeywords.split(";")) {
-                searchBuilder.removeExcludeKeyword(keyword);
-                searchBuilder.addIncludeKeyword(keyword);
+                searchBuilder.removeExcludeKeyword(keyword.trim());
+                searchBuilder.addIncludeKeyword(keyword.trim());
                 log.debug("已添加关键字: {}", keyword);
             }
         }
         if (!Strings.isNullOrEmpty(excludeKeywords)) {
             for (String keyword : excludeKeywords.split(";")) {
-                searchBuilder.removeIncludeKeyword(keyword);
-                searchBuilder.addExcludeKeyword(keyword);
+                searchBuilder.removeIncludeKeyword(keyword.trim());
+                searchBuilder.addExcludeKeyword(keyword.trim());
                 log.debug("已添加排除关键字: {}", keyword);
             }
         }
 
         log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
 
-        String requestUrl = searchBuilder.buildURL();
+        String requestUrl = searchBuilder.buildURL().intern();
         log.debug("RequestUrl: {}", requestUrl);
         JsonObject resultBody = null;
         if(!searchBodyCache.exists(requestUrl)) {
-            synchronized (searchCacheLock) {
+            synchronized (requestUrl) {
                 if (!searchBodyCache.exists(requestUrl)) {
                     log.debug("searchBody缓存失效, 正在更新...");
                     JsonObject jsonObject;
@@ -396,6 +403,9 @@ public class BotCommandProcess {
                 if (isNoSafe(illustId, globalProp, true)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
+                } else if(isReported(illustId)) {
+                    log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
+                    continue;
                 }
 
                 result.append(searchArea.name()).append(" (").append(count).append(" / ").append(limit).append(")\n\t作品id: ").append(illustId)
@@ -409,7 +419,7 @@ public class BotCommandProcess {
                 break;
             }
         }
-        return Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图";
+        return Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图\n如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。";
     }
 
     @Command(commandName = "pages")
@@ -428,12 +438,15 @@ public class BotCommandProcess {
         }
     }
 
-    @Command(commandName = "artworks")
+    @Command(commandName = "artwork")
     public static String artworksLink(@Argument(name = "id") int illustId) {
         try {
             if (isNoSafe(illustId, globalProp, false)) {
                 log.warn("作品Id {} 已被屏蔽.", illustId);
                 return "由于相关设置，该作品已被屏蔽！";
+            } else if(isReported(illustId)) {
+                log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
+                return "该作品暂时被封印，请等待色图姬进一步审核！";
             }
         } catch (IOException e) {
             log.error("获取作品信息失败!", e);
@@ -478,6 +491,9 @@ public class BotCommandProcess {
             if (isNoSafe(illustId, globalProp, false)) {
                 log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
                 return "（根据设置，该作品已被屏蔽！）";
+            } else if(isReported(illustId)) {
+                log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
+                return "（该作品已被封印）";
             }
         } catch (IOException e) {
             log.warn("作品信息无法获取!", e);
@@ -549,6 +565,31 @@ public class BotCommandProcess {
         }
         log.debug("图片缓存目录删除: {}", imageStoreDir.delete());
         log.warn("缓存删除完成.");
+    }
+
+    /**
+     * 举报某一作品
+     * @param illustId 需要举报的作品id
+     * @param reason 举报原因
+     * @return 返回提示信息
+     */
+    @Command
+    public static String report(@Argument(name = "id") int illustId, @Argument(name = "msg", force = false) String reason) {
+        log.warn("收到作品反馈(IllustId: {}, 原因: {})", illustId, reason);
+        JsonObject reportJson = new JsonObject();
+        reportJson.addProperty("illustId", illustId);
+        reportJson.addProperty("reason", reason);
+        reportStore.update(String.valueOf(illustId), reportJson, 0);
+        return "色图姬收到了你的报告，将屏蔽该作品并对作品违规情况进行核实，感谢你的反馈！";
+    }
+
+    /**
+     * 检查某一作品是否被报告
+     * @param illustId 作品Id
+     * @return 如果被报告了, 返回true
+     */
+    public static boolean isReported(int illustId) {
+        return reportStore.exists(String.valueOf(illustId));
     }
 
     /*
