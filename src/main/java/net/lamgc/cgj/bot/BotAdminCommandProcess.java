@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.text.SimpleDateFormat;
 import java.util.*;
 
 public class BotAdminCommandProcess {
@@ -220,6 +221,33 @@ public class BotAdminCommandProcess {
                 RandomIntervalSendTimer.getTimerById(id).destroy();
             }
         });
+    }
+
+    @Command
+    public static String getReportList() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+        Set<String> keys = BotCommandProcess.reportStore.keys();
+        StringBuilder msgBuilder = new StringBuilder();
+        msgBuilder.append("当前被报告的作品列表：\n");
+        for(String key : keys) {
+            String illustIdStr = key.substring(key.indexOf(".") + 1);
+            JsonObject report = BotCommandProcess.reportStore.getCache(illustIdStr).getAsJsonObject();
+            log.debug("{} - Report: {}", illustIdStr, report);
+            String reason = report.get("reason").isJsonNull() ? "" : report.get("reason").getAsString();
+            msgBuilder.append(illustIdStr)
+                    .append("(").append(dateFormat.format(new Date(report.get("reportTime").getAsLong()))).append(")：")
+                    .append(reason).append("\n");
+        }
+        return msgBuilder.toString();
+    }
+
+    @Command
+    public static String unBanArtwork(@Argument(name = "id") int illustId) {
+        if(illustId <= 0) {
+            return "无效的作品id!";
+        }
+        boolean removeResult = BotCommandProcess.reportStore.remove(String.valueOf(illustId));
+        return removeResult ? "作品已解封！" : "解封失败！可能该作品并未被封禁。";
     }
 
 }

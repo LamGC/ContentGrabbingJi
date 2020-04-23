@@ -578,6 +578,7 @@ public class BotCommandProcess {
         log.warn("收到作品反馈(IllustId: {}, 原因: {})", illustId, reason);
         JsonObject reportJson = new JsonObject();
         reportJson.addProperty("illustId", illustId);
+        reportJson.addProperty("reportTime", new Date().getTime());
         reportJson.addProperty("reason", reason);
         reportStore.update(String.valueOf(illustId), reportJson, 0);
         return "色图姬收到了你的报告，将屏蔽该作品并对作品违规情况进行核实，感谢你的反馈！";
