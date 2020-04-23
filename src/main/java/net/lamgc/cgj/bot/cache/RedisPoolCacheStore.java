@@ -9,6 +9,7 @@ import redis.clients.jedis.*;
 import java.net.URI;
 import java.util.Date;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -50,29 +51,27 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
     @Override
     public void update(String key, T value, Date expire) {
-        Jedis jedis = jedisPool.getResource();
-        jedis.set(keyPrefix + key, parse(value));
-        if(expire != null) {
-            jedis.pexpireAt(keyPrefix + key, expire.getTime());
-            log.debug("已设置Key {} 的过期时间(Expire: {})", key, expire.getTime());
+        try (Jedis jedis = jedisPool.getResource()) {
+            jedis.set(keyPrefix + key, parse(value));
+            if(expire != null) {
+                jedis.pexpireAt(keyPrefix + key, expire.getTime());
+                log.debug("已设置Key {} 的过期时间(Expire: {})", key, expire.getTime());
+            }
         }
-        jedis.close();
     }
 
     @Override
     public T getCache(String key) {
-        Jedis jedis = jedisPool.getResource();
-        T result = analysis(jedis.get(keyPrefix + key));
-        jedis.close();
-        return result;
+        try (Jedis jedis = jedisPool.getResource()) {
+            return analysis(jedis.get(keyPrefix + key));
+        }
     }
 
     @Override
     public boolean exists(String key) {
-        Jedis jedis = jedisPool.getResource();
-        boolean result = jedis.exists(keyPrefix + key);
-        jedis.close();
-        return result;
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.exists(keyPrefix + key);
+        }
     }
 
     @Override
@@ -82,11 +81,17 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
     @Override
     public boolean clear() {
-        Jedis jedis = jedisPool.getResource();
-        String result = jedis.flushDB();
-        jedis.close();
-        log.info("flushDB返回结果: {}", result);
-        return true;
+        try (Jedis jedis = jedisPool.getResource()) {
+            String result = jedis.flushDB();
+            log.info("flushDB返回结果: {}", result);
+            return true;
+        }
+    }
+
+    public Set<String> keys() {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.keys(keyPrefix + "*");
+        }
     }
 
     /**
