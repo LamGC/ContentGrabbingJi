@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 
 public class BotEventHandler implements EventHandler {
 
-    public final static String COMMAND_PREFIX = ".cgj ";
+    public final static String COMMAND_PREFIX = ".cgj";
     public final static String ADMIN_COMMAND_PREFIX = ".cgjadmin ";
 
     private final ArgumentsRunner processRunner;
