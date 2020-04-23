@@ -1,6 +1,7 @@
 package net.lamgc.cgj.bot.cache;
 
 import java.util.Date;
+import java.util.Set;
 
 /**
  * 缓存库接口
@@ -67,6 +68,19 @@ public interface CacheStore<T> {
      * @return 如果清空成功, 返回true
      */
     boolean clear();
+
+    /**
+     * 获取key集合
+     * @return 返回存储缓存库中所有缓存项key的集合
+     */
+    Set<String> keys();
+
+    /**
+     * 删除指定缓存项
+     * @param key 缓存项key
+     * @return 删除成功返回true
+     */
+    boolean remove(String key);
 
     /**
      * 是否支持持久化

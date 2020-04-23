@@ -5,6 +5,7 @@ import org.jetbrains.annotations.NotNull;
 import java.util.Date;
 import java.util.Hashtable;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -95,6 +96,16 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
     public boolean clear() {
         cache.clear();
         return true;
+    }
+
+    @Override
+    public Set<String> keys() {
+        return cache.keySet();
+    }
+
+    @Override
+    public boolean remove(String key) {
+        return cache.remove(key) != null;
     }
 
     @Override

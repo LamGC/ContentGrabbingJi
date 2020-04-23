@@ -88,9 +88,17 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
         }
     }
 
+    @Override
     public Set<String> keys() {
         try (Jedis jedis = jedisPool.getResource()) {
             return jedis.keys(keyPrefix + "*");
+        }
+    }
+
+    @Override
+    public boolean remove(String key) {
+        try (Jedis jedis = jedisPool.getResource()) {
+            return jedis.del(keyPrefix + key) == 1;
         }
     }
 

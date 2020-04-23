@@ -3,9 +3,7 @@ package net.lamgc.cgj.bot.cache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Date;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 /**
  * 具有继承性的热点数据缓存库
@@ -97,6 +95,21 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
     @Override
     public boolean clear() {
         return current.clear();
+    }
+
+    @Override
+    public Set<String> keys() {
+        Set<String> keys = new HashSet<>();
+        keys.addAll(current.keys());
+        keys.addAll(parent.keys());
+        return keys;
+    }
+
+    @Override
+    public boolean remove(String key) {
+        parent.remove(key);
+        current.remove(key);
+        return true;
     }
 
     @Override
