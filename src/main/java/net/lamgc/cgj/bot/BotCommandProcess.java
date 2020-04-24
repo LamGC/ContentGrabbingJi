@@ -113,13 +113,31 @@ public class BotCommandProcess {
     public static String help() {
         StringBuilder helpStrBuilder = new StringBuilder();
         helpStrBuilder.append("CGJ Bot使用指南").append("\n");
+        helpStrBuilder.append("使用方法：.cgj <命令> [参数...]").append("\n");
+        helpStrBuilder.append("例如查询作品信息功能：").append("\n");
+        helpStrBuilder.append(".cgj artwork -id 80846159").append("\n");
         helpStrBuilder.append("目前可用的命令:").append("\n");
         helpStrBuilder.append("\t").append("ranking - 获取今天或指定日期排行榜的前10名作品").append("\n");
         helpStrBuilder.append("\t\t").append("-date - 指定查询日期(年-月-日)").append("\n");
+        helpStrBuilder.append("\t\t").append("-type - 排行榜类型(illust/插画, ugoira/动图, manga/漫画)").append("\n");
+
         helpStrBuilder.append("\t").append("search - 搜索指定关键词并显示前10个作品").append("\n");
         helpStrBuilder.append("\t\t").append("-content - 搜索内容").append("\n");
-        helpStrBuilder.append("\t").append("artworks - 获取作品的Pixiv页面").append("\n");
+
+        helpStrBuilder.append("\t").append("link - 获取作品的Pixiv页面").append("\n");
         helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
+
+        helpStrBuilder.append("\t").append("info - 获取Pixiv作品信息").append("\n");
+        helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
+
+        helpStrBuilder.append("\t").append("image - 获取指定作品的图片").append("\n");
+        helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
+        helpStrBuilder.append("\t\t").append("-quality - 图片质量(original/原图 regular/预览图)").append("\n");
+        helpStrBuilder.append("\t\t").append("-page - 页数").append("\n");
+
+        helpStrBuilder.append("\t").append("report - 报告不当作品").append("\n");
+        helpStrBuilder.append("\t\t").append("-id - 作品Id").append("\n");
+        helpStrBuilder.append("\t\t").append("-msg - 报告原因").append("\n");
         return helpStrBuilder.toString();
     }
 
@@ -259,6 +277,18 @@ public class BotCommandProcess {
         return "功能未完成";
     }
 
+    /**
+     * 搜索命令
+     * @param content 搜索内容
+     * @param type 搜索类型
+     * @param area 搜索区域
+     * @param includeKeywords 包括关键字
+     * @param excludeKeywords 排除关键字
+     * @param contentOption 搜索选项
+     * @param pagesIndex 搜索页索引
+     * @return 返回搜索内容消息
+     * @throws IOException 当搜索发生异常时抛出
+     */
     @Command
     public static String search(@Argument(name = "content") String content,
                                 @Argument(name = "type", force = false) String type,
@@ -438,7 +468,7 @@ public class BotCommandProcess {
         }
     }
 
-    @Command(commandName = "artwork")
+    @Command(commandName = "link")
     public static String artworksLink(@Argument(name = "id") int illustId) {
         try {
             if (isNoSafe(illustId, globalProp, false)) {

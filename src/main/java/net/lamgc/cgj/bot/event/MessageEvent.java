@@ -56,7 +56,7 @@ public abstract class MessageEvent implements EventObject, MessageSender {
 
     @Override
     public String toString() {
-        return "MessageEvent{" +
+        return this.getClass().getSimpleName() + "{" +
                 "fromGroup=" + getFromGroup() +
                 ", fromQQ=" + getFromQQ() +
                 ", message='" + getMessage() + '\'' +
