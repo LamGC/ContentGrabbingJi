@@ -186,7 +186,7 @@ public class PixivURL {
     public static String getRankingLink(RankingContentType contentType, RankingMode mode, Date time, int pageIndex, boolean json){
         StringBuilder linkBuilder = new StringBuilder(PIXIV_RANKING_LINK);
         linkBuilder.append("mode=").append(mode == null ? RankingMode.MODE_DAILY.modeParam : mode.modeParam);
-        if(contentType != null && !contentType.equals(RankingContentType.ALL)){
+        if(contentType != null && !contentType.equals(RankingContentType.TYPE_ALL)){
             linkBuilder.append("&content=").append(contentType.typeName);
         }
         SimpleDateFormat format = new SimpleDateFormat("yyyyMMdd");
@@ -278,7 +278,7 @@ public class PixivURL {
      * 排名榜类型
      */
     public enum RankingContentType{
-        ALL("", RankingMode.values()),
+        TYPE_ALL("", RankingMode.values()),
         /**
          * 插画
          * 支持的时间类型: 每天, 每周, 每月, 新人

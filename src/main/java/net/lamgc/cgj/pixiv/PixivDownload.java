@@ -317,6 +317,7 @@ public class PixivDownload {
         ArrayList<JsonObject> results = new ArrayList<>(range);
         for (int pageIndex = startPages; pageIndex <= endPages && count < range; pageIndex++) {
             HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, pageIndex, true));
+            log.debug("RequestUri: {}", request.getURI());
             HttpResponse response = httpClient.execute(request);
 
             if(response.getStatusLine().getStatusCode() != 200) {

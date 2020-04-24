@@ -133,6 +133,7 @@ public class RandomIntervalSendTimer extends TimerTask {
     @Override
     public boolean cancel() {
         start.set(false);
+        loop.set(false);
         return super.cancel();
     }
 
