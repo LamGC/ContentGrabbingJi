@@ -23,10 +23,7 @@ import redis.clients.jedis.JedisPool;
 import java.lang.reflect.Method;
 import java.net.URI;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Objects;
+import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -141,7 +138,7 @@ public class BotEventHandler implements EventHandler {
 
         Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
         Matcher matcher = pattern.matcher(Strings.nullToEmpty(msg));
-        ArrayList<String> argsList = new ArrayList<>();
+        List<String> argsList = new ArrayList<>();
         while (matcher.find()) {
             String arg = matcher.group();
             int startIndex = 0;
@@ -163,6 +160,12 @@ public class BotEventHandler implements EventHandler {
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
         log.debug("传入参数: {}", Arrays.toString(args));
+        argsList.add("-$fromGroup");
+        argsList.add(String.valueOf(event.getFromGroup()));
+        argsList.add("-$fromQQ");
+        argsList.add(String.valueOf(event.getFromQQ()));
+        args = Arrays.copyOf(args, args.length + 4);
+        argsList.toArray(args);
 
         log.info("正在处理命令...");
         long time = System.currentTimeMillis();

@@ -604,11 +604,13 @@ public class BotCommandProcess {
      * @return 返回提示信息
      */
     @Command
-    public static String report(@Argument(name = "id") int illustId, @Argument(name = "msg", force = false) String reason) {
+    public static String report(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "$fromQQ") long fromQQ, @Argument(name = "id") int illustId, @Argument(name = "msg", force = false) String reason) {
         log.warn("收到作品反馈(IllustId: {}, 原因: {})", illustId, reason);
         JsonObject reportJson = new JsonObject();
         reportJson.addProperty("illustId", illustId);
         reportJson.addProperty("reportTime", new Date().getTime());
+        reportJson.addProperty("fromGroup", fromGroup);
+        reportJson.addProperty("fromQQ", fromQQ);
         reportJson.addProperty("reason", reason);
         reportStore.update(String.valueOf(illustId), reportJson, 0);
         return "色图姬收到了你的报告，将屏蔽该作品并对作品违规情况进行核实，感谢你的反馈！";

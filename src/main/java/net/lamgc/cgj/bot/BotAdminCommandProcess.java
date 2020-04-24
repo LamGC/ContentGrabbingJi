@@ -105,28 +105,31 @@ public class BotAdminCommandProcess {
     }
 
     @Command
-    public static String addPushGroup(@Argument(name = "group") long groupId,
-                                      @Argument(name = "minTime", force = false, defaultValue = "21600000") long minTime,
-                                      @Argument(name = "floatTime", force = false, defaultValue = "10800000") int floatTime,
-                                      @Argument(name = "rankingStart", force = false, defaultValue = "1") int rankingStart,
-                                      @Argument(name = "rankingStop", force = false, defaultValue = "150") int rankingStop,
-                                      @Argument(name = "original", force = false, defaultValue = "false") boolean original
+    public static String addPushGroup(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "group", force = false, defaultValue = "0") long groupId,
+            @Argument(name = "minTime", force = false, defaultValue = "21600000") long minTime,
+            @Argument(name = "floatTime", force = false, defaultValue = "10800000") int floatTime,
+            @Argument(name = "rankingStart", force = false, defaultValue = "1") int rankingStart,
+            @Argument(name = "rankingStop", force = false, defaultValue = "150") int rankingStop,
+            @Argument(name = "original", force = false, defaultValue = "false") boolean original
     ) {
+        long group = groupId <= 0 ? fromGroup : groupId;
         JsonObject setting = new JsonObject();
         setting.addProperty("time.min", minTime);
         setting.addProperty("time.float", floatTime);
         setting.addProperty("ranking.start", rankingStart);
         setting.addProperty("ranking.end", rankingStop);
         setting.addProperty("pageQuality.original", original);
-        if(pushInfoMap.containsKey(groupId)) {
-            log.info("群 {} 已存在Timer, 删除Timer...", groupId);
-            removePushGroup(groupId);
+        if(pushInfoMap.containsKey(group)) {
+            log.info("群 {} 已存在Timer, 删除Timer...", group);
+            removePushGroup(fromGroup, groupId);
         }
 
         log.info("正在增加Timer...(Setting: {})", setting);
-        pushInfoMap.put(groupId, setting);
-        addPushTimer(groupId, setting);
-        return "已在 " + groupId + " 开启定时推送功能。";
+        pushInfoMap.put(group, setting);
+        addPushTimer(group, setting);
+        return "已在 " + group + " 开启定时推送功能。";
     }
 
     /**
@@ -206,10 +209,11 @@ public class BotAdminCommandProcess {
      * @throws NoSuchElementException 当这个群号没有定时器的时候抛出异常
      */
     @Command
-    public static String removePushGroup(@Argument(name = "group") long id) {
-        RandomIntervalSendTimer.getTimerById(id).destroy();
-        pushInfoMap.remove(id);
-        return "已关闭群 " + id + " 的美图推送功能。";
+    public static String removePushGroup(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "group", force = false) long id) {
+        long group = id <= 0 ? fromGroup : id;
+        RandomIntervalSendTimer.getTimerById(group).destroy();
+        pushInfoMap.remove(group);
+        return "已关闭群 " + group + " 的美图推送功能。";
     }
 
     /**
@@ -229,14 +233,17 @@ public class BotAdminCommandProcess {
         Set<String> keys = BotCommandProcess.reportStore.keys();
         StringBuilder msgBuilder = new StringBuilder();
         msgBuilder.append("当前被报告的作品列表：\n");
+        int count = 1;
         for(String key : keys) {
             String illustIdStr = key.substring(key.indexOf(".") + 1);
             JsonObject report = BotCommandProcess.reportStore.getCache(illustIdStr).getAsJsonObject();
             log.debug("{} - Report: {}", illustIdStr, report);
             String reason = report.get("reason").isJsonNull() ? "" : report.get("reason").getAsString();
-            msgBuilder.append(illustIdStr)
-                    .append("(").append(dateFormat.format(new Date(report.get("reportTime").getAsLong()))).append(")：")
-                    .append(reason).append("\n");
+            msgBuilder.append(count).append(". 作品Id: ").append(illustIdStr)
+                    .append("(").append(dateFormat.format(new Date(report.get("reportTime").getAsLong()))).append(")：\n")
+                    .append("报告者QQ：").append(report.get("fromQQ").getAsLong()).append("\n")
+                    .append("报告所在群：").append(report.get("fromGroup").getAsLong()).append("\n")
+                    .append("报告原因：\n").append(reason).append("\n");
         }
         return msgBuilder.toString();
     }
