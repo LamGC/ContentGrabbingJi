@@ -8,6 +8,7 @@ import com.google.gson.reflect.TypeToken;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import net.lamgc.cgj.bot.message.MessageSource;
 import net.lamgc.cgj.pixiv.PixivDownload;
+import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
 import org.slf4j.Logger;
@@ -104,6 +105,14 @@ public class BotAdminCommandProcess {
         return "操作已完成.";
     }
 
+    private final static String RANKING_SETTING_TIME_MIN = "time.min";
+    private final static String RANKING_SETTING_TIME_FLOAT = "time.float";
+    private final static String RANKING_SETTING_RANKING_START = "ranking.start";
+    private final static String RANKING_SETTING_RANKING_END = "ranking.end";
+    private final static String RANKING_SETTING_RANKING_MODE = "ranking.mode";
+    private final static String RANKING_SETTING_RANKING_CONTENT_TYPE = "ranking.contentType";
+    private final static String RANKING_SETTING_PAGE_QUALITY = "page.quality";
+
     @Command
     public static String addPushGroup(
             @Argument(name = "$fromGroup") long fromGroup,
@@ -112,15 +121,21 @@ public class BotAdminCommandProcess {
             @Argument(name = "floatTime", force = false, defaultValue = "10800000") int floatTime,
             @Argument(name = "rankingStart", force = false, defaultValue = "1") int rankingStart,
             @Argument(name = "rankingStop", force = false, defaultValue = "150") int rankingStop,
+            @Argument(name = "mode", force = false, defaultValue = "DAILY") String rankingMode,
+            @Argument(name = "type", force = false, defaultValue = "ILLUST") String rankingContentType,
             @Argument(name = "original", force = false, defaultValue = "false") boolean original
     ) {
         long group = groupId <= 0 ? fromGroup : groupId;
         JsonObject setting = new JsonObject();
-        setting.addProperty("time.min", minTime);
-        setting.addProperty("time.float", floatTime);
-        setting.addProperty("ranking.start", rankingStart);
-        setting.addProperty("ranking.end", rankingStop);
-        setting.addProperty("pageQuality.original", original);
+        setting.addProperty(RANKING_SETTING_TIME_MIN, minTime);
+        setting.addProperty(RANKING_SETTING_TIME_FLOAT, floatTime);
+        setting.addProperty(RANKING_SETTING_RANKING_START, rankingStart);
+        setting.addProperty(RANKING_SETTING_RANKING_END, rankingStop);
+        setting.addProperty(RANKING_SETTING_RANKING_MODE, rankingMode);
+        setting.addProperty(RANKING_SETTING_RANKING_CONTENT_TYPE, rankingContentType);
+        setting.addProperty(RANKING_SETTING_PAGE_QUALITY, original ?
+                PixivDownload.PageQuality.ORIGINAL.name() :
+                PixivDownload.PageQuality.REGULAR.name());
         if(pushInfoMap.containsKey(group)) {
             log.info("群 {} 已存在Timer, 删除Timer...", group);
             removePushGroup(fromGroup, groupId);
@@ -173,14 +188,24 @@ public class BotAdminCommandProcess {
         }
     }
 
+    /**
+     * 加载所有推送Timer
+     * @param flush 是否完全重载, 如为true则加载前会删除所有已加载的Timer
+     */
     public static void loadAllPushTimer(boolean flush) {
         if(flush) {
             RandomIntervalSendTimer.timerIdSet().forEach(id -> RandomIntervalSendTimer.getTimerById(id).destroy());
+        } else {
+            cleanPushTimer();
         }
-        cleanPushTimer();
         pushInfoMap.forEach(BotAdminCommandProcess::addPushTimer);
     }
 
+    /**
+     * 根据设置增加Timer
+     * @param id 群组id
+     * @param setting jsonObject设置集
+     */
     private static void addPushTimer(long id, JsonObject setting) {
         try {
             RandomIntervalSendTimer.getTimerById(id);
@@ -188,11 +213,56 @@ public class BotAdminCommandProcess {
         } catch(NoSuchElementException ignored) {
         }
 
+        int rankingStart = setting.has(RANKING_SETTING_RANKING_START) ? setting.get(RANKING_SETTING_RANKING_START).getAsInt() : 1;
+        int rankingEnd = setting.has(RANKING_SETTING_RANKING_END) ? setting.get(RANKING_SETTING_RANKING_END).getAsInt() : 150;
+        PixivURL.RankingMode rankingMode = PixivURL.RankingMode.MODE_DAILY;
+        PixivURL.RankingContentType rankingContentType = PixivURL.RankingContentType.TYPE_ILLUST;
+        PixivDownload.PageQuality pageQuality = PixivDownload.PageQuality.REGULAR;
+
+        if(rankingStart <= 0 || rankingStart > 500) {
+            log.warn("群组 [{}] - 无效的RankingStart设定值, 将重置为默认设定值(1): {}", id, rankingStart);
+            rankingStart = 1;
+        } else if(rankingEnd > 500 || rankingEnd <= 0) {
+            log.warn("群组 [{}] - 无效的RankingEnd设定值, 将重置为默认设定值(150): {}", id, rankingEnd);
+            rankingEnd = 150;
+        } else if(rankingStart > rankingEnd) {
+            log.warn("群组 [{}] - 无效的排行榜选取范围, 将重置为默认设定值(1 ~ 150): start={}, end={}", id, rankingStart, rankingEnd);
+            rankingStart = 1;
+            rankingEnd = 150;
+        }
+
+        if(setting.has(RANKING_SETTING_RANKING_MODE)) {
+            String value = setting.get(RANKING_SETTING_RANKING_MODE).getAsString().trim().toUpperCase();
+            try {
+                rankingMode = PixivURL.RankingMode.valueOf(value.startsWith("MODE_") ? value : "MODE_" + value);
+            } catch(IllegalArgumentException e) {
+                log.warn("群组ID [{}] - 无效的RankingMode设定值, 将重置为默认值: {}", id, value);
+            }
+        }
+        if(setting.has(RANKING_SETTING_RANKING_CONTENT_TYPE)) {
+            String value = setting.get(RANKING_SETTING_RANKING_CONTENT_TYPE).getAsString().trim().toUpperCase();
+            try {
+                rankingContentType = PixivURL.RankingContentType.valueOf(value.startsWith("TYPE_") ? value : "TYPE_" + value);
+            } catch(IllegalArgumentException e) {
+                log.warn("群组ID [{}] - 无效的RankingContentType设定值: {}", id, value);
+            }
+        }
+
+        if(setting.has(RANKING_SETTING_PAGE_QUALITY)) {
+            String value = setting.get(RANKING_SETTING_PAGE_QUALITY).getAsString().trim().toUpperCase();
+            try {
+                pageQuality = PixivDownload.PageQuality.valueOf(value);
+            } catch(IllegalArgumentException e) {
+                log.warn("群组ID [{}] - 无效的PageQuality设定值: {}", id, value);
+            }
+        }
+
         AutoSender sender = new RandomRankingArtworksSender(
                 MessageSenderBuilder.getMessageSender(MessageSource.Group, id),
-                setting.get("ranking.start").getAsInt(),
-                setting.get("ranking.end").getAsInt(),
-                setting.get("pageQuality.original").getAsBoolean() ? PixivDownload.PageQuality.ORIGINAL : PixivDownload.PageQuality.REGULAR
+                rankingStart,
+                rankingEnd,
+                rankingMode, rankingContentType,
+                pageQuality
         );
 
         RandomIntervalSendTimer.createTimer(

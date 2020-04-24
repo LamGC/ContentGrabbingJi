@@ -21,6 +21,8 @@ public class RandomRankingArtworksSender extends AutoSender {
     private final Logger log;
     private final int rankingStart;
     private final int rankingStop;
+    private final PixivURL.RankingMode mode;
+    private final PixivURL.RankingContentType contentType;
     private final PixivDownload.PageQuality quality;
 
     /**
@@ -28,11 +30,15 @@ public class RandomRankingArtworksSender extends AutoSender {
      * @param messageSender 消息发送器
      * @param rankingStart 排行榜开始范围(从1开始, 名次)，如传入0或负数则为默认值，默认为1
      * @param rankingStop 排名榜结束范围(包括该名次)，如传入0或负数则为默认值，默认为150
-     * @param quality 图片质量, 详见{@link net.lamgc.cgj.pixiv.PixivDownload.PageQuality}
+     * @param mode 排行榜模式
+     * @param contentType 排行榜内容类型
+     * @param quality 图片质量, 详见{@link PixivDownload.PageQuality}
      * @throws IndexOutOfBoundsException 当 rankingStart > rankingStop时抛出
      */
-    public RandomRankingArtworksSender(MessageSender messageSender, int rankingStart, int rankingStop, PixivDownload.PageQuality quality) {
+    public RandomRankingArtworksSender(MessageSender messageSender, int rankingStart, int rankingStop, PixivURL.RankingMode mode, PixivURL.RankingContentType contentType, PixivDownload.PageQuality quality) {
         super(messageSender);
+        this.mode = mode;
+        this.contentType = contentType;
         log = LoggerFactory.getLogger("RecommendArtworksSender@" + Integer.toHexString(this.hashCode()));
         this.rankingStart = rankingStart > 0 ? rankingStart : 1;
         this.rankingStop = rankingStop > 0 ? rankingStop : 150;
@@ -57,8 +63,8 @@ public class RandomRankingArtworksSender extends AutoSender {
         int selectRanking = rankingStart + new Random().nextInt(rankingStop - rankingStart + 1);
         try {
             List<JsonObject> rankingList = BotCommandProcess.getRankingInfoByCache(
-                    PixivURL.RankingContentType.TYPE_ILLUST,
-                    PixivURL.RankingMode.MODE_DAILY,
+                    contentType,
+                    mode,
                     queryDate,
                     selectRanking,
                     1, false);
