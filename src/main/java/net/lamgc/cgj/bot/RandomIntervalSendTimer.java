@@ -1,5 +1,6 @@
 package net.lamgc.cgj.bot;
 
+import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -120,7 +121,11 @@ public class RandomIntervalSendTimer extends TimerTask {
 
     @Override
     public void run() {
-        sender.send();
+        try {
+            sender.send();
+        } catch (Exception e) {
+            log.error("定时器 {} 执行时发生异常:\n{}", Integer.toHexString(this.hashCode()), Throwables.getStackTraceAsString(e));
+        }
         if (this.loop.get()) {
             start();
         }

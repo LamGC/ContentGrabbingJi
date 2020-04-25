@@ -265,12 +265,13 @@ public class BotAdminCommandProcess {
                 pageQuality
         );
 
-        RandomIntervalSendTimer.createTimer(
+        RandomIntervalSendTimer timer = RandomIntervalSendTimer.createTimer(
                 id,
                 sender,
                 setting.get("time.min").getAsLong(),
                 setting.get("time.float").getAsInt(),
                 true, true);
+        log.info("群组 {} 已创建对应Timer: {}", id, Integer.toHexString(timer.hashCode()));
     }
 
     /**

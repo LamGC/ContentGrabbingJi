@@ -319,12 +319,13 @@ public class PixivDownload {
             HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, pageIndex, true));
             log.debug("RequestUri: {}", request.getURI());
             HttpResponse response = httpClient.execute(request);
-
+            String responseBody = EntityUtils.toString(response.getEntity());
+            log.debug("ResponseBody: {}", responseBody);
             if(response.getStatusLine().getStatusCode() != 200) {
                 throw new IOException("Http Response Error: " + response.getStatusLine());
             }
 
-            JsonArray resultArray = gson.fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class).getAsJsonArray("contents");
+            JsonArray resultArray = gson.fromJson(responseBody, JsonObject.class).getAsJsonArray("contents");
             for (int resultIndex = startIndex; resultIndex < resultArray.size() && count < range; resultIndex++, count++) {
                 results.add(resultArray.get(resultIndex).getAsJsonObject());
             }
