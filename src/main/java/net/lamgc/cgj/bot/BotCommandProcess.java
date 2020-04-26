@@ -568,6 +568,12 @@ public class BotCommandProcess {
         return getImageToBotCode(imageCache.get(fileName), false).toString();
     }
 
+    /**
+     * 通过文件获取图片的BotCode代码
+     * @param targetFile 图片文件
+     * @param updateCache 是否刷新缓存(只是让机器人重新上传, 如果上传接口有重复检测的话是无法处理的)
+     * @return 返回设定好参数的BotCode
+     */
     private static BotCode getImageToBotCode(File targetFile, boolean updateCache) {
         String fileName = targetFile.getName();
         BotCode code = BotCode.parse(CQCode.image(getImageStoreDir().getName() + "/" + fileName));

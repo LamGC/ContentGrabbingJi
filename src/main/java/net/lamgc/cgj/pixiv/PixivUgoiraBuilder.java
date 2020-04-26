@@ -135,7 +135,7 @@ public final class PixivUgoiraBuilder {
                 image.getRGB(0, 0, image.getWidth(), image.getHeight(), rgb, 0, image.getWidth());
                 log.trace("帧解析完成, 正在插入...");
                 encoder.addImage(Image.fromRgb(rgb, image.getWidth()), new ImageOptions().setDelay(frameInfo.get("delay").getAsLong(), TimeUnit.MILLISECONDS));
-                log.debug("帧 {} 插入完成.", frameFileName);
+                log.trace("帧 {} 插入完成.", frameFileName);
             } catch (IOException e) {
                 log.error("解析帧图片数据时发生异常", e);
             }
