@@ -599,12 +599,29 @@ public class PixivDownload {
             return null;
         }
 
+        /**
+         * 通过预加载数据获取作品类型
+         * @param illustId 作品Id
+         * @param preLoadDataObject 预加载数据(IllustInfo也可以)
+         * @return 如果存在illustType属性, 则返回对应项, 如没有, 或数据内不存在指定作品id的数据, 返回null
+         */
         public static PixivIllustType getIllustTypeByPreLoadData(int illustId, JsonObject preLoadDataObject) {
-            JsonObject illustData;
+            JsonObject illustData = null;
             if(preLoadDataObject.has("illust")) {
                 illustData = preLoadDataObject.getAsJsonObject("illust").getAsJsonObject(String.valueOf(illustId));
             } else if(preLoadDataObject.has(String.valueOf(illustId))) {
                 illustData = preLoadDataObject.getAsJsonObject(String.valueOf(illustId));
+            } else if(preLoadDataObject.has("body")) { // 解析IllustInfo
+                for (JsonElement jsonElement : preLoadDataObject.getAsJsonObject("body").getAsJsonArray("illusts")) {
+                    JsonObject illustInfo = jsonElement.getAsJsonObject();
+                    if (illustInfo.get("illustId").getAsInt() == illustId) {
+                        illustData = illustInfo;
+                        break;
+                    }
+                }
+                if(illustData == null) {
+                    return null;
+                }
             } else {
                 illustData = preLoadDataObject;
             }

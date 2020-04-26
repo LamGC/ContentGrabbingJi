@@ -1,8 +1,15 @@
 package net.lamgc.cgj.pixiv;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
 import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -200,6 +207,19 @@ public class PixivDownloadTest {
     @Test
     public void getIllustPreLoadDataByIdTest() throws IOException {
         log.info(new PixivDownload(cookieStore, proxy).getIllustPreLoadDataById(64076261).toString());
+    }
+
+    @Test
+    public void illustInfoTest() throws IOException {
+        CloseableHttpClient httpClient = HttpClientBuilder.create().setProxy(new HttpHost("127.0.0.1", 1001)).build();
+        HttpGet request = new HttpGet(PixivURL.getPixivIllustInfoAPI(80880547));
+        CloseableHttpResponse response = httpClient.execute(request);
+        String body = EntityUtils.toString(response.getEntity());
+        JsonObject illustInfoResult = new Gson().fromJson(body, JsonObject.class);
+        log.info("IllustInfoJsonResult: {}", illustInfoResult);
+        PixivDownload.PixivIllustType illustType = PixivDownload.PixivIllustType.getIllustTypeByPreLoadData(80880547, illustInfoResult);
+        log.info("IllustType: {}", illustType);
+        Assert.assertEquals(PixivDownload.PixivIllustType.UGOIRA, illustType);
     }
 
 }
