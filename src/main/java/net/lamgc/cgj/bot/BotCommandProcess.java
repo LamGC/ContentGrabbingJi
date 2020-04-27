@@ -786,7 +786,7 @@ public class BotCommandProcess {
         }
 
         if (Objects.isNull(result)) {
-            result = rankingCache.getCache(requestSign, start, range);
+            result = rankingCache.getCache(requestSign, start - 1, range);
             log.debug("RequestSign [{}] 缓存命中.", requestSign);
         }
         log.debug("Result-Length: {}", result.size());

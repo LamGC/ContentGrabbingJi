@@ -16,7 +16,7 @@ public class MiraiMessageEvent extends MessageEvent {
 
     public MiraiMessageEvent(ContactMessage message) {
         super(message instanceof GroupMessage ? ((GroupMessage) message).getGroup().getId() : 0,
-                message.getSender().getId(), message.getMessage().toString());
+                message.getSender().getId(), message.getMessage().contentToString());
         this.messageObject = Objects.requireNonNull(message);
         if(message instanceof GroupMessage) {
             messageSender = new MiraiMessageSender(((GroupMessage) message).getGroup(), MessageSource.Group);

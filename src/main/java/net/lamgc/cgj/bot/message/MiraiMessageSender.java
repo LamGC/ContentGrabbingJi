@@ -9,9 +9,9 @@ import net.lamgc.cgj.bot.cache.StringRedisCacheStore;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
-import net.mamoe.mirai.message.data.CombinedMessage;
 import net.mamoe.mirai.message.data.Image;
 import net.mamoe.mirai.message.data.Message;
+import net.mamoe.mirai.message.data.MessageChain;
 import net.mamoe.mirai.message.data.MessageUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,7 +78,7 @@ public class MiraiMessageSender implements MessageSender {
                 .replaceAll("&38", "&")
                 .split("\\|");
 
-        CombinedMessage chain = MessageUtils.newChain().plus("");
+        MessageChain messages = MessageUtils.newChain().plus("");
         int codeIndex = 0;
         for(String text : texts) {
             if(text.equals("{BotCode}")) {
@@ -89,13 +89,13 @@ public class MiraiMessageSender implements MessageSender {
                     log.warn("解析待发送消息内的BotCode时发生异常, 请检查错误格式BotCode的来源并尽快排错!", e);
                     continue;
                 }
-                chain = chain.plus(processBotCode(code));
+                messages = messages.plus(processBotCode(code));
             } else {
-                chain = chain.plus(text);
+                messages = messages.plus(text);
             }
         }
 
-        return chain;
+        return messages;
     }
 
     private Message processBotCode(BotCode code) {
