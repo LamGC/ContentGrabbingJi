@@ -138,7 +138,7 @@ public class MiraiMessageSender implements MessageSender {
                         log.debug("imageName [{}] 缓存失效或强制更新, 正在更新缓存...", imageName);
                         image = uploadImage0(new File(absolutePath));
                         String cacheExpireAt;
-                        long expireTime = 0;
+                        long expireTime = 864000000; // 10d
                         if(!Strings.isNullOrEmpty(cacheExpireAt = code.getParameter("cacheExpireAt"))) {
                             try {
                                 expireTime = Integer.parseInt(cacheExpireAt);
