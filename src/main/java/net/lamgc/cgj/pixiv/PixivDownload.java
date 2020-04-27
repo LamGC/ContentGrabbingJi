@@ -299,6 +299,7 @@ public class PixivDownload {
      */
     public List<JsonObject> getRanking(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode,
                                            Date time, int rankStart, int range) throws IOException {
+        Objects.requireNonNull(time);
         if(!Objects.requireNonNull(contentType).isSupportedMode(Objects.requireNonNull(mode))) {
             throw new IllegalArgumentException("ContentType不支持指定的RankingMode: ContentType: " + contentType.name() + ", Mode: " + mode.name());
         } else if(rankStart <= 0) {
@@ -322,7 +323,7 @@ public class PixivDownload {
             String responseBody = EntityUtils.toString(response.getEntity());
             log.debug("ResponseBody: {}", responseBody);
             if(response.getStatusLine().getStatusCode() != 200) {
-                throw new IOException("Http Response Error: " + response.getStatusLine());
+                throw new IOException("Http Response Error: '" + response.getStatusLine() + "', ResponseBody: '" + responseBody + '\'');
             }
 
             JsonArray resultArray = gson.fromJson(responseBody, JsonObject.class).getAsJsonArray("contents");
@@ -432,13 +433,14 @@ public class PixivDownload {
         THUMB_MINI
     }
 
-
-
     /**
      * 获取帐号所有的收藏插画，并以输入流形式提供
      * @return 获取所有链接的InputStream, 请注意关闭InputStream
      * @throws IOException 当获取时发生异常则直接抛出
+     * @deprecated 该方法可能会导致已经打开的InputStream超时, 使图片获取失败,
+     *          请直接使用{@linkplain #getCollectionAsInputStream(PageQuality, BiConsumer)}
      */
+    @Deprecated
     public Set<Map.Entry<String, InputStream>> getCollectionAsInputStream(PageQuality quality) throws IOException {
         HashSet<Map.Entry<String, InputStream>> illustInputStreamSet = new HashSet<>();
         getCollectionAsInputStream(quality, (link, inputStream) -> illustInputStreamSet.add(new AbstractMap.SimpleEntry<>(link, inputStream)));
