@@ -336,7 +336,7 @@ public class PixivURL {
          * @return 如果支持返回true
          */
         public boolean isSupportedMode(RankingMode mode) {
-            return Arrays.binarySearch(supportedMode, mode) < 0;
+            return Arrays.binarySearch(supportedMode, mode) >= 0;
         }
 
     }
