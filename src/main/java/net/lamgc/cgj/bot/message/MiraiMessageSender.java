@@ -101,12 +101,18 @@ public class MiraiMessageSender implements MessageSender {
     private Message processBotCode(BotCode code) {
         switch(code.getFunctionName().toLowerCase()) {
             case "image":
+                Image img;
                 if(code.containsParameter("id")) {
-                    return MessageUtils.newImage(code.getParameter("id"));
+                    img = MessageUtils.newImage(code.getParameter("id"));
                 } else if(code.containsParameter("absolutePath")) {
-                    return uploadImage(code);
+                    img = uploadImage(code);
                 } else {
                     return MessageUtils.newChain("(参数不存在)");
+                }
+                if(code.getParameter("flashImage").equalsIgnoreCase("true")) {
+                    return MessageUtils.flash(img);
+                } else {
+                    return img;
                 }
             default:
                 log.warn("解析到不支持的BotCode: {}", code);
