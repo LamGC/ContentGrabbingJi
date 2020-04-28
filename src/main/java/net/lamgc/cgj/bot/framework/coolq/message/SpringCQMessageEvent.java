@@ -1,9 +1,9 @@
-package net.lamgc.cgj.bot.event;
+package net.lamgc.cgj.bot.framework.coolq.message;
 
 import net.lamgc.cgj.bot.BotCode;
+import net.lamgc.cgj.bot.event.MessageEvent;
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSource;
-import net.lamgc.cgj.bot.message.SpringCQMessageSender;
 import net.lz1998.cq.event.message.CQDiscussMessageEvent;
 import net.lz1998.cq.event.message.CQGroupMessageEvent;
 import net.lz1998.cq.event.message.CQMessageEvent;

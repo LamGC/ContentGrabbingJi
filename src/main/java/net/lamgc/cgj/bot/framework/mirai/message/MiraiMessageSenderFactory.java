@@ -1,5 +1,8 @@
-package net.lamgc.cgj.bot.message;
+package net.lamgc.cgj.bot.framework.mirai.message;
 
+import net.lamgc.cgj.bot.message.MessageSender;
+import net.lamgc.cgj.bot.message.MessageSenderFactory;
+import net.lamgc.cgj.bot.message.MessageSource;
 import net.mamoe.mirai.Bot;
 
 public class MiraiMessageSenderFactory implements MessageSenderFactory {

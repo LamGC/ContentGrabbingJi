@@ -1,8 +1,8 @@
-package net.lamgc.cgj.bot.event;
+package net.lamgc.cgj.bot.framework.mirai.message;
 
+import net.lamgc.cgj.bot.event.MessageEvent;
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSource;
-import net.lamgc.cgj.bot.message.MiraiMessageSender;
 import net.mamoe.mirai.message.ContactMessage;
 import net.mamoe.mirai.message.GroupMessage;
 import net.mamoe.mirai.message.data.MessageUtils;

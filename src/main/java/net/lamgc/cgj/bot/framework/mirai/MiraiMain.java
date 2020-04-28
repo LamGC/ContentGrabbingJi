@@ -1,9 +1,9 @@
-package net.lamgc.cgj.bot;
+package net.lamgc.cgj.bot.framework.mirai;
 
 import net.lamgc.cgj.bot.event.BotEventHandler;
-import net.lamgc.cgj.bot.event.MiraiMessageEvent;
+import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageEvent;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
-import net.lamgc.cgj.bot.message.MiraiMessageSenderFactory;
+import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageSenderFactory;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactoryJvm;
 import net.mamoe.mirai.japt.Events;

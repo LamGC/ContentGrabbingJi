@@ -1,4 +1,4 @@
-package net.lamgc.cgj.bot.message;
+package net.lamgc.cgj.bot.framework.mirai.message;
 
 import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.BotCode;
@@ -7,6 +7,8 @@ import net.lamgc.cgj.bot.cache.HotDataCacheStore;
 import net.lamgc.cgj.bot.cache.LocalHashCacheStore;
 import net.lamgc.cgj.bot.cache.StringRedisCacheStore;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.message.MessageSender;
+import net.lamgc.cgj.bot.message.MessageSource;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
 import net.mamoe.mirai.message.data.Image;

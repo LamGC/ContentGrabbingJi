@@ -1,4 +1,4 @@
-package net.lamgc.cgj.bot;
+package net.lamgc.cgj.bot.framework.coolq;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.lz1998.cq.CQGlobal;
