@@ -26,8 +26,7 @@ import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * Pixiv动图构建器.
- * 可便捷的接收并处理动图.
+ * Pixiv动图构建器
  */
 public final class PixivUgoiraBuilder {
 

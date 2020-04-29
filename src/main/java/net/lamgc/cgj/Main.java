@@ -9,8 +9,9 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.framework.coolq.CQConfig;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
-import net.lamgc.cgj.pixiv.*;
-import net.lamgc.cgj.proxy.PixivAccessProxyServer;
+import net.lamgc.cgj.pixiv.PixivDownload;
+import net.lamgc.cgj.pixiv.PixivSearchBuilder;
+import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.plps.PixivLoginProxyServer;
 import net.lamgc.utils.base.ArgumentsProperties;
 import net.lamgc.utils.base.runner.Argument;
@@ -20,9 +21,7 @@ import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.message.BasicHeader;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -355,84 +354,14 @@ public class Main {
                         builder,
                         PixivURL.getPixivRefererLink(illustId)
                 );
-
-                /*log.info("正在下载...");
-                List<String> list = PixivDownload.getIllustAllPageDownload(
-                        HttpClientBuilder.create()
-                                .setProxy(proxy)
-                                .build(),
-                        illustId, PixivDownload.PageQuality.ORIGINAL);*/
             }
         }
-        /*
-
-        if(searchBuilder.getSearchArea().equals(PixivSearchBuilder.SearchArea.TOP)) {
-
-        } else {
-            JsonArray illustsArray = resultBody
-                    .getAsJsonObject(searchBuilder.getSearchArea().jsonKey).getAsJsonArray("data");
-            log.info("已找到与 {} 相关插图信息：", content);
-            int count = 1;
-            for (JsonElement jsonElement : illustsArray) {
-                JsonObject illustObj = jsonElement.getAsJsonObject();
-                //TODO: 防止数据内混入无效内容, 需要检查对象是否有illustId
-                if(!illustObj.has("illustId")) {
-                    continue;
-                }
-                int illustId = illustObj.get("illustId").getAsInt();
-                StringBuilder builder = new StringBuilder("[");
-                illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
-                builder.replace(builder.length() - 2, builder.length(), "]");
-                log.info("({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t作品链接: {}",
-                        count++,
-                        illustsArray.size(),
-                        illustId,
-                        illustObj.get("userName").getAsString(),
-                        illustObj.get("userId").getAsInt(),
-                        illustObj.get("illustTitle").getAsString(),
-                        builder,
-                        PixivURL.getPixivRefererLink(illustId)
-                );
-            }
-        }
-        */
     }
 
 
     @Command(defaultCommand = true)
     public static void testRun() {
-        /*loadCookieStoreFromFile();
-
-        if(cookieStore == null){
-            startPixivLoginProxyServer();
-        }*/
-
-        //accessPixivToFile();
-
-        //startPixivAccessProxyServer();
-
-        //saveCookieStoreToFile();
         log.info("这里啥都没有哟w");
-    }
-
-    private static void loadCookieStoreFromFile() throws IOException {
-        log.info("正在加载CookieStore...");
-        File storeFile = new File("./cookies.store");
-        if(!storeFile.exists()){
-            log.info("未找到CookieStore, 跳过加载.");
-            return;
-        }
-        ObjectInputStream stream = new ObjectInputStream(new FileInputStream(storeFile));
-        Object result;
-        try {
-            result = stream.readObject();
-        } catch (ClassNotFoundException e) {
-            log.error("加载出错", e);
-            return;
-        }
-        cookieStore = (CookieStore) result;
-        cookieStore.getCookies().forEach(cookie -> log.debug(cookie.getName() + ": " + cookie.getValue() + ", isExpired: " + cookie.isExpired(new Date())));
-        log.info("CookieStore加载完成.");
     }
 
     private static void saveCookieStoreToFile() throws IOException {
@@ -482,77 +411,6 @@ public class Main {
                 log.warn("要结束登录过程, 请使用\"done\"命令.");
             }
         }
-    }
-
-    private static void accessPixivToFile() throws IOException {
-        File cookieStoreFile = new File("./cookie.txt");
-        if (!cookieStoreFile.exists() && !cookieStoreFile.createNewFile()) {
-            log.info("Cookie文件存储失败");
-        }
-        /*log.info("正在写出Cookie, Cookie count: " + cookieStore.getCookies().size());
-        FileWriter cookieWriter = new FileWriter(cookieStoreFile);
-        cookieStore.getCookies().forEach(cookie -> {
-            try {
-                StringBuilder sb = new StringBuilder().append(cookie.getName()).append(" = ").append(cookie.getValue());
-                log.info("正在导出Cookie: " + sb.toString());
-                cookieWriter.append(sb.toString()).append("\n").flush();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        });
-        log.info("Cookie写出完成");*/
-
-        log.info("尝试通过捕获的Cookie访问Pixiv...");
-        HttpClient httpClient = new PixivSession(new HttpHost("127.0.0.1", 1080), cookieStore).getHttpClient();
-        HttpGet request = new HttpGet("https://www.pixiv.net");
-        request.addHeader("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:73.0) Gecko/20100101 Firefox/73.0");
-        request.addHeader(new BasicHeader("accept-encoding", "gzip, deflate, br"));
-        request.addHeader(new BasicHeader("accept-language", "zh-CN,zh;q=0.9"));
-        StringBuilder cookieBuilder = new StringBuilder();
-        cookieStore.getCookies().forEach(cookie -> {
-            if(cookie.isExpired(new Date())){
-                return;
-            }
-            cookieBuilder.append(cookie.getName()).append("=").append(cookie.getValue()).append("; ");
-        });
-        request.addHeader("cookie", cookieBuilder.toString());
-
-        HttpResponse response = httpClient.execute(request);
-        log.info("正在写入文件...");
-        File outFile = new File("./pixiv.html");
-        if (outFile.createNewFile() && !outFile.exists()) {
-            log.info("文件创建失败!");
-        }else {
-            new FileWriter(outFile).append(EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8)).flush();
-        }
-
-        Pixiv pixiv = new Pixiv(httpClient);
-        pixiv.getRecommend().forEach(illustMap -> {
-            StringBuilder builder = new StringBuilder();
-            illustMap.forEach((key, value) -> builder.append(key).append(": ").append(value).append("\n"));
-            try {
-                builder.append("download Link: ").append(Arrays.toString(pixiv.getAllDownloadLink(Integer.parseInt(illustMap.get(Pixiv.ATTR_ILLUST_ID)))));
-            } catch (IOException e) {
-                log.error("获取下载链接时出错!", e);
-            }
-            log.info(builder.append("\n").toString());
-        });
-
-    }
-
-    private static void startPixivAccessProxyServer(){
-        log.info("正在启动访问代理服务器, 将浏览器相关缓存清空后, 使用浏览器进行访问以尝试Cookie正确性.");
-        final PixivAccessProxyServer accessProxyServer = new PixivAccessProxyServer(cookieStore, new ProxyConfig(ProxyType.SOCKS5, "127.0.0.1", 1080));
-        Thread accessProxyServerThread = new Thread(() -> {
-            log.info("正在启动PAPS...");
-            accessProxyServer.start(1007);
-            log.info("PAPS已关闭.");
-        });
-        accessProxyServerThread.setName("AccessProxyServerThread");
-        accessProxyServerThread.start();
-        new Scanner(System.in).nextLine();
-        log.info("关闭PAPS服务器...");
-        accessProxyServer.close();
     }
 
 }

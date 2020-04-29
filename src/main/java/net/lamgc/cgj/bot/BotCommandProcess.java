@@ -684,7 +684,7 @@ public class BotCommandProcess {
         if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
             synchronized (illustIdStr) {
                 if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-                    log.info("IllustId {} 缓存失效, 正在更新...", illustId);
+                    log.debug("IllustId {} 缓存失效, 正在更新...", illustId);
                     JsonObject preLoadDataObj = pixivDownload.getIllustPreLoadDataById(illustId)
                             .getAsJsonObject("illust")
                             .getAsJsonObject(Integer.toString(illustId));
@@ -700,7 +700,7 @@ public class BotCommandProcess {
 
                     result = preLoadDataObj;
                     illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, expire);
-                    log.info("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
+                    log.debug("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
                 }
             }
         }
@@ -772,15 +772,16 @@ public class BotCommandProcess {
         if(!rankingCache.exists(requestSign) || flushCache) {
             synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign) || flushCache) {
-                    log.info("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
+                    log.debug("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
                     List<JsonObject> rankingResult = pixivDownload.getRanking(contentType, mode, queryDate, 1, 500);
+                    long expireTime = 0;
                     if(rankingResult.size() == 0) {
-                        log.info("数据获取失败, 将设置浮动有效时间以准备下次更新.");
+                        expireTime = 5400000 + expireTimeFloatRandom.nextInt(1800000);
+                        log.warn("数据获取失败, 将设置浮动有效时间以准备下次更新. (ExpireTime: {}ms)", expireTime);
                     }
                     result = new ArrayList<>(rankingResult).subList(start - 1, start + range - 1);
-                    rankingCache.update(requestSign, rankingResult,
-                            rankingResult.size() == 0 ? 5400000 + expireTimeFloatRandom.nextInt(1800000) : 0);
-                    log.info("Ranking缓存更新完成.(RequestSign: {})", requestSign);
+                    rankingCache.update(requestSign, rankingResult, expireTime);
+                    log.debug("Ranking缓存更新完成.(RequestSign: {})", requestSign);
                 }
             }
         }

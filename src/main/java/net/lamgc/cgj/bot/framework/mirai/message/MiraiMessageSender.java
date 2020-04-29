@@ -156,7 +156,7 @@ public class MiraiMessageSender implements MessageSender {
                             }
                         }
                         imageIdCache.update(imageName, image.getImageId(), expireTime);
-                        log.info("imageName [{}] 缓存更新完成.(有效时间: {})", imageName, expireTime);
+                        log.debug("imageName [{}] 缓存更新完成.(有效时间: {})", imageName, expireTime);
                     } else {
                         log.debug("ImageName: [{}] 缓存命中.", imageName);
                     }

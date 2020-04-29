@@ -181,19 +181,6 @@ public class PixivDownloadTest {
         log.info("正在调用方法...");
         try {
             pixivDownload.getRankingAsInputStream(null, null, queryDate, 5, 50, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
-                /*try {
-
-                    ZipEntry entry = new ZipEntry("Rank" + rank + "-" + link.substring(link.lastIndexOf("/") + 1));
-                    entry.setComment(rankInfo.toString());
-                    log.info("正在写入: " + entry.getName());
-                    zos.putNextEntry(entry);
-                    IOUtils.copy(inputStream, zos);
-                    zos.flush();
-                    log.info("已成功写入 {}", entry.getName());
-                    inputStream.close();
-                } catch (IOException e) {
-                    log.error("写入文件项时发生异常", e);
-                }*/
                 log.info("空操作");
             });
         } finally {

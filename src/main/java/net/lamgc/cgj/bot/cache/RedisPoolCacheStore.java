@@ -82,9 +82,7 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
     @Override
     public boolean clear() {
         try (Jedis jedis = jedisPool.getResource()) {
-            String result = jedis.flushDB();
-            log.info("flushDB返回结果: {}", result);
-            return true;
+            return jedis.flushDB().equalsIgnoreCase("ok");
         }
     }
 
@@ -158,13 +156,4 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
         return false;
     }
 
-    /**
-     * 替换原本的分隔符(.)为(:).<br/>
-     * 即将启用
-     * @param key 要处理的键名
-     * @return 处理后的键名
-     */
-    public static String replaceKey(String key) {
-        return key.replaceAll("\\.", ":");
-    }
 }

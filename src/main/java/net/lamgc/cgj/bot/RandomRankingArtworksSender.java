@@ -69,7 +69,7 @@ public class RandomRankingArtworksSender extends AutoSender {
                     selectRanking,
                     1, false);
 
-            log.info("RankingResult.size: {}", rankingList.size());
+            log.debug("RankingResult.size: {}", rankingList.size());
             if(rankingList.size() != 1) {
                 log.error("排行榜选取失败!(获取到了多个结果)");
                 return;

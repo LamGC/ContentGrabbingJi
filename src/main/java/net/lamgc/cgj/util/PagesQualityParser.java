@@ -7,7 +7,7 @@ import net.lamgc.utils.base.runner.StringParameterParser;
 public class PagesQualityParser implements StringParameterParser<PixivDownload.PageQuality> {
 
     @Override
-    public PixivDownload.PageQuality parse(String strValue) throws Exception {
+    public PixivDownload.PageQuality parse(String strValue) {
         return PixivDownload.PageQuality.valueOf(strValue.toUpperCase());
     }
 

@@ -9,6 +9,13 @@ import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
 
+/**
+ * Pixiv搜索URL构造器
+ * <p>该构造器通过分析Pixiv搜索链接可用的参数而开发, 对搜索链接的构造有高度自定义能力.</p>
+ * @author LamGC
+ * @see PixivURL#PIXIV_SEARCH_CONTENT_URL
+ */
+@SuppressWarnings("ALL")
 public class PixivSearchBuilder {
 
     private final String content;

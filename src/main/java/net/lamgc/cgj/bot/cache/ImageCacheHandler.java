@@ -30,7 +30,7 @@ public class ImageCacheHandler implements EventHandler {
     @SuppressWarnings("unused")
     public void getImageToCache(ImageCacheObject event) {
         if(cacheQueue.contains(event)) {
-            log.info("图片 {} 已存在相同缓存任务, 跳过.", event.getStoreFile().getName());
+            log.debug("图片 {} 已存在相同缓存任务, 跳过.", event.getStoreFile().getName());
             return;
         } else {
             cacheQueue.add(event);
@@ -39,7 +39,7 @@ public class ImageCacheHandler implements EventHandler {
         try {
             log.info("图片 {} Event正在进行...({})", event.getStoreFile().getName(), Integer.toHexString(event.hashCode()));
             File storeFile = event.getStoreFile();
-            log.info("正在缓存图片 {} (Path: {})", storeFile.getName(), storeFile.getAbsolutePath());
+            log.debug("正在缓存图片 {} (Path: {})", storeFile.getName(), storeFile.getAbsolutePath());
             try {
                 if(!storeFile.exists() && !storeFile.createNewFile()) {
                     log.error("无法创建文件(Path: {})", storeFile.getAbsolutePath());
@@ -64,7 +64,7 @@ public class ImageCacheHandler implements EventHandler {
                 return;
             }
 
-            log.info("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
+            log.debug("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
             try(FileOutputStream fos = new FileOutputStream(storeFile)) {
                 IOUtils.copy(response.getEntity().getContent(), fos);
             } catch (IOException e) {

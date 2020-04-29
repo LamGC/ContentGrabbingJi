@@ -4,4 +4,5 @@ ENV jarFileName=ContentGrabbingJi-exec.jar
 COPY ${jarFileName} /program/CGJ.jar
 RUN mkdir /program/data
 
-CMD cd /program/data && java -jar /program/CGJ.jar botMode
+WORKDIR /program/data
+CMD java -jar /program/CGJ.jar botMode

@@ -9,6 +9,7 @@ import java.util.GregorianCalendar;
 /**
  * 目前已整理的一些Pixiv接口列表
  */
+@SuppressWarnings("unused")
 public class PixivURL {
 
 

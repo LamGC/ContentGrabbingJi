@@ -24,19 +24,16 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
 
     @Override
     public int onPrivateMessage(CoolQ cq, CQPrivateMessageEvent event) {
-        //log.info("私聊消息到达: 发送者[{}], 消息内容: {}", event.getSender().getUserId(), event.getMessage());
         return processMessage(cq, event);
     }
 
     @Override
     public int onGroupMessage(CoolQ cq, CQGroupMessageEvent event) {
-        //log.info("群消息到达: 群[{}], 发送者[{}], 消息内容: {}", event.getGroupId(), event.getSender().getUserId(), event.getMessage());
         return processMessage(cq, event);
     }
 
     @Override
     public int onDiscussMessage(CoolQ cq, CQDiscussMessageEvent event) {
-        //log.info("讨论组消息到达: 群[{}], 发送者[{}], 消息内容: {}", event.getDiscussId(), event.getSender().getUserId(), event.getMessage());
         return processMessage(cq, event);
     }
 
