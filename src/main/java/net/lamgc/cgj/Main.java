@@ -52,6 +52,8 @@ public class Main {
     public static HttpHost proxy;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+        log.trace("ContentGrabbingJi 正在启动...");
+        log.debug("运行目录: {}", System.getProperty("user.dir"));
         ArgumentsProperties argsProp = new ArgumentsProperties(args);
         if(argsProp.containsKey("proxy")) {
             URL proxyUrl = new URL(argsProp.getValue("proxy"));
