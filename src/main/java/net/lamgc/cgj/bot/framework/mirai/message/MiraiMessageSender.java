@@ -111,7 +111,8 @@ public class MiraiMessageSender implements MessageSender {
                 } else {
                     return MessageUtils.newChain("(参数不存在)");
                 }
-                if(code.getParameter("flashImage").equalsIgnoreCase("true")) {
+                if(Strings.nullToEmpty(code.getParameter("flashImage"))
+                        .equalsIgnoreCase("true")) {
                     return MessageUtils.flash(img);
                 } else {
                     return img;
