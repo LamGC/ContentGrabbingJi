@@ -285,7 +285,8 @@ public class PixivDownload {
     }
 
     /**
-     * 获取排行榜
+     * 获取排行榜.
+     * <p>注意: 如果范围实际上没超出, 但返回排行榜不足, 会导致与实际请求的数量不符, 需要检查</p>
      * @param contentType 排行榜类型
      * @param mode 排行榜模式
      * @param time 查询时间
@@ -316,7 +317,8 @@ public class PixivDownload {
         int count = 0;
         Gson gson = new Gson();
         ArrayList<JsonObject> results = new ArrayList<>(range);
-        for (int pageIndex = startPages; pageIndex <= endPages && count < range; pageIndex++) {
+        boolean canNext = true;
+        for (int pageIndex = startPages; canNext && pageIndex <= endPages && count < range; pageIndex++) {
             HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, pageIndex, true));
             log.debug("RequestUri: {}", request.getURI());
             HttpResponse response = httpClient.execute(request);
@@ -326,10 +328,13 @@ public class PixivDownload {
                 throw new IOException("Http Response Error: '" + response.getStatusLine() + "', ResponseBody: '" + responseBody + '\'');
             }
 
-            JsonArray resultArray = gson.fromJson(responseBody, JsonObject.class).getAsJsonArray("contents");
+            JsonObject resultObject = gson.fromJson(responseBody, JsonObject.class);
+            canNext = resultObject.get("next").getAsJsonPrimitive().isNumber();
+            JsonArray resultArray = resultObject.getAsJsonArray("contents");
             for (int resultIndex = startIndex; resultIndex < resultArray.size() && count < range; resultIndex++, count++) {
                 results.add(resultArray.get(resultIndex).getAsJsonObject());
             }
+
             // 重置索引
             startIndex = 0;
         }

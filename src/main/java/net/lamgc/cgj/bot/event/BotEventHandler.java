@@ -188,7 +188,7 @@ public class BotEventHandler implements EventHandler {
             log.error("执行命令时发生异常", e);
             result = "命令执行时发生错误，无法完成！";
         }
-        log.info("命令处理完成.(耗时: {}ms)", System.currentTimeMillis() - time);
+        long processTime = System.currentTimeMillis() - time;
         if(Objects.requireNonNull(result) instanceof String) {
             try {
                 event.sendMessage((String) result);
@@ -196,7 +196,10 @@ public class BotEventHandler implements EventHandler {
                 log.error("发送消息时发生异常", e);
             }
         }
-        log.info("命令反馈完成.(耗时: {}ms)", System.currentTimeMillis() - time);
+        long totalTime = System.currentTimeMillis() - time;
+        log.info("命令反馈完成.(事件耗时: {}ms, P: {}%({}ms), R: {}%({}ms))", totalTime,
+                String.format("%.3f", ((double) processTime / (double)totalTime) * 100F), processTime,
+                String.format("%.3f", ((double) (totalTime - processTime) / (double)totalTime) * 100F), totalTime - processTime);
     }
 
     /**
