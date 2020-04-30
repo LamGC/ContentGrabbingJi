@@ -67,12 +67,12 @@ public class Main {
         }
 
         // TODO: 需要修改参数名了, 大概改成类似于 workerDir这样的吧
-        if(argsProp.containsKey("cqRootDir")) {
-            log.info("cqRootDir: {}", argsProp.getValue("cqRootDir"));
-            System.setProperty("cgj.cqRootDir", argsProp.getValue("cqRootDir"));
+        if(argsProp.containsKey("botDataDir")) {
+            log.info("botDataDir: {}", argsProp.getValue("botDataDir"));
+            System.setProperty("cgj.botDataDir", argsProp.getValue("botDataDir"));
         } else {
-            log.warn("未设置cqRootDir, 当前运行目录将作为酷Q机器人所在目录.");
-            System.setProperty("cgj.cqRootDir", "./");
+            log.warn("未设置botDataDir, 当前运行目录将作为酷Q机器人所在目录.");
+            System.setProperty("cgj.botDataDir", "./");
         }
 
         if(argsProp.containsKey("redisAddr")) {
@@ -83,7 +83,7 @@ public class Main {
             System.setProperty("cgj.redisAddress", "127.0.0.1");
         }
 
-        File cookieStoreFile = new File("cookies.store");
+        File cookieStoreFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
         if(!cookieStoreFile.exists()) {
             log.error("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
             Scanner scanner = new Scanner(System.in);
@@ -111,10 +111,10 @@ public class Main {
 
     @Command
     public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
-        if(!System.getProperty("cgj.cqRootDir").endsWith("\\") && !System.getProperty("cgj.cqRootDir").endsWith("/")) {
-            System.setProperty("cgj.cqRootDir", System.getProperty("cgj.cqRootDir") + "/");
+        if(!System.getProperty("cgj.botDataDir").endsWith("\\") && !System.getProperty("cgj.botDataDir").endsWith("/")) {
+            System.setProperty("cgj.botDataDir", System.getProperty("cgj.botDataDir") + "/");
         }
-        log.info("酷Q机器人根目录: {}", System.getProperty("cgj.cqRootDir"));
+        log.info("酷Q机器人根目录: {}", System.getProperty("cgj.botDataDir"));
         CQConfig.init();
         Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
         Matcher matcher = pattern.matcher(Strings.nullToEmpty(argsStr));
@@ -366,7 +366,7 @@ public class Main {
 
     private static void saveCookieStoreToFile() throws IOException {
         log.info("正在保存CookieStore...");
-        File outputFile = new File("./cookies.store");
+        File outputFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
         if(!outputFile.exists() && !outputFile.delete() && !outputFile.createNewFile()){
             log.error("保存CookieStore失败.");
             return;

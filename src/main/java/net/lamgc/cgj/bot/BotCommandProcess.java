@@ -41,7 +41,7 @@ public class BotCommandProcess {
 
     private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getSimpleName());
 
-    private final static File imageStoreDir = new File(System.getProperty("cgj.cqRootDir"), "data/image/cgj/");
+    private final static File imageStoreDir = new File(System.getProperty("cgj.botDataDir"), "data/image/cgj/");
     public final static Properties globalProp = new Properties();
     private final static Gson gson = new GsonBuilder()
             .serializeNulls()
@@ -76,7 +76,7 @@ public class BotCommandProcess {
     public static void initialize() {
         log.info("正在初始化...");
 
-        File globalPropFile = new File("./global.properties");
+        File globalPropFile = new File(System.getProperty("cgj.botDataDir"), "global.properties");
         if(globalPropFile.exists() && globalPropFile.isFile()) {
             log.info("正在加载全局配置文件...");
             try {
@@ -590,7 +590,7 @@ public class BotCommandProcess {
         illustPreLoadDataCache.clear();
         pagesCache.clear();
         searchBodyCache.clear();
-        File imageStoreDir = new File(System.getProperty("cgj.cqRootDir") + "data/image/cgj/");
+        File imageStoreDir = new File(System.getProperty("cgj.botDataDir") + "data/image/cgj/");
         File[] listFiles = imageStoreDir.listFiles();
         if (listFiles == null) {
             log.debug("图片缓存目录为空或内部文件获取失败!");

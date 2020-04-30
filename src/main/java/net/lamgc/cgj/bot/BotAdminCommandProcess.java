@@ -22,9 +22,9 @@ public class BotAdminCommandProcess {
 
     private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class.getSimpleName());
 
-    private final static File globalPropFile = new File("global.properties");
+    private final static File globalPropFile = new File(System.getProperty("cgj.botDataDir"), "global.properties");
 
-    private final static File pushListFile = new File("pushList.json");
+    private final static File pushListFile = new File(System.getProperty("cgj.botDataDir"), "pushList.json");
 
     private final static Hashtable<Long, JsonObject> pushInfoMap = new Hashtable<>();
 

@@ -34,7 +34,7 @@ public class MiraiMain implements Closeable {
             return;
         }
 
-        File botPropFile = new File("./bot.properties");
+        File botPropFile = new File(System.getProperty("cgj.botDataDir"), "./bot.properties");
         try (Reader reader = new BufferedReader(new FileReader(botPropFile))) {
             botProperties.load(reader);
         } catch (IOException e) {
