@@ -4,4 +4,4 @@ ENV jarFileName=ContentGrabbingJi-exec.jar
 COPY ${jarFileName} /CGJ.jar
 RUN mkdir /data/
 
-CMD java -Dcgj.logsPath=/data/logs -jar /CGJ.jar botMode -botDataDir=/data
+CMD ["java", "-Dcgj.logsPath=/data/logs", "-jar", "/CGJ.jar", "botMode", "-botDataDir=/data"]
