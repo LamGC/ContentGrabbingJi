@@ -4,6 +4,7 @@
         <property name="logStorePath">./logs</property>
         <property name="charset">UTF-8</property>
         <property name="pattern">[%-d{HH:mm:ss.SSS} %5level][%logger.%method():%-3L][%thread]: %msg%n</property>
+        <property name="logsDir">${sys:cgj.logsPath:-logs}</property>
     </properties>
 
     <Appenders>
@@ -20,7 +21,7 @@
             </Filters>
         </Console>
 
-        <RollingFile name="rollingFile" fileName="logs/latest.log" filePattern="logs/running.%-d{yyyy-MM-dd_HH-mm-ss}.log.gz">
+        <RollingFile name="rollingFile" fileName="${logsDir}/latest.log" filePattern="${logsDir}/running.%-d{yyyy-MM-dd_HH-mm-ss}.log.gz">
             <PatternLayout pattern="${pattern}" charset="${charset}"/>
             <Policies>
                 <OnStartupTriggeringPolicy />
