@@ -1,8 +1,7 @@
 FROM openjdk:8u252-jre
 
 ENV jarFileName=ContentGrabbingJi-exec.jar
-COPY ${jarFileName} /program/CGJ.jar
-RUN mkdir /program/data
+COPY ${jarFileName} /CGJ.jar
+RUN mkdir /data/
 
-WORKDIR /program/data
-CMD java -jar /program/CGJ.jar botMode
+CMD java -Dcgj.logsPath=/data/logs -jar /CGJ.jar botMode -botDataDir=/data

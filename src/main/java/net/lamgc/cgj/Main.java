@@ -52,6 +52,7 @@ public class Main {
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         log.trace("ContentGrabbingJi 正在启动...");
+        log.debug("Args: {}, LogsPath: {}", Arrays.toString(args), System.getProperty("cgj.logsPath"));
         log.debug("运行目录: {}", System.getProperty("user.dir"));
         ArgumentsProperties argsProp = new ArgumentsProperties(args);
         if(argsProp.containsKey("proxy")) {
@@ -85,7 +86,7 @@ public class Main {
 
         File cookieStoreFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
         if(!cookieStoreFile.exists()) {
-            log.error("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
+            log.warn("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
             Scanner scanner = new Scanner(System.in);
             if(scanner.nextLine().equalsIgnoreCase("yes")) {
                 startPixivLoginProxyServer();
