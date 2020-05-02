@@ -35,6 +35,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
+@SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "SameParameterValue"})
 public class BotCommandProcess {
 
     private final static PixivDownload pixivDownload = new PixivDownload(Main.cookieStore, Main.proxy);
@@ -244,7 +245,6 @@ public class BotCommandProcess {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
-            //TODO(LamGC, 2020.4.11): 将JsonRedisCacheStore更改为使用Redis的List集合, 以提高性能
             List<JsonObject> rankingInfoList = getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
@@ -655,7 +655,7 @@ public class BotCommandProcess {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
         JsonObject illustInfoObj = null;
         if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-            synchronized (illustIdStr) { // TODO: 这里要不做成HashMap存储key而避免使用常量池?
+            synchronized (illustIdStr) {
                 if (!illustInfoCache.exists(illustIdStr) || flushCache) {
                     illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
                     illustInfoCache.update(illustIdStr, illustInfoObj, null);

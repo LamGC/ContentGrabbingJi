@@ -67,7 +67,6 @@ public class Main {
             log.error("创建文件夹失败!");
         }
 
-        // TODO: 需要修改参数名了, 大概改成类似于 workerDir这样的吧
         if(argsProp.containsKey("botDataDir")) {
             log.info("botDataDir: {}", argsProp.getValue("botDataDir"));
             System.setProperty("cgj.botDataDir", argsProp.getValue("botDataDir"));

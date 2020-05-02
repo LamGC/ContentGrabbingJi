@@ -53,10 +53,10 @@ public class PixivURL {
 
     /**
      * P站用户插图列表获取API
+     * <p>所需数据在 body属性内的 illusts(属性名,属性值不重要), manga(多图) pickup(精选)</p>
      * 需要替换的文本:
      * {userId} - 用户ID
      */
-    //TODO: 所需数据在 body属性内的 illusts(属性名,属性值不重要), manga(多图) pickup(精选)
     //{"error":false,"message":"","body":{"illusts":{"74369837":null,"70990542":null,"70608653":null,"69755191":null,"69729450":null,"69729416":null,"69503608":null,"69288766":null,"69083882":null,"69051458":null,"68484200":null,"68216927":null,"68216866":null,"68192333":null,"67915106":null,"67914932":null,"67854803":null,"67854745":null,"67854670":null,"67787211":null,"67772199":null,"67770637":null,"67754861":null,"67754804":null,"67754726":null,"67740486":null,"67740480":null,"67740450":null,"67740434":null,"67726337":null,"67499196":null,"67499163":null,"67499145":null,"67499111":null,"67499085":null,"67499038":null,"67498987":null,"67473178":null,"66271465":null,"63682753":null,"63682697":null,"59385148":null,"59383265":null,"59383240":null,"59383227":null,"59383173":null},"manga":[],"novels":[],"mangaSeries":[],"novelSeries":[],"pickup":[],"bookmarkCount":{"public":{"illust":1,"novel":0},"private":{"illust":0,"novel":0}}}}
     public static final String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
 
