@@ -55,8 +55,15 @@ public class Main {
         log.debug("Args: {}, LogsPath: {}", Arrays.toString(args), System.getProperty("cgj.logsPath"));
         log.debug("运行目录: {}", System.getProperty("user.dir"));
         ArgumentsProperties argsProp = new ArgumentsProperties(args);
-        if(argsProp.containsKey("proxy")) {
-            URL proxyUrl = new URL(argsProp.getValue("proxy"));
+
+
+        if(!getSettingToSysProp(argsProp, "proxy", null)) {
+            getEnvSettingToSysProp("CGJ_PROXY", "proxy", null);
+        }
+
+        String proxyAddress = System.getProperty("cgj.proxy");
+        if(!Strings.isNullOrEmpty(proxyAddress)) {
+            URL proxyUrl = new URL(proxyAddress);
             proxy = new HttpHost(proxyUrl.getHost(), proxyUrl.getPort());
             log.info("已启用Http协议代理：{}", proxy.toHostString());
         } else {
@@ -67,27 +74,20 @@ public class Main {
             log.error("创建文件夹失败!");
         }
 
-        if(argsProp.containsKey("botDataDir")) {
-            log.info("botDataDir: {}", argsProp.getValue("botDataDir"));
-            System.setProperty("cgj.botDataDir", argsProp.getValue("botDataDir"));
-        } else {
+        if(!getSettingToSysProp(argsProp, "botDataDir", "./") &&
+                !getEnvSettingToSysProp("CGJ_BOT_DATA_DIR", "botDataDir", "./")) {
             log.warn("未设置botDataDir, 当前运行目录将作为酷Q机器人所在目录.");
-            System.setProperty("cgj.botDataDir", "./");
         }
-
-        if(argsProp.containsKey("redisAddr")) {
-            log.info("redisAddress: {}", argsProp.getValue("redisAddr"));
-            System.setProperty("cgj.redisAddress", argsProp.getValue("redisAddr"));
-        } else {
-            log.info("未设置RedisAddress, 将使用默认值连接Redis服务器(127.0.0.1:6379)");
-            System.setProperty("cgj.redisAddress", "127.0.0.1");
+        if(!getSettingToSysProp(argsProp, "redisAddress", "127.0.0.1") &&
+                !getEnvSettingToSysProp("CGJ_REDIS_URI", "redisAddress", "127.0.0.1")) {
+            log.warn("未设置RedisAddress, 将使用默认值连接Redis服务器(127.0.0.1:6379)");
         }
 
         File cookieStoreFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
         if(!cookieStoreFile.exists()) {
             log.warn("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
             Scanner scanner = new Scanner(System.in);
-            if(scanner.nextLine().equalsIgnoreCase("yes")) {
+            if(scanner.nextLine().trim().equalsIgnoreCase("yes")) {
                 startPixivLoginProxyServer();
             } else {
                 System.exit(1);
@@ -102,6 +102,37 @@ public class Main {
         log.debug("传入参数: {}", Arrays.toString(args));
 
         ArgumentsRunner.run(Main.class, args);
+    }
+
+    /**
+     * 从ArgumentsProperties获取设置项到System Properties
+     * @param prop ArgumentsProperties对象
+     * @param key 设置项key
+     * @param defaultValue 默认值
+     * @return 如果成功从ArgumentsProperties获得设置项, 返回true, 如未找到(使用了defaultValue或null), 返回false;
+     */
+    private static boolean getSettingToSysProp(ArgumentsProperties prop, String key, String defaultValue) {
+        if(prop.containsKey(key)) {
+            log.info("{}: {}", key, prop.getValue(key));
+            System.setProperty("cgj." + key, prop.getValue(key));
+            return true;
+        } else {
+            if(defaultValue != null) {
+                System.setProperty("cgj." + key, defaultValue);
+            }
+            return false;
+        }
+    }
+
+    private static boolean getEnvSettingToSysProp(String envKey, String sysPropKey, String defaultValue) {
+        String env = System.getenv(envKey);
+        if(env != null) {
+            System.setProperty("cgj." + sysPropKey, env);
+            return true;
+        } else {
+            System.setProperty("cgj." + sysPropKey, defaultValue);
+            return false;
+        }
     }
 
     @Command

@@ -1,6 +1,8 @@
 FROM openjdk:8u252-jre
 
 ENV jarFileName=ContentGrabbingJi-exec.jar
+ENV CGJ_REDIS_URI="127.0.0.1:6379"
+ENV CGJ_PROXY=""
 COPY ${jarFileName} /CGJ.jar
 RUN mkdir /data/
 

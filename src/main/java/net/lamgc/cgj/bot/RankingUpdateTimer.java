@@ -1,6 +1,5 @@
 package net.lamgc.cgj.bot;
 
-import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.event.VirtualLoadMessageEvent;
 import net.lamgc.cgj.pixiv.PixivURL;
@@ -28,10 +27,10 @@ public class RankingUpdateTimer {
         cal.setTime(firstRunDate == null ? new Date() : firstRunDate);
         LocalDate currentLocalDate = LocalDate.now();
         if(cal.get(Calendar.DAY_OF_YEAR) <= currentLocalDate.getDayOfYear() && cal.get(Calendar.HOUR_OF_DAY) >= 12) {
-            cal.set(Calendar.DAY_OF_YEAR, cal.get(Calendar.DAY_OF_YEAR) + 1);
+            cal.set(Calendar.DAY_OF_YEAR, currentLocalDate.getDayOfYear() + 1);
         }
         cal.set(Calendar.HOUR_OF_DAY, 12);
-        cal.set(Calendar.MINUTE, 30);
+        cal.set(Calendar.MINUTE, 0);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
@@ -66,15 +65,10 @@ public class RankingUpdateTimer {
                     log.debug("不支持的类型, 填空值跳过...(类型: {}.{})", rankingMode.name(), contentType.name());
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
-                try {
-                    //BotCommandProcess.getRankingInfoByCache(contentType, rankingMode, calendar.getTime(), 1, 0, true);
-                    BotEventHandler.executor.executorSync(
-                            new VirtualLoadMessageEvent(0,0,
-                                    ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name()));
-                    log.info("排行榜 {}.{} 更新完成.", rankingMode.name(), contentType.name());
-                } catch (InterruptedException e) {
-                    log.error("排行榜 {}.{} 更新时发生异常. \n{}", rankingMode.name(), contentType.name(), Throwables.getStackTraceAsString(e));
-                }
+                BotEventHandler.executor.executor(
+                        new VirtualLoadMessageEvent(0,0,
+                                ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name()));
+                log.info("排行榜 {}.{} 负载指令已投递.", rankingMode.name(), contentType.name());
             }
         }
         log.warn("定时任务更新完成.");

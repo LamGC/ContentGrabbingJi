@@ -7,6 +7,7 @@ import net.lamgc.cgj.bot.BotAdminCommandProcess;
 import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.util.DateParser;
 import net.lamgc.cgj.util.PagesQualityParser;
+import net.lamgc.cgj.util.TimeLimitThreadPoolExecutor;
 import net.lamgc.utils.base.runner.ArgumentsRunner;
 import net.lamgc.utils.base.runner.ArgumentsRunnerConfig;
 import net.lamgc.utils.base.runner.exception.DeveloperRunnerException;
@@ -25,7 +26,6 @@ import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
@@ -50,7 +50,8 @@ public class BotEventHandler implements EventHandler {
     /**
      * 消息事件执行器
      */
-    public final static EventExecutor executor = new EventExecutor(new ThreadPoolExecutor(
+    public final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
+            60 * 1000,
             (int) Math.ceil(Runtime.getRuntime().availableProcessors() / 2F),
             Runtime.getRuntime().availableProcessors(),
             30L,
@@ -185,8 +186,13 @@ public class BotEventHandler implements EventHandler {
         } catch(ParameterNoFoundException e) {
             result = "命令缺少参数: " + e.getParameterName();
         } catch(DeveloperRunnerException e) {
-            log.error("执行命令时发生异常", e);
-            result = "命令执行时发生错误，无法完成！";
+            if (!(e.getCause() instanceof InterruptedException)) {
+                log.error("执行命令时发生异常", e);
+                result = "色图姬在执行命令时遇到了一个错误！";
+            } else {
+                log.error("命令执行超时, 终止执行.");
+                result = "色图姬发现这个命令的处理时间太久了！所以打断了这个命令。";
+            }
         }
         long processTime = System.currentTimeMillis() - time;
         if(Objects.requireNonNull(result) instanceof String) {
