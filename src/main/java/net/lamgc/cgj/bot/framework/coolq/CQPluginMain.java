@@ -41,7 +41,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
         if(!BotEventHandler.match(event.getMessage())) {
             return MESSAGE_IGNORE;
         }
-        BotEventHandler.executor.executor(new SpringCQMessageEvent(cq, event));
+        BotEventHandler.executeMessageEvent(new SpringCQMessageEvent(cq, event));
         return MESSAGE_BLOCK;
     }
 

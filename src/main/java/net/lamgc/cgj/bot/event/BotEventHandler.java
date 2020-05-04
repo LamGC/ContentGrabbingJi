@@ -50,7 +50,7 @@ public class BotEventHandler implements EventHandler {
     /**
      * 消息事件执行器
      */
-    public final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
+    private final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
             60 * 1000,
             Math.max(Runtime.getRuntime().availableProcessors(), 4),
             Math.max(Math.max(Runtime.getRuntime().availableProcessors() * 2, 4), 32),
@@ -123,6 +123,14 @@ public class BotEventHandler implements EventHandler {
         adminRunner = new ArgumentsRunner(BotAdminCommandProcess.class, runnerConfig);
 
         BotCommandProcess.initialize();
+    }
+
+    /**
+     * 投递消息事件
+     * @param event 事件对象
+     */
+    public static void executeMessageEvent(MessageEvent event) {
+        BotEventHandler.executor.executor(event);
     }
 
     /**

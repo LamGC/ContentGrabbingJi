@@ -65,8 +65,7 @@ public class RankingUpdateTimer {
                     log.debug("不支持的类型, 填空值跳过...(类型: {}.{})", rankingMode.name(), contentType.name());
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
-                BotEventHandler.executor.executor(
-                        new VirtualLoadMessageEvent(0,0,
+                BotEventHandler.executeMessageEvent(new VirtualLoadMessageEvent(0,0,
                                 ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name()));
                 log.info("排行榜 {}.{} 负载指令已投递.", rankingMode.name(), contentType.name());
             }

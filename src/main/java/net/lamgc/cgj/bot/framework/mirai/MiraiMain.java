@@ -43,8 +43,8 @@ public class MiraiMain implements Closeable {
         }
 
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), new BotConfiguration());
-        Events.subscribeAlways(GroupMessage.class, (msg) -> BotEventHandler.executor.executor(new MiraiMessageEvent(msg)));
-        Events.subscribeAlways(FriendMessage.class, (msg) -> BotEventHandler.executor.executor(new MiraiMessageEvent(msg)));
+        Events.subscribeAlways(GroupMessage.class, (msg) -> BotEventHandler.executeMessageEvent(new MiraiMessageEvent(msg)));
+        Events.subscribeAlways(FriendMessage.class, (msg) -> BotEventHandler.executeMessageEvent(new MiraiMessageEvent(msg)));
         bot.login();
         MessageSenderBuilder.setCurrentMessageSenderFactory(new MiraiMessageSenderFactory(bot));
         BotEventHandler.preLoad();
