@@ -129,10 +129,10 @@ public class Main {
         if(env != null) {
             System.setProperty("cgj." + sysPropKey, env);
             return true;
-        } else {
+        } else if(defaultValue != null) {
             System.setProperty("cgj." + sysPropKey, defaultValue);
-            return false;
         }
+        return false;
     }
 
     @Command
