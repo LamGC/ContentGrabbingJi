@@ -52,8 +52,8 @@ public class BotEventHandler implements EventHandler {
      */
     public final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
             60 * 1000,
-            (int) Math.ceil(Runtime.getRuntime().availableProcessors() / 2F),
             Runtime.getRuntime().availableProcessors(),
+            Math.max(Runtime.getRuntime().availableProcessors() * 2, 16),
             30L,
     TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1536),
