@@ -5,6 +5,7 @@ import com.google.common.base.Throwables;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.lamgc.cgj.bot.BotAdminCommandProcess;
 import net.lamgc.cgj.bot.BotCommandProcess;
+import net.lamgc.cgj.bot.MessageEventExecutionDebugger;
 import net.lamgc.cgj.util.DateParser;
 import net.lamgc.cgj.util.PagesQualityParser;
 import net.lamgc.cgj.util.TimeLimitThreadPoolExecutor;
@@ -13,10 +14,8 @@ import net.lamgc.utils.base.runner.ArgumentsRunnerConfig;
 import net.lamgc.utils.base.runner.exception.DeveloperRunnerException;
 import net.lamgc.utils.base.runner.exception.NoSuchCommandException;
 import net.lamgc.utils.base.runner.exception.ParameterNoFoundException;
-import net.lamgc.utils.event.EventExecutor;
-import net.lamgc.utils.event.EventHandler;
+import net.lamgc.utils.event.*;
 import net.lamgc.utils.event.EventObject;
-import net.lamgc.utils.event.EventUncaughtExceptionHandler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
@@ -129,8 +128,23 @@ public class BotEventHandler implements EventHandler {
      * 投递消息事件
      * @param event 事件对象
      */
+    @NotAccepted
     public static void executeMessageEvent(MessageEvent event) {
-        BotEventHandler.executor.executor(event);
+        String debuggerName;
+        if(!event.getMessage().startsWith(ADMIN_COMMAND_PREFIX) &&
+                !Strings.isNullOrEmpty(debuggerName = BotCommandProcess.globalProp.getProperty("debug.debugger"))) {
+            try {
+                MessageEventExecutionDebugger debugger = MessageEventExecutionDebugger.valueOf(debuggerName.toUpperCase());
+                debugger.debugger.accept(executor, event, BotCommandProcess.globalProp,
+                                MessageEventExecutionDebugger.getDebuggerLogger(debugger));
+            } catch(IllegalArgumentException e) {
+                log.warn("未找到指定调试器: '{}'", debuggerName);
+            } catch (Exception e) {
+                log.error("事件调试处理时发生异常", e);
+            }
+        } else {
+            BotEventHandler.executor.executor(event);
+        }
     }
 
     /**
