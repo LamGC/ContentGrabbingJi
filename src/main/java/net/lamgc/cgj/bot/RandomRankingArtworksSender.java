@@ -77,7 +77,7 @@ public class RandomRankingArtworksSender extends AutoSender {
 
             JsonObject rankingInfo = rankingList.get(0);
             int illustId = rankingInfo.get("illust_id").getAsInt();
-            if(BotCommandProcess.isNoSafe(illustId, BotCommandProcess.globalProp, false)) {
+            if(BotCommandProcess.isNoSafe(illustId, SettingProperties.getProperties(SettingProperties.GLOBAL), false)) {
                 log.warn("作品为r18作品, 取消本次发送.");
                 return;
             } else if(BotCommandProcess.isReported(illustId)) {
@@ -89,7 +89,7 @@ public class RandomRankingArtworksSender extends AutoSender {
             message.append("#美图推送 - 今日排行榜 第 ").append(rankingInfo.get("rank").getAsInt()).append(" 名\n");
             message.append("标题：").append(rankingInfo.get("title").getAsString()).append("(").append(illustId).append(")\n");
             message.append("作者：").append(rankingInfo.get("user_name").getAsString()).append("\n");
-            message.append(BotCommandProcess.getImageById(illustId, quality, 1));
+            message.append(BotCommandProcess.getImageById(0, illustId, quality, 1));
             message.append("\n如有不当作品，可使用\".cgj report -id ").append(illustId).append("\"向色图姬反馈。");
             getMessageSender().sendMessage(message.toString());
         } catch (IOException e) {

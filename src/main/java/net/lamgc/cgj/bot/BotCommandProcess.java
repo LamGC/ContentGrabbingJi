@@ -25,7 +25,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
@@ -43,7 +42,6 @@ public class BotCommandProcess {
     private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getSimpleName());
 
     private final static File imageStoreDir = new File(System.getProperty("cgj.botDataDir"), "data/image/cgj/");
-    public final static Properties globalProp = new Properties();
     private final static Gson gson = new GsonBuilder()
             .serializeNulls()
             .create();
@@ -77,18 +75,7 @@ public class BotCommandProcess {
     public static void initialize() {
         log.info("正在初始化...");
 
-        File globalPropFile = new File(System.getProperty("cgj.botDataDir"), "global.properties");
-        if(globalPropFile.exists() && globalPropFile.isFile()) {
-            log.info("正在加载全局配置文件...");
-            try {
-                globalProp.load(new FileInputStream(globalPropFile));
-                log.info("全局配置文件加载完成.");
-            } catch (IOException e) {
-                log.error("加载全局配置文件时发生异常", e);
-            }
-        } else {
-            log.info("未找到全局配置文件，跳过加载.");
-        }
+        SettingProperties.loadProperties();
 
         try {
             imageCacheExecutor.addHandler(new ImageCacheHandler());
@@ -143,13 +130,13 @@ public class BotCommandProcess {
     }
 
     @Command(commandName = "info")
-    public static String artworkInfo(@Argument(name = "id") int illustId) {
+    public static String artworkInfo(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
         if(illustId <= 0) {
             return "错误的作品id！";
         }
 
         try {
-            if(isNoSafe(illustId, globalProp, false) || isReported(illustId)) {
+            if(isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false) || isReported(illustId)) {
                 return "阅览禁止：该作品已被封印！！";
             }
 
@@ -165,7 +152,7 @@ public class BotCommandProcess {
             builder.append("评论数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt()).append("\n");
             builder.append("页数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt()).append("页\n");
             builder.append("---------------- 作品图片 ----------------\n");
-            builder.append(getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
+            builder.append(getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
             builder.append("使用 \".cgj image -id ")
                     .append(illustId)
                     .append("\" 获取原图。\n如有不当作品，可使用\".cgj report -id ")
@@ -179,6 +166,7 @@ public class BotCommandProcess {
 
     @Command
     public static String ranking(
+            @Argument(name = "$fromGroup") long fromGroup,
             @Argument(force = false, name = "date") Date queryTime,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
             @Argument(force = false, name = "type", defaultValue = "ILLUST") String contentType
@@ -232,7 +220,8 @@ public class BotCommandProcess {
             int itemLimit = 10;
             String itemLimitPropertyKey = "ranking.ItemCountLimit";
             try {
-                itemLimit = Integer.parseInt(globalProp.getProperty(itemLimitPropertyKey, "10"));
+                itemLimit = Integer.parseInt(SettingProperties
+                        .getProperty(SettingProperties.GLOBAL, itemLimitPropertyKey, "10"));
             } catch(NumberFormatException e) {
                 log.warn("配置项 {} 的参数值格式有误!", itemLimitPropertyKey);
             }
@@ -240,7 +229,8 @@ public class BotCommandProcess {
             int imageLimit = 3;
             String imageLimitPropertyKey = "ranking.imageCountLimit";
             try {
-                imageLimit = Integer.parseInt(globalProp.getProperty(imageLimitPropertyKey, "3"));
+                imageLimit = Integer.parseInt(
+                        SettingProperties.getProperty(SettingProperties.GLOBAL, imageLimitPropertyKey, "3"));
             } catch(NumberFormatException e) {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
@@ -261,7 +251,7 @@ public class BotCommandProcess {
                 resultBuilder.append(rank).append(". (id: ").append(illustId).append(") ").append(title)
                         .append("(Author: ").append(authorName).append(",").append(authorId).append(") ").append(pagesCount).append("p.\n");
                 if (index <= imageLimit) {
-                    resultBuilder.append(getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
+                    resultBuilder.append(getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
                 }
             }
         } catch (IOException e) {
@@ -290,13 +280,15 @@ public class BotCommandProcess {
      * @throws IOException 当搜索发生异常时抛出
      */
     @Command
-    public static String search(@Argument(name = "content") String content,
-                                @Argument(name = "type", force = false) String type,
-                                @Argument(name = "area", force = false) String area,
-                                @Argument(name = "in", force = false) String includeKeywords,
-                                @Argument(name = "ex", force = false) String excludeKeywords,
-                                @Argument(name = "contentOption", force = false) String contentOption,
-                                @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
+    public static String search(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "content") String content,
+            @Argument(name = "type", force = false) String type,
+            @Argument(name = "area", force = false) String area,
+            @Argument(name = "in", force = false) String includeKeywords,
+            @Argument(name = "ex", force = false) String excludeKeywords,
+            @Argument(name = "contentOption", force = false) String contentOption,
+            @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
         log.info("正在执行搜索...");
         PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
@@ -360,7 +352,8 @@ public class BotCommandProcess {
                     }
 
                     long expire = 7200 * 1000;
-                    String propValue = globalProp.getProperty("cache.searchBody.expire", "7200000");
+                    String propValue = SettingProperties
+                            .getProperty(SettingProperties.GLOBAL, "cache.searchBody.expire", "7200000");
                     try {
                         expire = Long.parseLong(propValue);
                     } catch (Exception e) {
@@ -385,7 +378,8 @@ public class BotCommandProcess {
         log.debug("正在处理信息...");
         int limit = 8;
         try {
-            limit = Integer.parseInt(globalProp.getProperty("search.ItemCountLimit", "8"));
+            limit = Integer.parseInt(SettingProperties.
+                    getProperty(SettingProperties.GLOBAL, "search.ItemCountLimit", "8"));
         } catch (Exception e) {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
@@ -429,8 +423,8 @@ public class BotCommandProcess {
 
                 //pageCount
 
-                String imageMsg = getImageById(illustId, PixivDownload.PageQuality.REGULAR, 1);
-                if (isNoSafe(illustId, globalProp, true)) {
+                String imageMsg = getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
+                if (isNoSafe(illustId, SettingProperties.getProperties(SettingProperties.GLOBAL), true)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
                 } else if(isReported(illustId)) {
@@ -453,7 +447,9 @@ public class BotCommandProcess {
     }
 
     @Command(commandName = "pages")
-    public static String getPagesList(@Argument(name = "id") int illustId, @Argument(name = "quality", force = false) PixivDownload.PageQuality quality) {
+    public static String getPagesList(
+            @Argument(name = "id") int illustId,
+            @Argument(name = "quality", force = false) PixivDownload.PageQuality quality) {
         try {
             List<String> pagesList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
             StringBuilder builder = new StringBuilder("作品ID ").append(illustId).append(" 共有").append(pagesList.size()).append("页：").append("\n");
@@ -469,9 +465,9 @@ public class BotCommandProcess {
     }
 
     @Command(commandName = "link")
-    public static String artworksLink(@Argument(name = "id") int illustId) {
+    public static String artworksLink(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
         try {
-            if (isNoSafe(illustId, globalProp, false)) {
+            if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
                 log.warn("作品Id {} 已被屏蔽.", illustId);
                 return "由于相关设置，该作品已被屏蔽！";
             } else if(isReported(illustId)) {
@@ -493,9 +489,11 @@ public class BotCommandProcess {
      * @return 如果成功, 返回BotCode, 否则返回错误信息.
      */
     @Command(commandName = "image")
-    public static String getImageById(@Argument(name = "id") int illustId,
-                                                   @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
-                                                   @Argument(name = "page", force = false, defaultValue = "1") int pageIndex) {
+    public static String getImageById(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "id") int illustId,
+            @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
+            @Argument(name = "page", force = false, defaultValue = "1") int pageIndex) {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
         List<String> pagesList;
         try {
@@ -518,7 +516,7 @@ public class BotCommandProcess {
         }
 
         try {
-            if (isNoSafe(illustId, globalProp, false)) {
+            if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
                 log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
                 return "（根据设置，该作品已被屏蔽！）";
             } else if(isReported(illustId)) {
@@ -690,7 +688,8 @@ public class BotCommandProcess {
                             .getAsJsonObject(Integer.toString(illustId));
 
                     long expire = 7200 * 1000;
-                    String propValue = globalProp.getProperty("cache.illustPreLoadData.expire", "7200000");
+                    String propValue = SettingProperties.
+                            getProperty(SettingProperties.GLOBAL, "cache.illustPreLoadData.expire", "7200000");
                     log.debug("PreLoadData有效时间设定: {}", propValue);
                     try {
                         expire = Long.parseLong(propValue);

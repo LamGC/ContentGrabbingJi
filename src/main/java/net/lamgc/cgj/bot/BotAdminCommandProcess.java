@@ -22,8 +22,6 @@ public class BotAdminCommandProcess {
 
     private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class.getSimpleName());
 
-    private final static File globalPropFile = new File(System.getProperty("cgj.botDataDir"), "global.properties");
-
     private final static File pushListFile = new File(System.getProperty("cgj.botDataDir"), "pushList.json");
 
     private final static Hashtable<Long, JsonObject> pushInfoMap = new Hashtable<>();
@@ -39,59 +37,46 @@ public class BotAdminCommandProcess {
     }
 
     @Command
-    public static String setGlobalProperty(@Argument(name = "key") String key, @Argument(name = "value") String value, @Argument(name = "save", force = false) boolean saveNow) {
-        String lastValue = BotCommandProcess.globalProp.getProperty(key);
-        BotCommandProcess.globalProp.setProperty(key, Strings.nullToEmpty(value));
-        if(saveNow) {
-            saveGlobalProperties();
+    public static String setProperty(
+            @Argument(name = "group", force = false) long groupId,
+            @Argument(name = "key") String key,
+            @Argument(name = "value") String value
+    ) {
+        if(Strings.isNullOrEmpty(key)) {
+            return "未选择配置项key.";
         }
-        return "全局配置项 " + key + " 现已设置为: " + value + " (设置前的值: " + lastValue + ")";
+        String lastValue = SettingProperties.setProperty(groupId, key, value.equals("null") ? null : value);
+        return (groupId <= 0 ? "已更改全局配置 " : "已更改群组 " + groupId + " 配置 ") +
+                key + " 的值: '" + value + "' (原配置值: '" + lastValue + "')";
     }
 
     @Command
-    public static String getGlobalProperty(@Argument(name = "key") String key) {
-        return "全局配置项 " + key + " 当前值: " + BotCommandProcess.globalProp.getProperty(key, "(Empty)");
+    public static String getProperty(
+            @Argument(name = "group", force = false) long groupId,
+            @Argument(name = "key") String key
+    ) {
+        if(Strings.isNullOrEmpty(key)) {
+            return "未选择配置项key.";
+        }
+        return (groupId <= 0 ? "全局配置 " : "群组 " + groupId + " 配置 ") +
+                key + " 设定值: '" + SettingProperties.getProperty(groupId, key, "(empty)") + "'";
     }
 
     @Command
-    public static String saveGlobalProperties() {
+    public static String saveProperties() {
         log.info("正在保存全局配置文件...");
-
-        try {
-            if(!globalPropFile.exists()) {
-                if(!globalPropFile.createNewFile()) {
-                    log.error("全局配置项文件保存失败！({})", "文件创建失败");
-                    return "全局配置项文件保存失败！";
-                }
-            }
-            BotCommandProcess.globalProp.store(new FileOutputStream(globalPropFile), "");
-            log.info("全局配置文件保存成功！");
-            return "保存全局配置文件 - 操作已完成.";
-        } catch (IOException e) {
-            log.error("全局配置项文件保存失败！", e);
-            return "全局配置项文件保存失败！";
-        }
+        SettingProperties.saveProperties();
+        return "保存全局配置文件 - 操作已完成.";
     }
 
     @Command
-    public static String loadGlobalProperties(@Argument(name = "reload", force = false) boolean reload) {
-        Properties cache = new Properties();
-        if(!globalPropFile.exists()) {
-            return "未找到全局配置文件, 无法重载";
-        }
-
-        try(Reader reader = new BufferedReader(new FileReader(globalPropFile))) {
-            cache.load(reader);
-        } catch (IOException e) {
-            log.error("重载全局配置文件时发生异常", e);
-            return "加载全局配置文件时发生错误!";
-        }
-
+    public static String loadProperties(@Argument(name = "reload", force = false) boolean reload) {
         if(reload) {
-            BotCommandProcess.globalProp.clear();
+            SettingProperties.clearProperties();
         }
-        BotCommandProcess.globalProp.putAll(cache);
-        return "全局配置文件重载完成.";
+
+        SettingProperties.loadProperties();
+        return "操作已完成.";
     }
 
     @Command

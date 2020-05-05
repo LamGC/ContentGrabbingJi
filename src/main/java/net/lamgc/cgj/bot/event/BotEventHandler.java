@@ -6,6 +6,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import net.lamgc.cgj.bot.BotAdminCommandProcess;
 import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.MessageEventExecutionDebugger;
+import net.lamgc.cgj.bot.SettingProperties;
 import net.lamgc.cgj.util.DateParser;
 import net.lamgc.cgj.util.PagesQualityParser;
 import net.lamgc.cgj.util.TimeLimitThreadPoolExecutor;
@@ -50,7 +51,7 @@ public class BotEventHandler implements EventHandler {
      * 消息事件执行器
      */
     private final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
-            60 * 1000,
+            0,
             Math.max(Runtime.getRuntime().availableProcessors(), 4),
             Math.max(Math.max(Runtime.getRuntime().availableProcessors() * 2, 4), 32),
             30L,
@@ -130,12 +131,12 @@ public class BotEventHandler implements EventHandler {
      */
     @NotAccepted
     public static void executeMessageEvent(MessageEvent event) {
-        String debuggerName;
+        String debuggerName = SettingProperties.getProperty(0, "debug.debugger");
         if(!event.getMessage().startsWith(ADMIN_COMMAND_PREFIX) &&
-                !Strings.isNullOrEmpty(debuggerName = BotCommandProcess.globalProp.getProperty("debug.debugger"))) {
+                !Strings.isNullOrEmpty(debuggerName)) {
             try {
                 MessageEventExecutionDebugger debugger = MessageEventExecutionDebugger.valueOf(debuggerName.toUpperCase());
-                debugger.debugger.accept(executor, event, BotCommandProcess.globalProp,
+                debugger.debugger.accept(executor, event, SettingProperties.getProperties(SettingProperties.GLOBAL),
                                 MessageEventExecutionDebugger.getDebuggerLogger(debugger));
             } catch(IllegalArgumentException e) {
                 log.warn("未找到指定调试器: '{}'", debuggerName);
@@ -195,7 +196,8 @@ public class BotEventHandler implements EventHandler {
         Object result;
         try {
             if(msg.toLowerCase().startsWith(ADMIN_COMMAND_PREFIX)) {
-                if(!String.valueOf(event.getFromQQ()).equals(BotCommandProcess.globalProp.getProperty("admin.adminId"))) {
+                if(!String.valueOf(event.getFromQQ())
+                        .equals(SettingProperties.getProperty(0, "admin.adminId"))) {
                     result = "你没有执行该命令的权限！";
                 } else {
                     result = adminRunner.run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
