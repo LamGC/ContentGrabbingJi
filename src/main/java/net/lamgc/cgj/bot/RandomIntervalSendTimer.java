@@ -5,8 +5,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Field;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -26,6 +24,8 @@ public class RandomIntervalSendTimer extends TimerTask {
     private final int floatTime;
     private AtomicBoolean loop = new AtomicBoolean();
     private final AtomicBoolean start = new AtomicBoolean();
+    private final String hashId = Integer.toHexString(this.hashCode());
+
 
     /**
      * 创建一个随机延迟发送器
@@ -92,8 +92,6 @@ public class RandomIntervalSendTimer extends TimerTask {
         start(this.loop.get());
     }
 
-    private final static DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-ss HH:mm:ss");
-
     /**
      * 启动定时器
      * @param loop 是否循环, 如果为true, 则任务完成后会自动调用start方法继续循环, 直到被调用{@code #}或总定时器被销毁;
@@ -103,7 +101,7 @@ public class RandomIntervalSendTimer extends TimerTask {
         long nextDelay = time + timeRandom.nextInt(floatTime);
         Date nextDate = new Date();
         nextDate.setTime(nextDate.getTime() + nextDelay);
-        log.info("定时器 {} 下一延迟: {}ms ({})", Integer.toHexString(this.hashCode()), nextDelay, dateFormat.format(nextDate));
+        log.info("定时器 {} 下一延迟: {}ms ({})", hashId, nextDelay, nextDate);
         if(start.get()) {
             try {
                 Field state = this.getClass().getSuperclass().getDeclaredField("state");
