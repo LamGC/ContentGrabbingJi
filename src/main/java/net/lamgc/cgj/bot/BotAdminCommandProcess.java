@@ -64,9 +64,10 @@ public class BotAdminCommandProcess {
 
     @Command
     public static String saveProperties() {
-        log.info("正在保存全局配置文件...");
+        log.info("正在保存配置文件...");
         SettingProperties.saveProperties();
-        return "保存全局配置文件 - 操作已完成.";
+        log.info("配置文件保存操作已完成.");
+        return "保存配置 - 操作已完成.";
     }
 
     @Command
