@@ -20,7 +20,7 @@ import java.util.*;
 
 public class BotAdminCommandProcess {
 
-    private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class.getSimpleName());
+    private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class.getName());
 
     private final static File pushListFile = new File(System.getProperty("cgj.botDataDir"), "pushList.json");
 

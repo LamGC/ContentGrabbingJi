@@ -29,7 +29,7 @@ public class MiraiMessageSender implements MessageSender {
 
     private final Contact member;
     private final MessageSource source;
-    private final static Logger log = LoggerFactory.getLogger("MiraiMessageSender");
+    private final static Logger log = LoggerFactory.getLogger(MiraiMessageSender.class.getName());
     private final static CacheStore<String> imageIdCache = new HotDataCacheStore<>(
             new StringRedisCacheStore(BotEventHandler.redisServer, "mirai.imageId"),
             new LocalHashCacheStore<>(),

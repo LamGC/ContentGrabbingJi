@@ -19,7 +19,7 @@ import java.util.Properties;
 
 public class MiraiMain implements Closeable {
 
-    private final Logger log = LoggerFactory.getLogger(this.toString());
+    private final Logger log = LoggerFactory.getLogger(MiraiMain.class.getName());
 
     private Bot bot;
 

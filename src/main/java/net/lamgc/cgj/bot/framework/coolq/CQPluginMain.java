@@ -18,7 +18,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
     public CQPluginMain() {
         // TODO(LamGC, 2020.04.21): SpringCQ无法适配MessageSenderBuilder
         BotEventHandler.preLoad();
-        LoggerFactory.getLogger(this.toString())
+        LoggerFactory.getLogger(CQPluginMain.class.getName())
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
     }
 

@@ -42,7 +42,7 @@ import java.util.zip.ZipOutputStream;
 @SpringBootApplication
 public class Main {
 
-    private final static Logger log = LoggerFactory.getLogger("Main");
+    private final static Logger log = LoggerFactory.getLogger(Main.class.getName());
 
     private final static File storeDir = new File("store/");
 

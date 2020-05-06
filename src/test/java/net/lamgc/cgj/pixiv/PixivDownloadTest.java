@@ -31,7 +31,7 @@ public class PixivDownloadTest {
 
     private static CookieStore cookieStore;
 
-    private final static Logger log = LoggerFactory.getLogger("PixivDownloadTest");
+    private final static Logger log = LoggerFactory.getLogger(PixivDownloadTest.class.getName());
 
     private static HttpHost proxy = new HttpHost("127.0.0.1", 1001);
     
@@ -180,9 +180,8 @@ public class PixivDownloadTest {
 
         log.info("正在调用方法...");
         try {
-            pixivDownload.getRankingAsInputStream(null, null, queryDate, 5, 50, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
-                log.info("空操作");
-            });
+            pixivDownload.getRankingAsInputStream(null, null, queryDate, 5, 50,
+                    PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> log.info("空操作"));
         } finally {
             zos.finish();
             zos.flush();

@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class RandomIntervalSendTimer extends TimerTask {
 
     private final static Timer timer = new Timer("Thread-RIST");
-    private final static Logger log = LoggerFactory.getLogger("RandomIntervalSendTimer");
+    private final static Logger log = LoggerFactory.getLogger(RandomIntervalSendTimer.class.getName());
     private final static Map<Long, RandomIntervalSendTimer> timerMap = new HashMap<>();
 
     private final long timerId;

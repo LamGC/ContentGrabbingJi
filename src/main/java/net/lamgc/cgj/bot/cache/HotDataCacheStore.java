@@ -17,7 +17,7 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
     private final long expireTime;
     private final int expireFloatRange;
     private final Random random = new Random();
-    private final Logger log = LoggerFactory.getLogger(HotDataCacheStore.class.getSimpleName() + "@" + Integer.toHexString(this.hashCode()));
+    private final Logger log = LoggerFactory.getLogger(this.toString());
 
     /**
      * 构造热点缓存存储对象

@@ -30,7 +30,7 @@ import java.util.zip.ZipInputStream;
  */
 public final class PixivUgoiraBuilder {
 
-    private final Logger log = LoggerFactory.getLogger(PixivUgoiraBuilder.class.getSimpleName() + "@" + Integer.toHexString(this.hashCode()));
+    private final Logger log = LoggerFactory.getLogger(this.toString());
 
     private final HttpClient httpClient;
     private final JsonObject ugoiraMeta;

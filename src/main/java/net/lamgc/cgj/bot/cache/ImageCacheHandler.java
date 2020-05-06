@@ -21,7 +21,7 @@ import java.util.Set;
 
 public class ImageCacheHandler implements EventHandler {
 
-    private final static Logger log = LoggerFactory.getLogger("ImageCacheHandler");
+    private final static Logger log = LoggerFactory.getLogger(ImageCacheHandler.class.getName());
 
     private final static HttpClient httpClient = HttpClientBuilder.create().setProxy(Main.proxy).build();
 

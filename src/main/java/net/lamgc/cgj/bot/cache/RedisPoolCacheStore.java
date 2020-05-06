@@ -36,7 +36,7 @@ public abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
         if(jedisPool.isClosed()) {
             throw new IllegalStateException("JedisPool is closed");
         }
-        log = LoggerFactory.getLogger(this.getClass().getSimpleName() + "@" + Integer.toHexString(jedisPool.hashCode()));
+        log = LoggerFactory.getLogger(this.getClass().getName() + "@" + Integer.toHexString(jedisPool.hashCode()));
         if(!Strings.isNullOrEmpty(keyPrefix)) {
             this.keyPrefix = keyPrefix.endsWith(".") ? keyPrefix : keyPrefix + ".";
         } else {

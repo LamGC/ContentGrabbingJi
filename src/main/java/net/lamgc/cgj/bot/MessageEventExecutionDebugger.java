@@ -52,8 +52,6 @@ public enum MessageEventExecutionDebugger {
         }
     });
 
-    public final static String debuggerLoggerNameTemp = "MessageEventExecuteDebugger-{debugger}";
-
     public final MessageExecuteDebugger debugger;
 
     MessageEventExecutionDebugger(MessageExecuteDebugger debugger) {
@@ -61,7 +59,7 @@ public enum MessageEventExecutionDebugger {
     }
 
     public static Logger getDebuggerLogger(MessageEventExecutionDebugger debugger) {
-        return LoggerFactory.getLogger(debuggerLoggerNameTemp.replace("{debugger}", debugger.name()));
+        return LoggerFactory.getLogger(MessageEventExecutionDebugger.class.getName() + "." + debugger.name());
     }
 
     @FunctionalInterface
