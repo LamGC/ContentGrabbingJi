@@ -218,7 +218,7 @@ public class BotCommandProcess {
         try {
             int index = 0;
             int itemLimit = 10;
-            String itemLimitPropertyKey = "ranking.ItemCountLimit";
+            String itemLimitPropertyKey = "ranking.itemCountLimit";
             try {
                 itemLimit = Integer.parseInt(SettingProperties
                         .getProperty(SettingProperties.GLOBAL, itemLimitPropertyKey, "10"));
@@ -379,7 +379,7 @@ public class BotCommandProcess {
         int limit = 8;
         try {
             limit = Integer.parseInt(SettingProperties.
-                    getProperty(SettingProperties.GLOBAL, "search.ItemCountLimit", "8"));
+                    getProperty(SettingProperties.GLOBAL, "search.itemCountLimit", "8"));
         } catch (Exception e) {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
@@ -424,7 +424,7 @@ public class BotCommandProcess {
                 //pageCount
 
                 String imageMsg = getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
-                if (isNoSafe(illustId, SettingProperties.getProperties(SettingProperties.GLOBAL), true)) {
+                if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), true)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
                 } else if(isReported(illustId)) {

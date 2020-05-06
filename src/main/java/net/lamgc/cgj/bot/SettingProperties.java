@@ -186,7 +186,13 @@ public final class SettingProperties {
      */
     public static String setProperty(long groupId, String key, String value) {
         Objects.requireNonNull(key);
-        Properties targetProperties = groupId <= 0 ? globalProp : getGroupProperties(groupId);
+        Properties targetProperties;
+        if(groupId <= 0) {
+            changeList.add(groupId);
+            targetProperties = getGroupProperties(groupId);
+        } else {
+            targetProperties = globalProp;
+        }
         String lastValue = targetProperties.getProperty(key);
         if(value != null) {
             targetProperties.setProperty(key, value);
@@ -213,6 +219,9 @@ public final class SettingProperties {
     private static Properties getGroupProperties(long groupId) {
         if (groupId <= 0) {
             throw new IllegalArgumentException("Group number cannot be 0 or negative: " + groupId);
+        }
+        if(!groupPropMap.containsKey(groupId)) {
+            groupPropMap.put(groupId, new Properties(globalProp));
         }
         return groupPropMap.get(groupId);
     }
