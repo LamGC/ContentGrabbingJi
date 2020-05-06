@@ -40,7 +40,7 @@ public class BotCommandProcess {
 
     private final static PixivDownload pixivDownload = new PixivDownload(Main.cookieStore, Main.proxy);
 
-    private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getSimpleName());
+    private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getName());
 
     private final static File imageStoreDir = new File(System.getProperty("cgj.botDataDir"), "data/image/cgj/");
     public final static Properties globalProp = new Properties();

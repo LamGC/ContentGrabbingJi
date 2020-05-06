@@ -27,7 +27,7 @@ import java.util.List;
  */
 public class PixivAccessProxyServer {
 
-    private final Logger log = LoggerFactory.getLogger(this.getClass().getSimpleName());
+    private final Logger log = LoggerFactory.getLogger(PixivAccessProxyServer.class.getName());
 
     private final HttpProxyServer proxyServer;
 

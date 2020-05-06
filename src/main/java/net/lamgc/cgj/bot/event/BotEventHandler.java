@@ -38,7 +38,7 @@ public class BotEventHandler implements EventHandler {
     private final ArgumentsRunner processRunner;
     private final ArgumentsRunner adminRunner;
 
-    private final static Logger log = LoggerFactory.getLogger("BotEventHandler");
+    private final static Logger log = LoggerFactory.getLogger(BotEventHandler.class.getName());
 
     /**
      * 所有缓存共用的JedisPool

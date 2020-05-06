@@ -39,7 +39,7 @@ public class RandomRankingArtworksSender extends AutoSender {
         super(messageSender);
         this.mode = mode;
         this.contentType = contentType;
-        log = LoggerFactory.getLogger("RecommendArtworksSender@" + Integer.toHexString(this.hashCode()));
+        log = LoggerFactory.getLogger(this.toString());
         this.rankingStart = rankingStart > 0 ? rankingStart : 1;
         this.rankingStop = rankingStop > 0 ? rankingStop : 150;
         if(this.rankingStart > this.rankingStop) {
