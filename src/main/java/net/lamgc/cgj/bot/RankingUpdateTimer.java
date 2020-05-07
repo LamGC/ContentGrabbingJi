@@ -6,6 +6,7 @@ import net.lamgc.cgj.pixiv.PixivURL;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.Calendar;
 import java.util.Date;
@@ -29,8 +30,8 @@ public class RankingUpdateTimer {
         if(cal.get(Calendar.DAY_OF_YEAR) <= currentLocalDate.getDayOfYear() && cal.get(Calendar.HOUR_OF_DAY) >= 12) {
             cal.set(Calendar.DAY_OF_YEAR, currentLocalDate.getDayOfYear() + 1);
         }
-        cal.set(Calendar.HOUR_OF_DAY, 12);
-        cal.set(Calendar.MINUTE, 0);
+        cal.set(Calendar.HOUR_OF_DAY, 11);
+        cal.set(Calendar.MINUTE, 30);
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
@@ -51,13 +52,14 @@ public class RankingUpdateTimer {
         LocalDate currentLocalDate = LocalDate.now();
         if(calendar.get(Calendar.DAY_OF_YEAR) == currentLocalDate.getDayOfYear() ||
                 calendar.get(Calendar.DAY_OF_YEAR) == currentLocalDate.getDayOfYear() - 1) {
-            if(calendar.get(Calendar.HOUR_OF_DAY) < 12) {
+            if(calendar.get(Calendar.HOUR_OF_DAY) < 11) {
                 calendar.add(Calendar.DAY_OF_YEAR, -2);
             } else {
                 calendar.add(Calendar.DAY_OF_YEAR, -1);
             }
         }
 
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());
         log.info("正在获取 {} 期排行榜数据...", calendar.getTime());
         for (PixivURL.RankingMode rankingMode : PixivURL.RankingMode.values()) {
             for (PixivURL.RankingContentType contentType : PixivURL.RankingContentType.values()) {
@@ -66,7 +68,7 @@ public class RankingUpdateTimer {
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
                 BotEventHandler.executeMessageEvent(new VirtualLoadMessageEvent(0,0,
-                                ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name()));
+                                ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name() + " -force -date " + dateStr));
                 log.info("排行榜 {}.{} 负载指令已投递.", rankingMode.name(), contentType.name());
             }
         }
