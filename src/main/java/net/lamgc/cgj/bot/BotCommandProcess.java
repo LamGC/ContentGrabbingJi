@@ -129,6 +129,12 @@ public class BotCommandProcess {
         return helpStrBuilder.toString();
     }
 
+    /**
+     * 作品信息查询
+     * @param fromGroup 来源群(系统提供)
+     * @param illustId 作品Id
+     * @return 返回作品信息
+     */
     @Command(commandName = "info")
     public static String artworkInfo(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
         if(illustId <= 0) {
@@ -164,10 +170,20 @@ public class BotCommandProcess {
         return "尚未支持";
     }
 
+    /**
+     * 排行榜命令
+     * @param fromGroup 来源群(系统提供)
+     * @param queryTime 查询时间, 格式: 年-月-日
+     * @param force 是否强制查询, 当主动提供的时间不在查询范围时, 是否强制查询, 仅系统可用
+     * @param contentMode 内容模式
+     * @param contentType 排行榜类型
+     * @return 返回排行榜信息
+     */
     @Command
     public static String ranking(
             @Argument(name = "$fromGroup") long fromGroup,
             @Argument(force = false, name = "date") Date queryTime,
+            @Argument(force = false, name = "force") boolean force,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
             @Argument(force = false, name = "type", defaultValue = "ILLUST") String contentType
     ) {
@@ -184,7 +200,7 @@ public class BotCommandProcess {
             }
             queryDate = gregorianCalendar.getTime();
         } else {
-            if(new Date().before(queryDate)) {
+            if(new Date().before(queryDate) && !force) {
                 log.warn("查询的日期过早, 无法查询排行榜.");
                 return "查询日期过早, 暂未更新指定日期的排行榜!";
             }
@@ -261,6 +277,10 @@ public class BotCommandProcess {
         return resultBuilder.append("如查询当前时间获取到昨天时间，则今日排名榜未更新。\n如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。").toString();
     }
 
+    /**
+     * 查询指定作者的作品(尚未完成)
+     * @return 返回作者信息和部分作品
+     */
     @Command(commandName = "userArt")
     public static String userArtworks() {
 
@@ -269,6 +289,7 @@ public class BotCommandProcess {
 
     /**
      * 搜索命令
+     * @param fromGroup 来源群(系统提供)
      * @param content 搜索内容
      * @param type 搜索类型
      * @param area 搜索区域
@@ -446,11 +467,22 @@ public class BotCommandProcess {
         return Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图\n如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。";
     }
 
+    /**
+     * 获取作品页面的下载链接
+     * @param illustId 作品Id
+     * @param quality 画质类型
+     * @return 返回作品所有页面在Pixiv的下载链接(有防盗链, 考虑要不要设置镜像站)
+     */
     @Command(commandName = "pages")
     public static String getPagesList(
+            @Argument(name = "$fromGroup") long fromGroup,
             @Argument(name = "id") int illustId,
             @Argument(name = "quality", force = false) PixivDownload.PageQuality quality) {
         try {
+            if(isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
+                log.warn("来源群 {} 查询的作品Id {} 为R18作品, 根据配置设定, 屏蔽该作品.", fromGroup, illustId);
+                return "该作品已被封印！";
+            }
             List<String> pagesList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
             StringBuilder builder = new StringBuilder("作品ID ").append(illustId).append(" 共有").append(pagesList.size()).append("页：").append("\n");
             int index = 0;
@@ -464,6 +496,12 @@ public class BotCommandProcess {
         }
     }
 
+    /**
+     * 获取作品链接
+     * @param fromGroup 来源群(系统提供)
+     * @param illustId 作品Id
+     * @return 返回作品在Pixiv的链接
+     */
     @Command(commandName = "link")
     public static String artworksLink(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
         try {
@@ -483,6 +521,7 @@ public class BotCommandProcess {
 
     /**
      * 通过illustId获取作品图片
+     * @param fromGroup 来源群(系统提供)
      * @param illustId 作品Id
      * @param quality 图片质量
      * @param pageIndex 指定页面索引, 从1开始
@@ -504,7 +543,7 @@ public class BotCommandProcess {
         }
 
         if(log.isDebugEnabled()) {
-            StringBuilder logBuilder = new StringBuilder("作品Id {} 所有页面下载链接: \n");
+            StringBuilder logBuilder = new StringBuilder("作品Id " + illustId + " 所有页面下载链接: \n");
             AtomicInteger index = new AtomicInteger();
             pagesList.forEach(item -> logBuilder.append(index.incrementAndGet()).append(". ").append(item).append("\n"));
             log.debug(logBuilder.toString());
@@ -603,12 +642,18 @@ public class BotCommandProcess {
 
     /**
      * 举报某一作品
+     * @param fromGroup 来源群(系统提供)
      * @param illustId 需要举报的作品id
      * @param reason 举报原因
      * @return 返回提示信息
      */
     @Command
-    public static String report(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "$fromQQ") long fromQQ, @Argument(name = "id") int illustId, @Argument(name = "msg", force = false) String reason) {
+    public static String report(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "$fromQQ") long fromQQ,
+            @Argument(name = "id") int illustId,
+            @Argument(name = "msg", force = false) String reason
+    ) {
         log.warn("收到作品反馈(IllustId: {}, 原因: {})", illustId, reason);
         JsonObject reportJson = new JsonObject();
         reportJson.addProperty("illustId", illustId);
