@@ -41,6 +41,8 @@ public class BotEventHandler implements EventHandler {
 
     private final static Logger log = LoggerFactory.getLogger(BotEventHandler.class.getName());
 
+    private final static Map<Long, AtomicBoolean> muteStateMap = new Hashtable<>();
+
     /**
      * 所有缓存共用的JedisPool
      */
@@ -158,6 +160,9 @@ public class BotEventHandler implements EventHandler {
         log.debug(event.toString());
         if(!match(msg)) {
             return;
+        } else if(isMute(event.getFromGroup())) {
+            log.debug("机器人已被禁言, 忽略请求.");
+            return;
         }
 
         Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
@@ -219,12 +224,14 @@ public class BotEventHandler implements EventHandler {
             }
         }
         long processTime = System.currentTimeMillis() - time;
-        if(Objects.requireNonNull(result) instanceof String) {
+        if(Objects.requireNonNull(result) instanceof String && !isMute(event.getFromGroup())) {
             try {
                 event.sendMessage((String) result);
             } catch (Exception e) {
                 log.error("发送消息时发生异常", e);
             }
+        } else if(isMute(event.getFromGroup())) {
+            log.warn("命令反馈时机器人已被禁言, 跳过反馈.");
         }
         long totalTime = System.currentTimeMillis() - time;
         log.info("命令反馈完成.(事件耗时: {}ms, P: {}%({}ms), R: {}%({}ms))", totalTime,
@@ -239,6 +246,42 @@ public class BotEventHandler implements EventHandler {
      */
     public static boolean match(String message) {
         return message.startsWith(COMMAND_PREFIX) || message.startsWith(ADMIN_COMMAND_PREFIX);
+    }
+
+    private static boolean isMute(long groupId) {
+        Boolean mute = isMute(groupId, false);
+        return mute != null && mute;
+    }
+
+    /**
+     * 查询某群是否被禁言.
+     * @param groupId 群组Id
+     * @param rawValue 是否返回原始值(当没有该群状态, 且本参数为true时, 将返回null)
+     * @return 返回状态值, 如无该群禁言记录且rawValue = true, 则返回null
+     */
+    public static Boolean isMute(long groupId, boolean rawValue) {
+        if(groupId <= 0) {
+            return false;
+        }
+        AtomicBoolean state = muteStateMap.get(groupId);
+        if(state == null && rawValue) {
+            return null;
+        }
+        return state != null && state.get();
+    }
+
+    /**
+     * 设置机器人禁言状态.
+     * <p>设置该项可防止因机器人在禁言期间反馈请求导致被封号.</p>
+     * @param mute 如果被禁言, 传入true
+     */
+    public static void setMuteState(long groupId, boolean mute) {
+        if(!muteStateMap.containsKey(groupId)) {
+            muteStateMap.put(groupId, new AtomicBoolean(mute));
+        } else {
+            muteStateMap.get(groupId).set(mute);
+        }
+        log.warn("群组 {} 机器人禁言状态已变更: {}", groupId, mute ? "已禁言" : "已解除");
     }
 
 }

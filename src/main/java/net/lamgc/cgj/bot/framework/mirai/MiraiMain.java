@@ -6,7 +6,10 @@ import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageSenderFactory;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactoryJvm;
+import net.mamoe.mirai.event.events.BotMuteEvent;
+import net.mamoe.mirai.event.events.BotUnmuteEvent;
 import net.mamoe.mirai.japt.Events;
+import net.mamoe.mirai.message.ContactMessage;
 import net.mamoe.mirai.message.FriendMessage;
 import net.mamoe.mirai.message.GroupMessage;
 import net.mamoe.mirai.utils.BotConfiguration;
@@ -43,12 +46,31 @@ public class MiraiMain implements Closeable {
         }
 
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), new BotConfiguration());
-        Events.subscribeAlways(GroupMessage.class, (msg) -> BotEventHandler.executeMessageEvent(new MiraiMessageEvent(msg)));
-        Events.subscribeAlways(FriendMessage.class, (msg) -> BotEventHandler.executeMessageEvent(new MiraiMessageEvent(msg)));
+        Events.subscribeAlways(GroupMessage.class, this::executeMessageEvent);
+        Events.subscribeAlways(FriendMessage.class, this::executeMessageEvent);
+        Events.subscribeAlways(BotMuteEvent.class,
+                event -> BotEventHandler.setMuteState(event.getGroup().getId(), true));
+        Events.subscribeAlways(BotUnmuteEvent.class,
+                event -> BotEventHandler.setMuteState(event.getGroup().getId(), false));
         bot.login();
         MessageSenderBuilder.setCurrentMessageSenderFactory(new MiraiMessageSenderFactory(bot));
         BotEventHandler.preLoad();
         bot.join();
+    }
+
+    /**
+     * 处理消息事件
+     * @param message 消息事件对象
+     */
+    private void executeMessageEvent(ContactMessage message) {
+        if(message instanceof GroupMessage) {
+            GroupMessage groupMessage = (GroupMessage) message;
+            if(BotEventHandler.isMute(groupMessage.getGroup().getId(), true) == null) {
+                BotEventHandler.setMuteState(groupMessage.getGroup().getId(),
+                        ((GroupMessage) message).getGroup().getBotMuteRemaining() != 0);
+            }
+        }
+        BotEventHandler.executeMessageEvent(new MiraiMessageEvent(message));
     }
 
     public void close() {
