@@ -33,7 +33,7 @@ public class MiraiMessageSender implements MessageSender {
     private final static CacheStore<String> imageIdCache = new HotDataCacheStore<>(
             new StringRedisCacheStore(BotEventHandler.redisServer, "mirai.imageId"),
             new LocalHashCacheStore<>(),
-            5400000, 1800000);
+            5400000, 1800000, true);
 
     /**
      * 使用id构造发送器

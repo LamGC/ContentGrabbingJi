@@ -50,7 +50,7 @@ public class BotCommandProcess {
     private final static CacheStore<JsonElement> illustInfoCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
     private final static CacheStore<JsonElement> illustPreLoadDataCache = new HotDataCacheStore<>(
             new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson),
-            new LocalHashCacheStore<>(), 3600000, 900000);
+            new LocalHashCacheStore<>(), 3600000, 900000, true);
     private final static CacheStore<JsonElement> searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
     private final static CacheStore<List<JsonObject>> rankingCache = new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
     private final static CacheStore<List<String>> pagesCache = new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
@@ -408,7 +408,7 @@ public class BotCommandProcess {
                 StringBuilder builder = new StringBuilder("[");
                 illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
                 builder.replace(builder.length() - 2, builder.length(), "]");
-                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t页数: {}, \n\t作品链接: {}",
+                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t页数: {}页, \n\t作品链接: {}",
                         searchArea.name(),
                         count,
                         illustsList.size(),
@@ -435,7 +435,7 @@ public class BotCommandProcess {
                 result.append(searchArea.name()).append(" (").append(count).append(" / ").append(limit).append(")\n\t作品id: ").append(illustId)
                         .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
                         .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString())
-                        .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt())
+                        .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt()).append("页")
                         .append("\n").append(imageMsg).append("\n");
                 count++;
             }

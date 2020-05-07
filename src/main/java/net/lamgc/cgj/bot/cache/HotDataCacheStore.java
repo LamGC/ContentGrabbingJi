@@ -10,7 +10,7 @@ import java.util.*;
  * @param <T> 存储类型
  * @author LamGC
  */
-public class HotDataCacheStore<T> implements CacheStore<T> {
+public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
 
     private final CacheStore<T> parent;
     private final CacheStore<T> current;
@@ -24,17 +24,22 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
      * @param parent 上级缓存存储库
      * @param current 热点缓存存储库, 最好使用本地缓存(例如 {@linkplain LocalHashCacheStore LocalHashCacheStore})
      * @param expireTime 本地缓存库的缓存项过期时间, 单位毫秒;
-     *                   该时间并不是所有缓存项的最终过期时间, 还需要根据expireFloatRange的设定随机设置, 公式:
-     *                   {@code expireTime + new Random().nextInt(expireFloatRange)}
+ *                   该时间并不是所有缓存项的最终过期时间, 还需要根据expireFloatRange的设定随机设置, 公式:
+ *                   {@code expireTime + new Random().nextInt(expireFloatRange)}
      * @param expireFloatRange 过期时间的浮动范围(单位毫秒), 用于防止短时间内大量缓存项失效导致的缓存雪崩
+     * @param autoClean 是否交由{@link AutoCleanTimer}自动执行清理
      */
-    public HotDataCacheStore(CacheStore<T> parent, CacheStore<T> current, long expireTime, int expireFloatRange) {
+    public HotDataCacheStore(CacheStore<T> parent, CacheStore<T> current, long expireTime, int expireFloatRange, boolean autoClean) {
         this.parent = parent;
         this.current = current;
         this.expireTime = expireTime;
         this.expireFloatRange = expireFloatRange;
-        log.debug("HotDataCacheStore初始化完成. (Parent: {}, Current: {}, expireTime: {}, expireFloatRange: {})",
-                parent, current, expireTime, expireFloatRange);
+        if(autoClean) {
+            AutoCleanTimer.add(this);
+        }
+
+        log.debug("HotDataCacheStore初始化完成. (Parent: {}, Current: {}, expireTime: {}, expireFloatRange: {}, autoClean: {})",
+                parent, current, expireTime, expireFloatRange, autoClean);
     }
 
     @Override
@@ -120,5 +125,14 @@ public class HotDataCacheStore<T> implements CacheStore<T> {
     @Override
     public boolean supportedList() {
         return false;
+    }
+
+    @Override
+    public void clean() {
+        for(String key : this.current.keys()) {
+            if(current.exists(key)) {
+                current.remove(key);
+            }
+        }
     }
 }
