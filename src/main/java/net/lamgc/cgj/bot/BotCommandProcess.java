@@ -453,11 +453,26 @@ public class BotCommandProcess {
                     continue;
                 }
 
-                result.append(searchArea.name()).append(" (").append(count).append(" / ").append(limit).append(")\n\t作品id: ").append(illustId)
+                JsonObject illustPreLoadData = getIllustPreLoadData(illustId, false);
+                result.append(searchArea.name()).append(" (").append(count).append(" / ")
+                        .append(limit).append(")\n\t作品id: ").append(illustId)
                         .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
                         .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString())
                         .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt()).append("页")
-                        .append("\n").append(imageMsg).append("\n");
+                        .append("\n\t点赞数：")
+                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt())
+                        .append("\n")
+                        .append("\n\t收藏数：")
+                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt())
+                        .append("\n")
+                        .append("\n\t围观数：")
+                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt())
+                        .append("\n")
+                        .append("\n\t评论数：")
+                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt())
+                        .append("\n")
+                        .append(imageMsg)
+                        .append("\n");
                 count++;
             }
             if (count > limit) {
