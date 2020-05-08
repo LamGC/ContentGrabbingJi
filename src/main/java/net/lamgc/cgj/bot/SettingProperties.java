@@ -188,10 +188,10 @@ public final class SettingProperties {
         Objects.requireNonNull(key);
         Properties targetProperties;
         if(groupId <= 0) {
+            targetProperties = globalProp;
+        } else {
             changeList.add(groupId);
             targetProperties = getGroupProperties(groupId);
-        } else {
-            targetProperties = globalProp;
         }
         String lastValue = targetProperties.getProperty(key);
         if(value != null) {
