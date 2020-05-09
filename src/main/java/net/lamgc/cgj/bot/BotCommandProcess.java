@@ -2,7 +2,6 @@ package net.lamgc.cgj.bot;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.Main;
@@ -15,7 +14,6 @@ import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
-import net.lamgc.utils.event.EventExecutor;
 import net.lz1998.cq.utils.CQCode;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
@@ -29,9 +27,6 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "SameParameterValue"})
@@ -56,32 +51,12 @@ public class BotCommandProcess {
     private final static CacheStore<List<String>> pagesCache = new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
     public final static CacheStore<JsonElement> reportStore = new JsonRedisCacheStore(BotEventHandler.redisServer, "report", gson);
 
-    /**
-     * 图片异步缓存执行器
-     */
-    private final static EventExecutor imageCacheExecutor = new EventExecutor(new ThreadPoolExecutor(
-            Runtime.getRuntime().availableProcessors() >= 2 ? 2 : 1,
-            (int) Math.ceil(Runtime.getRuntime().availableProcessors() / 2F),
-            5L, TimeUnit.SECONDS,
-            new LinkedBlockingQueue<>(128),
-            new ThreadFactoryBuilder()
-                    .setNameFormat("imageCacheThread-%d")
-                    .build(),
-            new ThreadPoolExecutor.DiscardOldestPolicy()
-    ));
-
     private final static RankingUpdateTimer updateTimer = new RankingUpdateTimer();
 
     public static void initialize() {
         log.info("正在初始化...");
 
         SettingProperties.loadProperties();
-
-        try {
-            imageCacheExecutor.addHandler(new ImageCacheHandler());
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        }
 
         updateTimer.schedule(null);
         log.info("初始化完成.");
@@ -544,6 +519,20 @@ public class BotCommandProcess {
             @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
             @Argument(name = "page", force = false, defaultValue = "1") int pageIndex) {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
+
+        try {
+            if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
+                log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
+                return "（根据设置，该作品已被屏蔽！）";
+            } else if(isReported(illustId)) {
+                log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
+                return "（该作品已被封印）";
+            }
+        } catch (IOException e) {
+            log.warn("作品信息无法获取!", e);
+            return "发生网络异常，无法获取图片！";
+        }
+
         List<String> pagesList;
         try {
             pagesList = getIllustPages(illustId, quality, false);
@@ -562,19 +551,6 @@ public class BotCommandProcess {
         if (pagesList.size() < pageIndex || pageIndex <= 0) {
             log.warn("指定的页数超出了总页数({} / {})", pageIndex, pagesList.size());
             return "指定的页数超出了范围(总共 " + pagesList.size() + " 页)";
-        }
-
-        try {
-            if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
-                log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
-                return "（根据设置，该作品已被屏蔽！）";
-            } else if(isReported(illustId)) {
-                log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
-                return "（该作品已被封印）";
-            }
-        } catch (IOException e) {
-            log.warn("作品信息无法获取!", e);
-            return "发生网络异常，无法获取图片！";
         }
 
         String downloadLink = pagesList.get(pageIndex - 1);
@@ -601,12 +577,11 @@ public class BotCommandProcess {
                 }
             }
 
-            ImageCacheObject taskObject = new ImageCacheObject(imageCache, illustId, downloadLink, imageFile);
             try {
-                imageCacheExecutor.executorSync(taskObject);
+                ImageCacheStore.executeCacheRequest(new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
             } catch (InterruptedException e) {
-                log.error("等待图片下载时发生中断", e);
-                return "图片获取失败!";
+                log.warn("图片缓存被中断", e);
+                return "(错误：图片获取超时)";
             }
         } else {
             log.debug("图片 {} 缓存命中.", fileName);

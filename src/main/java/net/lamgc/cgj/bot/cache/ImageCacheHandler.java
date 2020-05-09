@@ -28,9 +28,9 @@ public class ImageCacheHandler implements EventHandler {
     private final static Set<ImageCacheObject> cacheQueue = Collections.synchronizedSet(new HashSet<>());
 
     @SuppressWarnings("unused")
-    public void getImageToCache(ImageCacheObject event) {
+    public void getImageToCache(ImageCacheObject event) throws Exception {
         if(cacheQueue.contains(event)) {
-            log.debug("图片 {} 已存在相同缓存任务, 跳过.", event.getStoreFile().getName());
+            log.warn("图片 {} 已存在相同缓存任务, 跳过.", event.getStoreFile().getName());
             return;
         } else {
             cacheQueue.add(event);
@@ -43,11 +43,11 @@ public class ImageCacheHandler implements EventHandler {
             try {
                 if(!storeFile.exists() && !storeFile.createNewFile()) {
                     log.error("无法创建文件(Path: {})", storeFile.getAbsolutePath());
-                    return;
+                    throw new IOException("Failed to create file");
                 }
             } catch (IOException e) {
                 log.error("无法创建文件(Path: {})", storeFile.getAbsolutePath());
-                e.printStackTrace();
+                throw e;
             }
 
             HttpGet request = new HttpGet(event.getDownloadLink());
@@ -57,11 +57,11 @@ public class ImageCacheHandler implements EventHandler {
                 response = httpClient.execute(request);
             } catch (IOException e) {
                 log.error("Http请求时发生异常", e);
-                return;
+                throw e;
             }
             if(response.getStatusLine().getStatusCode() != 200) {
                 log.warn("Http请求异常：{}", response.getStatusLine());
-                return;
+                throw new IOException("Http Response Error: " + response.getStatusLine());
             }
 
             log.debug("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
@@ -69,7 +69,7 @@ public class ImageCacheHandler implements EventHandler {
                 IOUtils.copy(response.getEntity().getContent(), fos);
             } catch (IOException e) {
                 log.error("下载图片时发生异常", e);
-                return;
+                throw e;
             }
             event.getImageCache().put(URLs.getResourceName(event.getDownloadLink()), storeFile);
         } finally {
