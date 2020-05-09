@@ -41,15 +41,46 @@ public class BotCommandProcess {
             .serializeNulls()
             .create();
 
+    /* -------------------- 缓存 -------------------- */
+
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
-    private final static CacheStore<JsonElement> illustInfoCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
-    private final static CacheStore<JsonElement> illustPreLoadDataCache = new HotDataCacheStore<>(
-            new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson),
-            new LocalHashCacheStore<>(), 3600000, 900000, true);
-    private final static CacheStore<JsonElement> searchBodyCache = new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
-    private final static CacheStore<List<JsonObject>> rankingCache = new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
-    private final static CacheStore<List<String>> pagesCache = new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
-    public final static CacheStore<JsonElement> reportStore = new JsonRedisCacheStore(BotEventHandler.redisServer, "report", gson);
+
+    /**
+     * 作品信息缓存 - 不过期
+     */
+    private final static CacheStore<JsonElement> illustInfoCache =
+            new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
+
+    /**
+     * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期1 ± 0.25
+     */
+    private final static CacheStore<JsonElement> illustPreLoadDataCache =
+            CacheStoreUtils.hashLocalHotDataStore(
+                new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson),
+                3600000, 900000);
+    /**
+     * 搜索内容缓存, 有效期 2 小时
+     */
+    private final static CacheStore<JsonElement> searchBodyCache =
+            new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
+
+    /**
+     * 排行榜缓存, 不过期
+     */
+    private final static CacheStore<List<JsonObject>> rankingCache =
+            new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
+
+    /**
+     * 作品页面下载链接缓存 - 不过期
+     */
+    private final static CacheStore<List<String>> pagesCache =
+            new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
+
+    /**
+     * 作品报告存储 - 不过期
+     */
+    public final static CacheStore<JsonElement> reportStore =
+            new JsonRedisCacheStore(BotEventHandler.redisServer, "report", gson);
 
     private final static RankingUpdateTimer updateTimer = new RankingUpdateTimer();
 
@@ -122,16 +153,18 @@ public class BotCommandProcess {
             }
 
             JsonObject illustPreLoadData = getIllustPreLoadData(illustId, false);
-            StringBuilder builder = new StringBuilder("---------------- 作品信息 ----------------\n");
-            builder.append("作品Id: ").append(illustId).append("\n");
-            builder.append("作品标题：").append(illustPreLoadData.get("illustTitle").getAsString()).append("\n");
-            builder.append("作者(作者Id)：").append(illustPreLoadData.get("userName").getAsString())
-                    .append("(").append(illustPreLoadData.get("userId").getAsInt()).append(")\n");
-            builder.append("点赞数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt()).append("\n");
-            builder.append("收藏数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt()).append("\n");
-            builder.append("围观数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt()).append("\n");
-            builder.append("评论数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt()).append("\n");
-            builder.append("页数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt()).append("页\n");
+            StringBuilder builder = new StringBuilder("色图姬帮你了解了这个作品的信息！\n");
+            builder.append("---------------- 作品信息 ----------------");
+            builder.append("\n作品Id: ").append(illustId);
+            builder.append("\n作品标题：").append(illustPreLoadData.get("illustTitle").getAsString());
+            builder.append("\n作者(作者Id)：").append(illustPreLoadData.get("userName").getAsString())
+                    .append("(").append(illustPreLoadData.get("userId").getAsInt()).append(")");
+            builder.append("\n点赞数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt());
+            builder.append("\n收藏数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt());
+            builder.append("\n围观数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt());
+            builder.append("\n评论数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt());
+            builder.append("\n页数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt()).append("页");
+            builder.append("\n作品链接：").append(artworksLink(fromGroup, illustId)).append("\n");
             builder.append("---------------- 作品图片 ----------------\n");
             builder.append(getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
             builder.append("使用 \".cgj image -id ")
