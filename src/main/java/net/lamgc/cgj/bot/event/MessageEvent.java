@@ -12,7 +12,7 @@ public abstract class MessageEvent implements EventObject, MessageSender {
     public MessageEvent(long fromGroup, long fromQQ, String message) {
         this.fromGroup = fromGroup;
         this.fromQQ = fromQQ;
-        this.message = message;
+        this.message = message.trim();
     }
 
     /**
