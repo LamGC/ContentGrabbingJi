@@ -461,18 +461,13 @@ public class BotCommandProcess {
                         .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt()).append("页")
                         .append("\n\t点赞数：")
                         .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt())
-                        .append("\n")
                         .append("\n\t收藏数：")
                         .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt())
-                        .append("\n")
                         .append("\n\t围观数：")
                         .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt())
-                        .append("\n")
                         .append("\n\t评论数：")
                         .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt())
-                        .append("\n")
-                        .append(imageMsg)
-                        .append("\n");
+                        .append("\n").append(imageMsg).append("\n");
                 count++;
             }
             if (count > limit) {
