@@ -398,7 +398,7 @@ public class Main {
     private static void saveCookieStoreToFile() throws IOException {
         log.info("正在保存CookieStore...");
         File outputFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
-        if(!outputFile.exists() && !outputFile.delete() && !outputFile.createNewFile()){
+        if(!outputFile.exists() && !outputFile.createNewFile()){
             log.error("保存CookieStore失败.");
             return;
         }

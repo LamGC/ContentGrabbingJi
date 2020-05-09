@@ -10,7 +10,7 @@ import java.util.*;
 
 public final class SettingProperties {
 
-    private final static Logger log = LoggerFactory.getLogger("SettingProperties");
+    private final static Logger log = LoggerFactory.getLogger(SettingProperties.class.getName());
 
     private final static File globalPropFile = new File(getPropertiesDir(), "global.properties");
     private final static Properties globalProp = new Properties();
@@ -95,7 +95,7 @@ public final class SettingProperties {
 
     private static void saveGroupProperties(Long groupId, Properties properties) throws IOException {
         File groupPropFile = new File(getPropertiesDir(), "group." + groupId + ".properties");
-        if((!groupPropFile.exists() || !groupPropFile.isFile()) && (!groupPropFile.delete() || !groupPropFile.createNewFile())) {
+        if(!groupPropFile.exists() && !groupPropFile.createNewFile()) {
             log.error("群组 {} 配置文件创建失败!", groupId);
             return;
         }
@@ -122,7 +122,7 @@ public final class SettingProperties {
      */
     private static void saveGlobalProperties() {
         try {
-            if((!globalPropFile.exists() || !globalPropFile.isFile()) && (!globalPropFile.delete() || !globalPropFile.createNewFile())) {
+            if(!globalPropFile.exists() && !globalPropFile.createNewFile()) {
                 log.error("创建全局配置文件失败.");
                 return;
             }
@@ -158,7 +158,7 @@ public final class SettingProperties {
      */
     private static File getPropertiesDir() {
         File propDir = new File(System.getProperty("cgj.botDataDir"), "/setting/");
-        if((!propDir.exists() || !propDir.isDirectory()) && (!propDir.delete() || !propDir.mkdirs())) {
+        if(!propDir.exists() && !propDir.mkdirs()) {
             log.warn("Setting文件夹创建失败!");
         }
         return propDir;
