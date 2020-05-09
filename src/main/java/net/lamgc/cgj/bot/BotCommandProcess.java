@@ -245,7 +245,7 @@ public class BotCommandProcess {
             String itemLimitPropertyKey = "ranking.itemCountLimit";
             try {
                 itemLimit = Integer.parseInt(SettingProperties
-                        .getProperty(SettingProperties.GLOBAL, itemLimitPropertyKey, "10"));
+                        .getProperty(fromGroup, itemLimitPropertyKey, "10"));
             } catch(NumberFormatException e) {
                 log.warn("配置项 {} 的参数值格式有误!", itemLimitPropertyKey);
             }
@@ -254,7 +254,7 @@ public class BotCommandProcess {
             String imageLimitPropertyKey = "ranking.imageCountLimit";
             try {
                 imageLimit = Integer.parseInt(
-                        SettingProperties.getProperty(SettingProperties.GLOBAL, imageLimitPropertyKey, "3"));
+                        SettingProperties.getProperty(fromGroup, imageLimitPropertyKey, "3"));
             } catch(NumberFormatException e) {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
@@ -408,7 +408,7 @@ public class BotCommandProcess {
         int limit = 8;
         try {
             limit = Integer.parseInt(SettingProperties.
-                    getProperty(SettingProperties.GLOBAL, "search.itemCountLimit", "8"));
+                    getProperty(fromGroup, "search.itemCountLimit", "8"));
         } catch (Exception e) {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
