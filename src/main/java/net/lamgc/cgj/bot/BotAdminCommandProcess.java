@@ -111,6 +111,30 @@ public class BotAdminCommandProcess {
             @Argument(name = "type", force = false, defaultValue = "ILLUST") String rankingContentType,
             @Argument(name = "original", force = false, defaultValue = "false") boolean original
     ) {
+        if(minTime <= 0 || floatTime <= 0) {
+            return "时间不能为0或负数！";
+        } else if(rankingStart <= 0 || rankingStop - rankingStart <= 0) {
+            return "排行榜范围选取错误！";
+        }
+
+        PixivURL.RankingContentType type;
+        PixivURL.RankingMode mode;
+        try {
+            type = PixivURL.RankingContentType.valueOf("TYPE_" + rankingContentType.toUpperCase());
+        } catch(IllegalArgumentException e) {
+            return "无效的排行榜类型参数！";
+        }
+
+        try {
+            mode = PixivURL.RankingMode.valueOf("MODE_" + rankingMode.toUpperCase());
+        } catch(IllegalArgumentException e) {
+            return "无效的排行榜模式参数！";
+        }
+
+        if(!type.isSupportedMode(mode)) {
+            return "不兼容的排行榜模式与类型！";
+        }
+
         long group = groupId <= 0 ? fromGroup : groupId;
         JsonObject setting = new JsonObject();
         setting.addProperty(RANKING_SETTING_TIME_MIN, minTime);
@@ -127,7 +151,8 @@ public class BotAdminCommandProcess {
             removePushGroup(fromGroup, groupId);
         }
 
-        log.info("正在增加Timer...(Setting: {})", setting);
+        log.info("群组 {} 新推送配置: {}", group, setting);
+        log.info("正在增加Timer...");
         pushInfoMap.put(group, setting);
         addPushTimer(group, setting);
         return "已在 " + group + " 开启定时推送功能。";
