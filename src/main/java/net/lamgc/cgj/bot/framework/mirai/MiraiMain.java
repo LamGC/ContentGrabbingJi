@@ -73,9 +73,16 @@ public class MiraiMain implements Closeable {
         BotEventHandler.executeMessageEvent(new MiraiMessageEvent(message));
     }
 
+    /**
+     * 关闭机器人
+     */
     public void close() {
+        if(bot == null) {
+            return;
+        }
         log.warn("正在关闭机器人...");
         bot.close(null);
+        bot = null;
         log.warn("机器人已关闭.");
     }
 
