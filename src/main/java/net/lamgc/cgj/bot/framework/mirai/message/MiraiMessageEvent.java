@@ -1,29 +1,27 @@
 package net.lamgc.cgj.bot.framework.mirai.message;
 
-import net.lamgc.cgj.bot.event.MessageEvent;
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSource;
-import net.mamoe.mirai.message.ContactMessage;
-import net.mamoe.mirai.message.GroupMessage;
+import net.mamoe.mirai.message.GroupMessageEvent;
+import net.mamoe.mirai.message.MessageEvent;
 import net.mamoe.mirai.message.data.MessageUtils;
 
 import java.util.Objects;
 
-public class MiraiMessageEvent extends MessageEvent {
+public class MiraiMessageEvent extends net.lamgc.cgj.bot.event.MessageEvent {
 
-    private final ContactMessage messageObject;
+    private final MessageEvent messageObject;
     private final MessageSender messageSender;
 
-    public MiraiMessageEvent(ContactMessage message) {
-        super(message instanceof GroupMessage ? ((GroupMessage) message).getGroup().getId() : 0,
+    public MiraiMessageEvent(MessageEvent message) {
+        super(message instanceof GroupMessageEvent ? ((GroupMessageEvent) message).getGroup().getId() : 0,
                 message.getSender().getId(), getMessageBodyWithoutSource(message.getMessage().toString()));
         this.messageObject = Objects.requireNonNull(message);
-        if(message instanceof GroupMessage) {
-            messageSender = new MiraiMessageSender(((GroupMessage) message).getGroup(), MessageSource.Group);
+        if(message instanceof GroupMessageEvent) {
+            messageSender = new MiraiMessageSender(((GroupMessageEvent) message).getGroup(), MessageSource.Group);
         } else {
             messageSender = new MiraiMessageSender(message.getSender(), MessageSource.Private);
         }
-
     }
 
     /**
