@@ -11,10 +11,7 @@ import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSource;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.contact.Contact;
-import net.mamoe.mirai.message.data.Image;
-import net.mamoe.mirai.message.data.Message;
-import net.mamoe.mirai.message.data.MessageChain;
-import net.mamoe.mirai.message.data.MessageUtils;
+import net.mamoe.mirai.message.data.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -117,6 +114,15 @@ public class MiraiMessageSender implements MessageSender {
                 } else {
                     return img;
                 }
+            case "face":
+                if(!code.containsParameter("id")) {
+                    return MessageUtils.newChain("(无效的表情Id)");
+                }
+                int faceId = Integer.parseInt(code.getParameter("id"));
+                if(faceId <= 0) {
+                    return MessageUtils.newChain("(无效的表情Id)");
+                }
+                return new Face(faceId);
             default:
                 log.warn("解析到不支持的BotCode: {}", code);
                 return MessageUtils.newChain("(不支持的BotCode)");
