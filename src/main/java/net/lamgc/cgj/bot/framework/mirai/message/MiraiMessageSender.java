@@ -60,7 +60,7 @@ public class MiraiMessageSender implements MessageSender {
     public int sendMessage(final String message) {
         log.debug("处理前的消息内容:\n{}", message);
         Message msgBody = processMessage(Objects.requireNonNull(message));
-        log.debug("处理后的消息内容(可能出现乱序的情况, 但实际上顺序是没问题的):\n{}", msgBody);
+        log.debug("处理后的消息内容(可能出现乱序的情况, 但实际上顺序是没问题的):\n{}", msgBody.contentToString());
         member.sendMessage(msgBody);
         return 0;
     }
