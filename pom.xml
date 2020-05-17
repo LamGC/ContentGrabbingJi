@@ -6,7 +6,7 @@
 
     <groupId>net.lamgc</groupId>
     <artifactId>ContentGrabbingJi</artifactId>
-    <version>2.5.1</version>
+    <version>2.5.2-20200517.1-SNAPSHOT</version>
 
     <repositories>
         <repository>
@@ -86,7 +86,7 @@
         <dependency>
             <groupId>net.lamgc</groupId>
             <artifactId>java-utils</artifactId>
-            <version>1.2.0_20200505.1-SNAPSHOT</version>
+            <version>1.2.0_20200514.1-SNAPSHOT</version>
         </dependency>
         
         <dependency>
