@@ -109,7 +109,7 @@ public class BotCommandProcess {
         helpStrBuilder.append("CGJ Bot使用指南").append("\n");
         helpStrBuilder.append("使用方法：.cgj <命令> [参数...]").append("\n");
         helpStrBuilder.append("例如查询作品信息功能：").append("\n");
-        helpStrBuilder.append(".cgj artwork -id 80846159").append("\n");
+        helpStrBuilder.append(".cgj info -id 80846159").append("\n");
         helpStrBuilder.append("目前可用的命令:").append("\n");
         helpStrBuilder.append("\t").append("ranking - 获取今天或指定日期排行榜的前10名作品").append("\n");
         helpStrBuilder.append("\t\t").append("-date - 指定查询日期(年-月-日)").append("\n");
