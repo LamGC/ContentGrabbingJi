@@ -26,13 +26,19 @@ public enum MessageEventExecutionDebugger {
 
         try {
             rotation = Integer.parseInt(properties.getProperty("debug.pm.rotation", "5"));
-        } catch(NumberFormatException ignored) {}
+        } catch(NumberFormatException e) {
+            log.warn("配置项 {} 值无效, 将使用默认值.({})", "debug.pm.rotation", rotation);
+        }
         try {
             number = Integer.parseInt(properties.getProperty("debug.pm.number", "50"));
-        } catch(NumberFormatException ignored) {}
+        } catch(NumberFormatException e) {
+            log.warn("配置项 {} 值无效, 将使用默认值.({})", "debug.pm.number", number);
+        }
         try {
             interval = Integer.parseInt(properties.getProperty("debug.pm.interval", "2500"));
-        } catch(NumberFormatException ignored) {}
+        } catch(NumberFormatException e) {
+            log.warn("配置项 {} 值无效, 将使用默认值.({})", "debug.pm.interval", interval);
+        }
 
         boolean interrupted = false;
         Thread currentThread = Thread.currentThread();
