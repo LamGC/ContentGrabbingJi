@@ -6,7 +6,30 @@ Pixiv爬虫一只，同时也是一个机器人/插件！
 - [CoolQ](https://cqp.cc)(基于`SpringCQ`, 不支持多账号使用, 需要使用`CQHttp`插件)
 
 ## Usage ##
-### 参数 ###
-- `proxy` / `CGJ_PROXY`: 设置代理
-- `botDataDir` / `CGJ_BOT_DATA_DIR`: 设置`botMode`运行模式下机器人数据存储目录
-- `redisAddress` / `CGJ_REDIS_URI`: Redis服务器地址
+
+> 注意: 运行色图姬前, 你需要准备一个Pixiv账号的会话Cookie存储文件, 否则色图姬将无法运行.  
+
+### Arguments ###
+- 通用参数
+  - `proxy` / `CGJ_PROXY`: 设置代理
+    - 格式: `协议://地址:端口`
+    - 示例: `socks5://127.0.0.1:1080`
+- 机器人参数
+  - `botDataDir` / `CGJ_BOT_DATA_DIR`: 设置`botMode`运行模式下机器人数据存储目录
+    - 格式: `路径`
+    - 示例: `./data`
+    - 默认: `./`
+  - `redisAddress` / `CGJ_REDIS_URI`: Redis服务器地址
+    - 格式: `地址:端口`
+    - 示例: `127.0.0.1:6379`
+
+### Commands ###
+- `pluginMode`: CoolQ插件模式
+- `botMode`: Mirai独立模式
+- `collectionDownload`: 收藏下载, 以原图画质下载Cookie所属账号的所有收藏作品
+- `getRecommends`: 将访问主页获得的推荐作品全部以原图画质下载
+- `getRankingIllust`: 以原图画质下载指定排行榜类型的全部作品
+- `search`: 搜索指定内容并获取相关作品信息(不下载)
+
+
+
