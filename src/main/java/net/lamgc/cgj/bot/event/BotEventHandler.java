@@ -224,7 +224,7 @@ public class BotEventHandler implements EventHandler {
             }
         }
         long processTime = System.currentTimeMillis() - time;
-        if(Objects.requireNonNull(result) instanceof String && !isMute(event.getFromGroup())) {
+        if(!Objects.isNull(result) && result instanceof String && !isMute(event.getFromGroup())) {
             try {
                 event.sendMessage((String) result);
             } catch (Exception e) {

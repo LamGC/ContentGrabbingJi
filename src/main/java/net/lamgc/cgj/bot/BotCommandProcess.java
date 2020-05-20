@@ -7,10 +7,14 @@ import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.Main;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.event.BufferMessageEvent;
 import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
+import net.lamgc.cgj.pixiv.PixivURL.RankingContentType;
+import net.lamgc.cgj.pixiv.PixivURL.RankingMode;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
@@ -293,6 +297,18 @@ public class BotCommandProcess {
     public static String userArtworks() {
 
         return "功能未完成";
+    }
+
+    @Command(commandName = "st")
+    public static String r18Image() {
+        BufferMessageEvent event = new BufferMessageEvent();
+        RandomRankingArtworksSender artworksSender = 
+            new RandomRankingArtworksSender(event, 1, 200, 
+            RankingMode.MODE_MALE, 
+            RankingContentType.TYPE_ALL, 
+            PageQuality.ORIGINAL);
+        artworksSender.send();
+        return event.getBufferMessage();
     }
 
     /**
