@@ -1,6 +1,15 @@
+# Ignore test date folder
 /pluginData/
 /logs/
-/.idea/
-/CGJ_2.iml
 /cookies.store
 /target/
+
+# Ignore Idea files
+/.idea/
+/CGJ_2.iml
+
+# Ignore Visual Studio Code files
+.classpath
+.factorypath
+.project
+/.settings/
