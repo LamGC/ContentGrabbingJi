@@ -8,7 +8,6 @@ import java.util.Hashtable;
 import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.concurrent.locks.Condition;
 import java.util.concurrent.locks.ReentrantLock;
 
 public final class ImageCacheStore {
@@ -101,8 +100,6 @@ public final class ImageCacheStore {
         public final ReentrantLock lock = new ReentrantLock(true);
 
         public final AtomicReference<TaskState> taskState = new AtomicReference<>(TaskState.READY);
-
-        public final Condition condition = lock.newCondition();
 
     }
 

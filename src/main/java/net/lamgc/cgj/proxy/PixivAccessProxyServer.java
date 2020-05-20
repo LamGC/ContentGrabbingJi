@@ -99,7 +99,7 @@ public class PixivAccessProxyServer {
                                     }*/
                                     log.info("Response Cookie: " + value);
                                     BasicClientCookie cookie = parseRawCookie(value);
-                                    cookieStore.addCookie(null);
+                                    cookieStore.addCookie(cookie);
                                 });
                                 httpResponse.headers().remove(HttpHeaderNames.SET_COOKIE);
                                 super.afterResponse(clientChannel, proxyChannel, httpResponse, pipeline);
