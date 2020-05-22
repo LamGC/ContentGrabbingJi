@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -793,11 +794,19 @@ public class BotCommandProcess {
         }
         return result;
     }
-    
+
+    /**
+     * 获取图片存储目录.
+     * <p>每次调用都会检查目录是否存在, 如不存在则会抛出异常</p>
+     * @return 返回File对象
+     * @throws RuntimeException 当目录创建失败时将包装{@link IOException}异常并抛出.
+     */
     private static File getImageStoreDir() {
-        if(!imageStoreDir.exists() && !imageStoreDir.mkdirs()) {
-            log.warn("酷Q图片缓存目录失效！(Path: {} )", imageStoreDir.getAbsolutePath());
-            throw new RuntimeException(new IOException("文件夹创建失败!"));
+        if(!imageStoreDir.exists() && !Files.isSymbolicLink(imageStoreDir.toPath())) {
+            if(!imageStoreDir.mkdirs()) {
+                log.warn("酷Q图片缓存目录失效！(Path: {} )", imageStoreDir.getAbsolutePath());
+                throw new RuntimeException(new IOException("文件夹创建失败!"));
+            }
         }
         return imageStoreDir;
     }
