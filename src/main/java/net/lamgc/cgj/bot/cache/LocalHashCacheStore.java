@@ -12,19 +12,45 @@ import java.util.concurrent.atomic.AtomicReference;
  * 基于Hashtable的本地缓存库
  * @param <T> 缓存类型
  */
-public class LocalHashCacheStore<T> implements CacheStore<T> {
+public class LocalHashCacheStore<T> implements CacheStore<T>, Cleanable {
 
     private final Hashtable<String, CacheObject<T>> cache;
 
+    /**
+     * 构造一个基于Hashtable的本地缓存库
+     * @see Hashtable
+     */
     public LocalHashCacheStore() {
         this(0);
     }
 
+    /**
+     * 构造一个基于Hashtable的本地缓存库
+     * @param initialCapacity 初始容量
+     * @see Hashtable
+     */
     public LocalHashCacheStore(int initialCapacity) {
         this(initialCapacity, 0F);
     }
 
+    /**
+     * 构造一个基于Hashtable的本地缓存库
+     * @param initialCapacity 初始容量
+     * @param loadFactor 重载因子
+     * @see Hashtable
+     */
     public LocalHashCacheStore(int initialCapacity, float loadFactor) {
+        this(initialCapacity, loadFactor, false);
+    }
+
+    /**
+     * 构造一个基于Hashtable的本地缓存库
+     * @param initialCapacity 初始容量
+     * @param loadFactor 重载因子
+     * @param autoClean 是否自动清理
+     * @see Hashtable
+     */
+    public LocalHashCacheStore(int initialCapacity, float loadFactor, boolean autoClean) {
         if(initialCapacity != 0) {
             if(loadFactor <= 0F) {
                 cache = new Hashtable<>(initialCapacity);
@@ -33,6 +59,10 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
             }
         } else {
             cache = new Hashtable<>();
+        }
+
+        if(autoClean) {
+            AutoCleanTimer.add(this);
         }
     }
 
@@ -118,6 +148,15 @@ public class LocalHashCacheStore<T> implements CacheStore<T> {
         return false;
     }
 
+    @Override
+    public void clean() throws Exception {
+        Date currentDate = new Date();
+        cache.forEach((key, value) -> {
+            if(value.isExpire(currentDate)) {
+                cache.remove(key);
+            }
+        });
+    }
 
     public static class CacheObject<T> implements Comparable<CacheObject<T>> {
 

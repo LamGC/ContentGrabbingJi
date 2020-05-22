@@ -86,13 +86,15 @@ public class Main {
         File cookieStoreFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
         if(!cookieStoreFile.exists()) {
             log.warn("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
-            Scanner scanner = new Scanner(System.in);
-            if(scanner.nextLine().trim().equalsIgnoreCase("yes")) {
-                startPixivLoginProxyServer();
-            } else {
-                System.exit(1);
-                return;
+            try(Scanner scanner = new Scanner(System.in)) {
+                if(scanner.nextLine().trim().equalsIgnoreCase("yes")) {
+                    startPixivLoginProxyServer();
+                } else {
+                    System.exit(1);
+                    return;
+                }
             }
+            
         }
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cookieStoreFile));
         cookieStore = (CookieStore) ois.readObject();
@@ -137,7 +139,9 @@ public class Main {
 
     @Command
     public static void botMode(@Argument(name = "args", force = false) String argsStr) {
-        new MiraiMain().init();
+        MiraiMain main = new MiraiMain();
+        main.init();
+        main.close();
     }
 
     @Command
@@ -423,23 +427,25 @@ public class Main {
         proxyServerStartThread.setName("LoginProxyServerThread");
         proxyServerStartThread.start();
         //System.console().readLine();
-        Scanner scanner = new Scanner(System.in);
+        
         log.info("登录完成后, 使用\"done\"命令结束登录过程.");
-        while(true) {
-            if (scanner.nextLine().equalsIgnoreCase("done")) {
-                log.info("关闭PLPS服务器...");
-                proxyServer.close();
-                cookieStore = proxyServer.getCookieStore();
-                try {
-                    log.info("正在保存CookieStore...");
-                    saveCookieStoreToFile();
-                    log.info("CookieStore保存完成.");
-                } catch (IOException e) {
-                    log.error("CookieStore保存时发生异常, 本次CookieStore仅可在本次运行使用.", e);
+        try(Scanner scanner = new Scanner(System.in)) {
+            while(true) {
+                if (scanner.nextLine().equalsIgnoreCase("done")) {
+                    log.info("关闭PLPS服务器...");
+                    proxyServer.close();
+                    cookieStore = proxyServer.getCookieStore();
+                    try {
+                        log.info("正在保存CookieStore...");
+                        saveCookieStoreToFile();
+                        log.info("CookieStore保存完成.");
+                    } catch (IOException e) {
+                        log.error("CookieStore保存时发生异常, 本次CookieStore仅可在本次运行使用.", e);
+                    }
+                    break;
+                } else {
+                    log.warn("要结束登录过程, 请使用\"done\"命令.");
                 }
-                break;
-            } else {
-                log.warn("要结束登录过程, 请使用\"done\"命令.");
             }
         }
     }
