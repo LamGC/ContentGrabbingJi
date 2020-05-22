@@ -215,12 +215,17 @@ public class BotEventHandler implements EventHandler {
         } catch(ParameterNoFoundException e) {
             result = "命令缺少参数: " + e.getParameterName();
         } catch(DeveloperRunnerException e) {
-            if (!(e.getCause() instanceof InterruptedException)) {
-                log.error("执行命令时发生异常", e);
-                result = "色图姬在执行命令时遇到了一个错误！";
-            } else {
+            Throwable cause = e.getCause();
+            if (cause instanceof InterruptedException) {
                 log.error("命令执行超时, 终止执行.");
                 result = "色图姬发现这个命令的处理时间太久了！所以打断了这个命令。";
+            } else if(cause instanceof NoSuchElementException && cause.getMessage().startsWith("No work found: ")) {
+                String message = cause.getMessage();
+                log.error("指定作品不存在.(Id: {})", message.substring(message.lastIndexOf(": ") + 2));
+                result = "色图姬找不到这个作品！";
+            } else {
+                log.error("执行命令时发生异常", e);
+                result = "色图姬在执行命令时遇到了一个错误！";
             }
         }
         long processTime = System.currentTimeMillis() - time;

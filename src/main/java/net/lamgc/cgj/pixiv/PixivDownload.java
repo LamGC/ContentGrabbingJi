@@ -542,8 +542,9 @@ public class PixivDownload {
      *       }
      *      </pre>
      * @throws IOException 当请求发生异常, 或接口返回错误信息时抛出.
+     * @throws NoSuchElementException 当该作品不存在时抛出异常
      */
-    public JsonObject getIllustInfoByIllustId(int illustId) throws IOException {
+    public JsonObject getIllustInfoByIllustId(int illustId) throws IOException, NoSuchElementException {
         HttpGet request = createHttpGetRequest(PixivURL.getPixivIllustInfoAPI(illustId));
         HttpResponse response = httpClient.execute(request);
         String responseStr = EntityUtils.toString(response.getEntity());
@@ -558,7 +559,7 @@ public class PixivDownload {
         if(illustsArray.size() == 1) {
             return illustsArray.get(0).getAsJsonObject();
         } else {
-            return null;
+            throw new NoSuchElementException("No work found: " + illustId);
         }
     }
 

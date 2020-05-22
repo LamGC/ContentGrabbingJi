@@ -149,7 +149,7 @@ public class BotCommandProcess {
     @Command(commandName = "info")
     public static String artworkInfo(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
         if(illustId <= 0) {
-            return "错误的作品id！";
+            return "这个作品Id是错误的！";
         }
 
         try {
@@ -709,13 +709,6 @@ public class BotCommandProcess {
         return reportStore.exists(String.valueOf(illustId));
     }
 
-    /*
-    下一目标：
-    添加定时发图
-    定时发图支持设置关注标签
-    标签....标签支持搜索吧
-     */
-
     /**
      * 检查指定作品是否为r18
      * @param illustId 作品Id
@@ -723,13 +716,22 @@ public class BotCommandProcess {
      * @param returnRaw 是否返回原始值
      * @return 如果为true, 则不为全年龄
      * @throws IOException 获取数据时发生异常时抛出
+     * @throws NoSuchElementException 当作品不存在时抛出
      */
-    public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw) throws IOException {
+    public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw) throws IOException, NoSuchElementException {
         boolean rawValue = getIllustInfo(illustId, false).getAsJsonArray("tags").contains(new JsonPrimitive("R-18"));
         return returnRaw || settingProp == null ? rawValue : rawValue && !settingProp.getProperty("image.allowR18", "false").equalsIgnoreCase("true");
     }
 
-    private static JsonObject getIllustInfo(int illustId, boolean flushCache) throws IOException {
+    /**
+     * 获取作品信息
+     * @param illustId 作品Id
+     * @param flushCache 强制刷新缓存
+     * @return 返回作品信息
+     * @throws IOException 当Http请求发生异常时抛出
+     * @throws NoSuchElementException 当作品未找到时抛出
+     */
+    private static JsonObject getIllustInfo(int illustId, boolean flushCache) throws IOException, NoSuchElementException {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
         JsonObject illustInfoObj = null;
         if (!illustInfoCache.exists(illustIdStr) || flushCache) {
