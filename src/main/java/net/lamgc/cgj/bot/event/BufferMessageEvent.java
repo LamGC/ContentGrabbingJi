@@ -4,9 +4,9 @@ import java.util.Objects;
 
 public class BufferMessageEvent extends MessageEvent {
 
-    StringBuffer buffer = new StringBuffer();
+    private final StringBuffer buffer = new StringBuffer();
 
-    public final MessageEvent parent;
+    private final MessageEvent parent;
 
     /**
      * 以空消息空Id生成BufferMessageEvent
@@ -22,6 +22,17 @@ public class BufferMessageEvent extends MessageEvent {
      */
     public BufferMessageEvent(String message) {
         super(0, 0, message);
+        parent = null;
+    }
+
+    /**
+     * 提供消息内容构和Id信息造BufferMessageEvent
+     * @param groupId 群组Id
+     * @param qqId 发送者Id
+     * @param message 传入的消息内容
+     */
+    public BufferMessageEvent(int groupId, int qqId, String message) {
+        super(groupId, qqId, message);
         parent = null;
     }
 
