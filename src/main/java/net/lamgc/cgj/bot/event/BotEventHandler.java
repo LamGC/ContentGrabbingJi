@@ -17,6 +17,7 @@ import net.lamgc.utils.base.runner.exception.NoSuchCommandException;
 import net.lamgc.utils.base.runner.exception.ParameterNoFoundException;
 import net.lamgc.utils.event.*;
 import net.lamgc.utils.event.EventObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
@@ -231,7 +232,10 @@ public class BotEventHandler implements EventHandler {
         long processTime = System.currentTimeMillis() - time;
         if(!Objects.isNull(result) && result instanceof String && !isMute(event.getFromGroup())) {
             try {
-                event.sendMessage((String) result);
+                int sendResult = event.sendMessage((String) result);
+                if(sendResult < 0) {
+                    log.warn("消息发送失败, Sender {} 返回错误代码: {}", event.getClass().getName(), sendResult);
+                }
             } catch (Exception e) {
                 log.error("发送消息时发生异常", e);
             }
