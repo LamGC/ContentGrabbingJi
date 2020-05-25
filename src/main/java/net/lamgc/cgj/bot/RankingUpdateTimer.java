@@ -27,8 +27,9 @@ public class RankingUpdateTimer {
         Calendar cal = Calendar.getInstance();
         cal.setTime(firstRunDate == null ? new Date() : firstRunDate);
         LocalDate currentLocalDate = LocalDate.now();
-        if(cal.get(Calendar.DAY_OF_YEAR) <= currentLocalDate.getDayOfYear() &&
-                cal.get(Calendar.HOUR_OF_DAY) >= 11 && cal.get(Calendar.MINUTE) >= 30) {
+        if(cal.get(Calendar.DAY_OF_YEAR) < currentLocalDate.getDayOfYear() || (
+                cal.get(Calendar.DAY_OF_YEAR) == currentLocalDate.getDayOfYear() &&
+                        (cal.get(Calendar.HOUR_OF_DAY) * 60 + cal.get(Calendar.MINUTE) >= 690))) {
             cal.set(Calendar.DAY_OF_YEAR, currentLocalDate.getDayOfYear() + 1);
         }
         cal.set(Calendar.HOUR_OF_DAY, 11);
@@ -36,7 +37,7 @@ public class RankingUpdateTimer {
         cal.set(Calendar.SECOND, 0);
         cal.set(Calendar.MILLISECOND, 0);
 
-        long delay = cal.getTime().getTime() - (System.currentTimeMillis());
+        long delay = cal.getTime().getTime() - System.currentTimeMillis();
         log.warn("已设置排行榜定时更新, 首次运行时间: {} ({}min)", cal.getTime(), delay / 1000 / 60);
         timer.schedule(new TimerTask() {
             @Override
