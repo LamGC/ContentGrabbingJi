@@ -77,7 +77,7 @@ public class MiraiMessageSender implements MessageSender {
                 .replaceAll("&38", "&")
                 .split("\\|");
 
-        MessageChain messages = MessageUtils.newChain().plus("");
+        MessageChain messages = MessageUtils.newChain();
         int codeIndex = 0;
         for(String text : texts) {
             if(text.equals("{BotCode}")) {

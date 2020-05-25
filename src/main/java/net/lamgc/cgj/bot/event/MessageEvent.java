@@ -19,9 +19,10 @@ public abstract class MessageEvent implements EventObject, MessageSender {
      * 发送消息
      * @param message 消息内容
      * @return 成功返回MessageId, 如没有MessageId则返回0, 失败返回负数错误码
+     * @throws Exception 该方法根据不同实现, 可能会抛出不同异常, 详见实现所标识的文档内容.
      */
     @Override
-    public abstract int sendMessage(final String message);
+    public abstract int sendMessage(final String message) throws Exception;
 
     /**
      * 获取图片下载地址.

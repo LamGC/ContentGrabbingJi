@@ -38,7 +38,7 @@ public class MiraiMessageEvent extends net.lamgc.cgj.bot.event.MessageEvent {
     }
 
     @Override
-    public int sendMessage(final String message) {
+    public int sendMessage(final String message) throws Exception {
         return messageSender.sendMessage(message);
     }
 

@@ -36,7 +36,7 @@ public class SpringCQMessageEvent extends MessageEvent {
     }
 
     @Override
-    public int sendMessage(final String message) {
+    public int sendMessage(final String message) throws Exception {
         return messageSender.sendMessage(message);
     }
 

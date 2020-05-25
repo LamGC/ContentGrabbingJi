@@ -92,8 +92,8 @@ public class RandomRankingArtworksSender extends AutoSender {
             message.append(BotCommandProcess.getImageById(0, illustId, quality, 1));
             message.append("\n如有不当作品，可使用\".cgj report -id ").append(illustId).append("\"向色图姬反馈。");
             getMessageSender().sendMessage(message.toString());
-        } catch (IOException e) {
-            e.printStackTrace();
+        } catch (Exception e) {
+            log.error("发送随机作品时发生异常", e);
         }
     }
 }
