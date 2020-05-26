@@ -300,8 +300,11 @@ public class BotCommandProcess {
         return "功能未完成";
     }
 
-    @Command(commandName = "st")
-    public static String r18Image() {
+    /**
+     * 随机获取一副作品
+     */
+    @Command(commandName = "random")
+    public static String randomImage() {
         BufferMessageEvent event = new BufferMessageEvent();
         RandomRankingArtworksSender artworksSender = 
             new RandomRankingArtworksSender(event, 1, 200, 
