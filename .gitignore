@@ -6,7 +6,7 @@
 
 # Ignore Idea files
 /.idea/
-/CGJ_2.iml
+*.iml
 
 # Ignore Visual Studio Code files
 .classpath
