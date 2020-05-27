@@ -3,7 +3,7 @@ Pixiv爬虫一只，同时也是一个机器人/插件！
 
 ## 支持的机器人平台 ##
 - [Mirai](https://github.com/mamoe/mirai)
-- [CoolQ](https://cqp.cc)(基于[`SpringCQ`](https://github.com/lz1998/spring-cq), 不支持多账号使用, 需要使用[`CQHttp`插件](https://cqhttp.cc/))
+- [CoolQ](https://cqp.cc)(基于[`SpringCQ`](https://github.com/lz1998/spring-cq), 不支持多账号使用, 需要使用[`CQHttp`](https://cqhttp.cc/)插件)
 
 ## Usage ##
 > 注意: 运行色图姬前, 你需要准备一个Pixiv账号的会话Cookie存储文件, 否则色图姬将无法运行.  
@@ -13,15 +13,15 @@ Pixiv爬虫一只，同时也是一个机器人/插件！
 > ENV参数名为环境变量名, 用于给Docker容器提供设置方式.  
 
 - 通用参数
-  - `-proxy` / `ENV: CGJ_PROXY`: 设置代理
+  - `-proxy` / `ENV: CGJ_PROXY`: (**可选**) 设置代理
     - 格式: `协议://地址:端口`
     - 示例: `socks5://127.0.0.1:1080`
 - 机器人参数
-  - `-botDataDir` / `ENV: CGJ_BOT_DATA_DIR`: 设置`botMode`运行模式下机器人数据存储目录
+  - `-botDataDir` / `ENV: CGJ_BOT_DATA_DIR`: (**可选**) 设置`botMode`运行模式下机器人数据存储目录
     - 格式: `路径`
     - 示例: `./data`
     - 默认: `./`
-  - `-redisAddress` / `ENV: CGJ_REDIS_URI`: Redis服务器地址
+  - `-redisAddress` / `ENV: CGJ_REDIS_URI`: (**必填, 计划支持可选**) Redis服务器地址
     - 格式: `地址:端口`
     - 示例: `127.0.0.1:6379`
 
