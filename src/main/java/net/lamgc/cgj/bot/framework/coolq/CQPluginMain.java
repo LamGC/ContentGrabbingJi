@@ -17,6 +17,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
 
     public CQPluginMain() {
         // TODO(LamGC, 2020.04.21): SpringCQ无法适配MessageSenderBuilder
+        // MessageSenderBuilder.setCurrentMessageSenderFactory(new SpringCQMessageSenderFactory());
         BotEventHandler.preLoad();
         LoggerFactory.getLogger(CQPluginMain.class.getName())
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
@@ -37,7 +38,13 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
         return processMessage(cq, event);
     }
 
-    public int processMessage(CoolQ cq, CQMessageEvent event) {
+    /**
+     * 处理消息
+     * @param cq CoolQ机器人对象
+     * @param event 消息事件
+     * @return 是否拦截消息
+     */
+    private static int processMessage(CoolQ cq, CQMessageEvent event) {
         if(!BotEventHandler.match(event.getMessage())) {
             return MESSAGE_IGNORE;
         }
