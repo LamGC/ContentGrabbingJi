@@ -173,6 +173,7 @@ public class PixivURL {
     /**
      * 查询用户收藏.<br/>
      * 该URL返回HTML页面，需要进行解析.<br/>
+     * <p>注意: 该接口需要登陆</p>
      * 需要替换的文本:<br/>
      * {pageIndex} - 页数, 超出了则结果为空<br/>
      */
@@ -345,6 +346,7 @@ public class PixivURL {
          * @param mode 要检查的RankingMode项
          * @return 如果支持返回true
          */
+        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
         public boolean isSupportedMode(RankingMode mode) {
             return Arrays.binarySearch(supportedMode, mode) >= 0;
         }
