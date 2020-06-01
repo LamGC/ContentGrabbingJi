@@ -27,21 +27,30 @@ public class PixivURL {
 
     /**
      * P站搜索请求url
+     * @deprecated 该接口已被替换, 请使用{@link PixivSearchBuilder}构造搜索Url
+     * @see PixivSearchBuilder
      */
+    @Deprecated
     private static final String PIXIV_SEARCH_URL = "https://www.pixiv.net/search.php";
 
     /**
      * P站搜索用户url
      * 需要替换的参数:
      * {nick} - 用户昵称、部分名称
+     * @deprecated 该接口已被替换, 请使用{@link PixivSearchBuilder}构造搜索Url
+     * @see PixivSearchBuilder
      */
+    @Deprecated
     public static final String PIXIV_SEARCH_USER_URL = PIXIV_SEARCH_URL + "?s_mode=s_usr&nick={nick}";
 
     /**
      * P站搜索插画url
      * 需要替换的参数:
      * {word} - 插画相关文本
+     * @deprecated 该接口已被替换, 请使用{@link PixivSearchBuilder}构造搜索Url
+     * @see PixivSearchBuilder
      */
+    @Deprecated
     public static final String PIXIV_SEARCH_TAG_URL = PIXIV_SEARCH_URL + "?s_mode=s_tag&word={word}";
 
     /**
