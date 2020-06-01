@@ -44,8 +44,11 @@ public class MiraiMessageEvent extends net.lamgc.cgj.bot.event.MessageEvent {
     private MiraiMessageEvent(MessageEvent messageObject, long groupId, long qqId, MessageChain message) {
         super(groupId, qqId, getMessageBodyWithoutSource(message.toString()));
         this.messageObject = Objects.requireNonNull(messageObject, "messageObject is null");
-        this.messageSender = new MiraiMessageSender(messageObject.getSender(),
-                        groupId != 0 ? MessageSource.Group : MessageSource.Private);
+        if(groupId != 0) {
+            this.messageSender = new MiraiMessageSender(((GroupMessageEvent) messageObject).getGroup(), MessageSource.Group);
+        } else {
+            this.messageSender = new MiraiMessageSender(messageObject.getSender(), MessageSource.Group);
+        }
     }
 
     /**
