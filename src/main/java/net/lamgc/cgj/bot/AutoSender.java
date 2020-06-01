@@ -9,7 +9,7 @@ import java.util.Objects;
  */
 public abstract class AutoSender {
 
-    private MessageSender messageSender;
+    private final MessageSender messageSender;
 
     /**
      * 构造一个自动发送器

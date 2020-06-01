@@ -119,12 +119,15 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
 
     @Override
     public boolean supportedPersistence() {
+        // 由于Current的缓存数据会更新到Parent上,
+        // 所以只要任意一边支持持久化, 那么该缓存库就支持持久化
         return current.supportedPersistence() || parent.supportedPersistence();
     }
 
     @Override
     public boolean supportedList() {
-        return false;
+        // 只有两边都支持List, 该缓存库才会支持持久化
+        return current.supportedList() && parent.supportedList();
     }
 
     @Override
