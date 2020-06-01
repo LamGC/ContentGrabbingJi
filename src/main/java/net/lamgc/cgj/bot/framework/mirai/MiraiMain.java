@@ -48,6 +48,7 @@ public class MiraiMain implements Closeable {
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), configuration);
         Events.subscribeAlways(GroupMessageEvent.class, this::executeMessageEvent);
         Events.subscribeAlways(FriendMessageEvent.class, this::executeMessageEvent);
+        Events.subscribeAlways(TempMessageEvent.class, this::executeMessageEvent);
         Events.subscribeAlways(BotMuteEvent.class,
                 event -> BotEventHandler.setMuteState(event.getGroup().getId(), true));
         Events.subscribeAlways(BotUnmuteEvent.class,
@@ -70,13 +71,13 @@ public class MiraiMain implements Closeable {
                         ((GroupMessageEvent) message).getGroup().getBotMuteRemaining() != 0);
             }
         }
-        BotEventHandler.executeMessageEvent(new MiraiMessageEvent(message));
+        BotEventHandler.executeMessageEvent(MiraiMessageEvent.covertEventObject(message));
     }
 
     /**
      * 关闭机器人
      */
-    public void close() {
+    public synchronized void close() {
         if(bot == null) {
             return;
         }
