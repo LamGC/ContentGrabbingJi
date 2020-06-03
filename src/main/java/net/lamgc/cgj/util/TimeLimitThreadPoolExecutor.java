@@ -28,32 +28,29 @@ public class TimeLimitThreadPoolExecutor extends ThreadPoolExecutor {
 
     public TimeLimitThreadPoolExecutor(long executeLimitTime, int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue);
-        setInitialTime(0, executeLimitTime);
+        setInitialTime(executeLimitTime);
         timeoutCheckThread.start();
     }
 
     public TimeLimitThreadPoolExecutor(long executeLimitTime, int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory);
-        setInitialTime(0, executeLimitTime);
+        setInitialTime(executeLimitTime);
         timeoutCheckThread.start();
     }
 
     public TimeLimitThreadPoolExecutor(long executeLimitTime, int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, RejectedExecutionHandler handler) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, handler);
-        setInitialTime(0, executeLimitTime);
+        setInitialTime(executeLimitTime);
         timeoutCheckThread.start();
     }
 
     public TimeLimitThreadPoolExecutor(long executeLimitTime, int corePoolSize, int maximumPoolSize, long keepAliveTime, TimeUnit unit, BlockingQueue<Runnable> workQueue, ThreadFactory threadFactory, RejectedExecutionHandler handler) {
         super(corePoolSize, maximumPoolSize, keepAliveTime, unit, workQueue, threadFactory, handler);
-        setInitialTime(0, executeLimitTime);
+        setInitialTime(executeLimitTime);
         timeoutCheckThread.start();
     }
 
-    private void setInitialTime(long checkInterval, long executeLimitTime) {
-        if(checkInterval > 0) {
-            timeoutCheckInterval.set(checkInterval);
-        }
+    private void setInitialTime(long executeLimitTime) {
         if(executeLimitTime > 0) {
             executeTimeLimit.set(executeLimitTime);
         }
