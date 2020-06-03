@@ -133,6 +133,10 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
         return current.supportedList() && parent.supportedList();
     }
 
+    /**
+     * 检查并清理已过期的Entry.
+     * <p>该方法仅清理Current缓存库, 不会对上游缓存库造成影响.</p>
+     */
     @Override
     public void clean() {
         for(String key : this.current.keys()) {
