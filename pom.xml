@@ -86,7 +86,7 @@
         <dependency>
             <groupId>net.lamgc</groupId>
             <artifactId>java-utils</artifactId>
-            <version>1.2.0_20200514.1-SNAPSHOT</version>
+            <version>1.2.0_20200517.1-SNAPSHOT</version>
         </dependency>
         
         <dependency>
