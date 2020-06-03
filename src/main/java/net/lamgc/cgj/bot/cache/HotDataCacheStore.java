@@ -26,8 +26,9 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
      * @param expireTime 本地缓存库的缓存项过期时间, 单位毫秒;
  *                   该时间并不是所有缓存项的最终过期时间, 还需要根据expireFloatRange的设定随机设置, 公式:
  *                   {@code expireTime + new Random().nextInt(expireFloatRange)}
-     * @param expireFloatRange 过期时间的浮动范围(单位毫秒), 用于防止短时间内大量缓存项失效导致的缓存雪崩
-     * @param autoClean 是否交由{@link AutoCleanTimer}自动执行清理
+     * @param expireFloatRange 过期时间的浮动范围(单位毫秒), 用于防止短时间内大量缓存项失效导致的缓存雪崩,
+     *                         如设置为0或负数, 则不启用浮动范围.
+     * @param autoClean 是否交由{@link AutoCleanTimer}自动执行清理, 启用后, AutoCleanTimer会自动检查过期Key并进行删除.
      */
     public HotDataCacheStore(CacheStore<T> parent, CacheStore<T> current, long expireTime, int expireFloatRange, boolean autoClean) {
         this.parent = parent;
@@ -38,7 +39,8 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
             AutoCleanTimer.add(this);
         }
 
-        log.debug("HotDataCacheStore初始化完成. (Parent: {}, Current: {}, expireTime: {}, expireFloatRange: {}, autoClean: {})",
+        log.debug("HotDataCacheStore初始化完成. " +
+                        "(Parent: {}, Current: {}, expireTime: {}, expireFloatRange: {}, autoClean: {})",
                 parent, current, expireTime, expireFloatRange, autoClean);
     }
 
@@ -68,7 +70,8 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
                 return null;
             }
             log.debug("Parent缓存命中, 正在更新Current缓存库...");
-            current.update(key, parentResult, expireTime + random.nextInt(expireFloatRange));
+            current.update(key, parentResult,
+                    expireTime + (expireFloatRange <= 0 ? 0 : random.nextInt(expireFloatRange)));
             log.debug("Current缓存库更新完成.");
             result = parentResult;
         } else {

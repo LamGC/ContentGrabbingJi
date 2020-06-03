@@ -98,7 +98,7 @@ public class RandomIntervalSendTimer extends TimerTask {
      */
     public void start(boolean loop) {
         this.loop.set(loop);
-        long nextDelay = time + timeRandom.nextInt(floatTime);
+        long nextDelay = time + (floatTime <= 0 ? 0 : timeRandom.nextInt(floatTime));
         Date nextDate = new Date();
         nextDate.setTime(nextDate.getTime() + nextDelay);
         log.info("定时器 {} 下一延迟: {}ms ({})", hashId, nextDelay, nextDate);
