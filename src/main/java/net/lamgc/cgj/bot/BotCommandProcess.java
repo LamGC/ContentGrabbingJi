@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import net.lamgc.cgj.Main;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.event.BufferMessageEvent;
@@ -37,9 +36,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "SameParameterValue"})
 public class BotCommandProcess {
 
-    private final static PixivDownload pixivDownload = new PixivDownload(Main.cookieStore, Main.proxy);
+    private final static PixivDownload pixivDownload =
+            new PixivDownload(BotGlobal.getGlobal().getCookieStore(), BotGlobal.getGlobal().getProxy());
 
-    private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class);
 
     private final static File imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
     private final static Gson gson = new GsonBuilder()

@@ -1,6 +1,6 @@
 package net.lamgc.cgj.bot.cache;
 
-import net.lamgc.cgj.Main;
+import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.cache.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
@@ -22,9 +22,11 @@ import java.util.Set;
 
 public class ImageCacheHandler implements EventHandler {
 
-    private final static Logger log = LoggerFactory.getLogger(ImageCacheHandler.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(ImageCacheHandler.class);
 
-    private final static HttpClient httpClient = HttpClientBuilder.create().setProxy(Main.proxy).build();
+    private final static HttpClient httpClient = HttpClientBuilder.create()
+            .setProxy(BotGlobal.getGlobal().getProxy())
+            .build();
 
     private final static Set<ImageCacheObject> cacheQueue = Collections.synchronizedSet(new HashSet<>());
 

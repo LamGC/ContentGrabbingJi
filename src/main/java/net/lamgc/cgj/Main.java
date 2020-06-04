@@ -15,9 +15,7 @@ import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
-import net.lamgc.cgj.util.PropertiesUtils;
 import net.lamgc.plps.PixivLoginProxyServer;
-import net.lamgc.utils.base.ArgumentsProperties;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.ArgumentsRunner;
 import net.lamgc.utils.base.runner.Command;
@@ -33,7 +31,6 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -46,13 +43,13 @@ import java.util.zip.ZipOutputStream;
 @SpringBootApplication
 public class Main {
 
-    private final static Logger log = LoggerFactory.getLogger(Main.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(Main.class);
 
     private final static File storeDir = new File("store/");
 
-    public static CookieStore cookieStore;
+    private static CookieStore cookieStore;
 
-    public static HttpHost proxy;
+    private static HttpHost proxy;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
         log.trace("ContentGrabbingJi 正在启动...");
@@ -61,21 +58,8 @@ public class Main {
 
         ApplicationBoot.initialApplication(args);
         log.debug("botDataDir: {}", System.getProperty("cgj.botDataDir"));
-        ArgumentsProperties argsProp = new ArgumentsProperties(args);
 
-        if(!PropertiesUtils.getSettingToSysProp(argsProp, "proxy", null)) {
-            PropertiesUtils.getEnvSettingToSysProp("CGJ_PROXY", "proxy", null);
-        }
-
-        String proxyAddress = System.getProperty("cgj.proxy");
-        if(!Strings.isNullOrEmpty(proxyAddress)) {
-            URL proxyUrl = new URL(proxyAddress);
-            proxy = new HttpHost(proxyUrl.getHost(), proxyUrl.getPort());
-            log.info("已启用Http协议代理：{}", proxy.toHostString());
-        } else {
-            proxy = null;
-        }
-
+        proxy = BotGlobal.getGlobal().getProxy();
         File cookieStoreFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "cookies.store");
         if(!cookieStoreFile.exists()) {
             log.warn("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
@@ -91,6 +75,7 @@ public class Main {
         }
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cookieStoreFile));
         cookieStore = (CookieStore) ois.readObject();
+        BotGlobal.getGlobal().setCookieStore(cookieStore);
         ois.close();
         log.info("已载入CookieStore");
 

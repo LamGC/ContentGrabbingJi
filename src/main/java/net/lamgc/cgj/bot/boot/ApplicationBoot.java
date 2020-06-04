@@ -18,6 +18,9 @@ public final class ApplicationBoot {
      */
     public static void initialApplication(String[] args) {
         ArgumentsProperties argsProp = new ArgumentsProperties(args);
+        if(!PropertiesUtils.getSettingToSysProp(argsProp, "proxy", null)) {
+            PropertiesUtils.getEnvSettingToSysProp("CGJ_PROXY", "proxy", null);
+        }
         if(!PropertiesUtils.getSettingToSysProp(argsProp, "botDataDir", "./") &&
                 !PropertiesUtils.getEnvSettingToSysProp("CGJ_BOT_DATA_DIR", "botDataDir", "./")) {
             log.warn("未设置botDataDir, 当前运行目录将作为酷Q机器人所在目录.");
