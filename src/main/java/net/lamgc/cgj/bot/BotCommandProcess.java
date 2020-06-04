@@ -36,15 +36,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "SameParameterValue"})
 public class BotCommandProcess {
 
-    private final static PixivDownload pixivDownload =
-            new PixivDownload(BotGlobal.getGlobal().getCookieStore(), BotGlobal.getGlobal().getProxy());
-
     private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class);
 
     private final static File imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
-    private final static Gson gson = new GsonBuilder()
-            .serializeNulls()
-            .create();
 
     /* -------------------- 缓存 -------------------- */
 
@@ -54,26 +48,30 @@ public class BotCommandProcess {
      * 作品信息缓存 - 不过期
      */
     private final static CacheStore<JsonElement> illustInfoCache =
-            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "illustInfo", gson);
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
+                    "illustInfo", BotGlobal.getGlobal().getGson());
 
     /**
      * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期1 ± 0.25
      */
     private final static CacheStore<JsonElement> illustPreLoadDataCache =
             CacheStoreUtils.hashLocalHotDataStore(
-                new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "illustPreLoadData", gson),
-                3600000, 900000);
+                new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
+                        "illustPreLoadData", BotGlobal.getGlobal().getGson()),
+                    3600000, 900000);
     /**
      * 搜索内容缓存, 有效期 2 小时
      */
     private final static CacheStore<JsonElement> searchBodyCache =
-            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "searchBody", gson);
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
+                    "searchBody", BotGlobal.getGlobal().getGson());
 
     /**
      * 排行榜缓存, 不过期
      */
     private final static CacheStore<List<JsonObject>> rankingCache =
-            new JsonObjectRedisListCacheStore(BotGlobal.getGlobal().getRedisServer(), "ranking", gson);
+            new JsonObjectRedisListCacheStore(BotGlobal.getGlobal().getRedisServer(),
+                    "ranking", BotGlobal.getGlobal().getGson());
 
     /**
      * 作品页面下载链接缓存 - 不过期
@@ -85,7 +83,8 @@ public class BotCommandProcess {
      * 作品报告存储 - 不过期
      */
     public final static CacheStore<JsonElement> reportStore =
-            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "report", gson);
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
+                    "report", BotGlobal.getGlobal().getGson());
 
     private final static RankingUpdateTimer updateTimer = new RankingUpdateTimer();
 
@@ -380,12 +379,12 @@ public class BotCommandProcess {
                 if (!searchBodyCache.exists(requestUrl)) {
                     log.debug("searchBody缓存失效, 正在更新...");
                     JsonObject jsonObject;
-                    HttpGet httpGetRequest = pixivDownload.createHttpGetRequest(requestUrl);
-                    HttpResponse response = pixivDownload.getHttpClient().execute(httpGetRequest);
+                    HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().createHttpGetRequest(requestUrl);
+                    HttpResponse response = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(httpGetRequest);
 
                     String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
                     log.debug("ResponseBody: {}", responseBody);
-                    jsonObject = gson.fromJson(responseBody, JsonObject.class);
+                    jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
 
                     if (jsonObject.get("error").getAsBoolean()) {
                         log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
@@ -511,7 +510,7 @@ public class BotCommandProcess {
                 log.warn("来源群 {} 查询的作品Id {} 为R18作品, 根据配置设定, 屏蔽该作品.", fromGroup, illustId);
                 return "该作品已被封印！";
             }
-            List<String> pagesList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
+            List<String> pagesList = PixivDownload.getIllustAllPageDownload(BotGlobal.getGlobal().getPixivDownload().getHttpClient(), BotGlobal.getGlobal().getPixivDownload().getCookieStore(), illustId, quality);
             StringBuilder builder = new StringBuilder("作品ID ").append(illustId).append(" 共有").append(pagesList.size()).append("页：").append("\n");
             int index = 0;
             for (String link : pagesList) {
@@ -606,7 +605,7 @@ public class BotCommandProcess {
                 headRequest.addHeader("Referer", PixivURL.getPixivRefererLink(illustId));
                 HttpResponse headResponse;
                 try {
-                    headResponse = pixivDownload.getHttpClient().execute(headRequest);
+                    headResponse = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(headRequest);
                 } catch (IOException e) {
                     log.error("获取图片大小失败！", e);
                     return "图片获取失败!";
@@ -736,7 +735,7 @@ public class BotCommandProcess {
         if (!illustInfoCache.exists(illustIdStr) || flushCache) {
             synchronized (illustIdStr) {
                 if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-                    illustInfoObj = pixivDownload.getIllustInfoByIllustId(illustId);
+                    illustInfoObj = BotGlobal.getGlobal().getPixivDownload().getIllustInfoByIllustId(illustId);
                     illustInfoCache.update(illustIdStr, illustInfoObj, null);
                 }
             }
@@ -764,7 +763,7 @@ public class BotCommandProcess {
             synchronized (illustIdStr) {
                 if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
                     log.debug("IllustId {} 缓存失效, 正在更新...", illustId);
-                    JsonObject preLoadDataObj = pixivDownload.getIllustPreLoadDataById(illustId)
+                    JsonObject preLoadDataObj = BotGlobal.getGlobal().getPixivDownload().getIllustPreLoadDataById(illustId)
                             .getAsJsonObject("illust")
                             .getAsJsonObject(Integer.toString(illustId));
 
@@ -798,7 +797,7 @@ public class BotCommandProcess {
         if (!pagesCache.exists(pagesSign) || flushCache) {
             synchronized (pagesSign) {
                 if (!pagesCache.exists(pagesSign) || flushCache) {
-                    List<String> linkList = PixivDownload.getIllustAllPageDownload(pixivDownload.getHttpClient(), pixivDownload.getCookieStore(), illustId, quality);
+                    List<String> linkList = PixivDownload.getIllustAllPageDownload(BotGlobal.getGlobal().getPixivDownload().getHttpClient(), BotGlobal.getGlobal().getPixivDownload().getCookieStore(), illustId, quality);
                     result = linkList;
                     pagesCache.update(pagesSign, linkList, null);
                 }
@@ -861,7 +860,7 @@ public class BotCommandProcess {
             synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign) || flushCache) {
                     log.debug("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
-                    List<JsonObject> rankingResult = pixivDownload.getRanking(contentType, mode, queryDate, 1, 500);
+                    List<JsonObject> rankingResult = BotGlobal.getGlobal().getPixivDownload().getRanking(contentType, mode, queryDate, 1, 500);
                     long expireTime = 0;
                     if(rankingResult.size() == 0) {
                         expireTime = 5400000 + expireTimeFloatRandom.nextInt(1800000);

@@ -1,6 +1,9 @@
 package net.lamgc.cgj.bot.boot;
 
 import com.google.common.base.Strings;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.lamgc.cgj.pixiv.PixivDownload;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
 import org.slf4j.Logger;
@@ -38,6 +41,12 @@ public final class BotGlobal {
 
     private CookieStore cookieStore;
 
+    private final Gson gson = new GsonBuilder()
+            .serializeNulls()
+            .create();
+
+    private final PixivDownload pixivDownload;
+
     private BotGlobal() {
         this.redisUri = URI.create("redis://" + System.getProperty("cgj.redisAddress"));
         this.redisServer = new JedisPool(
@@ -59,6 +68,9 @@ public final class BotGlobal {
             }
         }
         this.proxy = temp;
+
+        this.pixivDownload =
+                new PixivDownload(BotGlobal.getGlobal().getCookieStore(), BotGlobal.getGlobal().getProxy());
     }
 
     public URI getRedisUri() {
@@ -87,5 +99,13 @@ public final class BotGlobal {
 
     public void setCookieStore(CookieStore cookieStore) {
         this.cookieStore = cookieStore;
+    }
+
+    public Gson getGson() {
+        return gson;
+    }
+
+    public PixivDownload getPixivDownload() {
+        return pixivDownload;
     }
 }
