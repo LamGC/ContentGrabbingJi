@@ -7,6 +7,9 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import net.lamgc.cgj.bot.boot.ApplicationBoot;
+import net.lamgc.cgj.bot.boot.BotGlobal;
+import net.lamgc.cgj.bot.framework.cli.ConsoleMain;
 import net.lamgc.cgj.bot.framework.coolq.CQConfig;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
@@ -102,6 +105,11 @@ public class Main {
         MiraiMain main = new MiraiMain();
         main.init();
         main.close();
+    }
+
+    @Command
+    public static void consoleMode() {
+        ConsoleMain.start();
     }
 
     @Command
