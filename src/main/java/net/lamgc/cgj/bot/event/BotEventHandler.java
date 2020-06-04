@@ -38,7 +38,7 @@ public class BotEventHandler implements EventHandler {
     private final ArgumentsRunner processRunner;
     private final ArgumentsRunner adminRunner;
 
-    private final static Logger log = LoggerFactory.getLogger(BotEventHandler.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(BotEventHandler.class);
 
     private final static Map<Long, AtomicBoolean> muteStateMap = new Hashtable<>();
 

@@ -21,7 +21,7 @@ import java.util.*;
 
 public class BotAdminCommandProcess {
 
-    private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class);
 
     private final static File pushListFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "pushList.json");
 

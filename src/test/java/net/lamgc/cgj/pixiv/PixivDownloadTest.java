@@ -31,9 +31,9 @@ public class PixivDownloadTest {
 
     private static CookieStore cookieStore;
 
-    private final static Logger log = LoggerFactory.getLogger(PixivDownloadTest.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(PixivDownloadTest.class);
 
-    private static HttpHost proxy = new HttpHost("127.0.0.1", 1001);
+    private static final HttpHost proxy = new HttpHost("127.0.0.1", 1001);
     
     @BeforeClass
     public static void before() throws IOException, ClassNotFoundException {

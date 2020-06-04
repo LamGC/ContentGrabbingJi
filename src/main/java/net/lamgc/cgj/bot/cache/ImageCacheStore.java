@@ -17,7 +17,7 @@ import java.util.concurrent.locks.ReentrantLock;
 
 public final class ImageCacheStore {
 
-    private final static Logger log = LoggerFactory.getLogger(ImageCacheStore.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(ImageCacheStore.class);
 
     private final static Map<ImageCacheObject, Task> cacheMap = new Hashtable<>();
 

@@ -11,7 +11,7 @@ import java.util.*;
 
 public final class SettingProperties {
 
-    private final static Logger log = LoggerFactory.getLogger(SettingProperties.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(SettingProperties.class);
 
     private final static File globalPropFile = new File(getPropertiesDir(), "global.properties");
     private final static Properties globalProp = new Properties();

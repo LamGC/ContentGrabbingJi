@@ -26,7 +26,7 @@ public class MiraiMessageSender implements MessageSender {
 
     private final Contact member;
     private final MessageSource source;
-    private final static Logger log = LoggerFactory.getLogger(MiraiMessageSender.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(MiraiMessageSender.class);
     private final static CacheStore<String> imageIdCache = new HotDataCacheStore<>(
             new StringRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "mirai.imageId"),
             new LocalHashCacheStore<>(),

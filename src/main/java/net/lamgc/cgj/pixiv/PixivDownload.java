@@ -33,7 +33,7 @@ import java.util.function.BiConsumer;
 
 public class PixivDownload {
 
-    private final static Logger log = LoggerFactory.getLogger(PixivDownload.class.getName());
+    private final static Logger log = LoggerFactory.getLogger(PixivDownload.class);
 
     private final HttpClient httpClient;
 
