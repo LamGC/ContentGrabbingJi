@@ -2,11 +2,11 @@ package net.lamgc.cgj.bot.framework.mirai.message;
 
 import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.BotCode;
+import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.cache.CacheStore;
 import net.lamgc.cgj.bot.cache.HotDataCacheStore;
 import net.lamgc.cgj.bot.cache.LocalHashCacheStore;
 import net.lamgc.cgj.bot.cache.StringRedisCacheStore;
-import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSource;
 import net.mamoe.mirai.Bot;
@@ -28,7 +28,7 @@ public class MiraiMessageSender implements MessageSender {
     private final MessageSource source;
     private final static Logger log = LoggerFactory.getLogger(MiraiMessageSender.class.getName());
     private final static CacheStore<String> imageIdCache = new HotDataCacheStore<>(
-            new StringRedisCacheStore(BotEventHandler.redisServer, "mirai.imageId"),
+            new StringRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "mirai.imageId"),
             new LocalHashCacheStore<>(),
             5400000, 1800000, true);
 

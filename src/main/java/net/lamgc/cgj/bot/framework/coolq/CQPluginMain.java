@@ -1,5 +1,6 @@
 package net.lamgc.cgj.bot.framework.coolq;
 
+import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.coolq.message.SpringCQMessageEvent;
 import net.lamgc.utils.event.EventHandler;
@@ -18,7 +19,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
     public CQPluginMain() {
         // TODO(LamGC, 2020.04.21): SpringCQ无法适配MessageSenderBuilder
         // MessageSenderBuilder.setCurrentMessageSenderFactory(new SpringCQMessageSenderFactory());
-        BotEventHandler.preLoad();
+        ApplicationBoot.initialBot();
         LoggerFactory.getLogger(CQPluginMain.class.getName())
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
     }
@@ -45,7 +46,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
      * @return 是否拦截消息
      */
     private static int processMessage(CoolQ cq, CQMessageEvent event) {
-        if(!BotEventHandler.match(event.getMessage())) {
+        if(BotEventHandler.mismatch(event.getMessage())) {
             return MESSAGE_IGNORE;
         }
         BotEventHandler.executeMessageEvent(new SpringCQMessageEvent(cq, event));

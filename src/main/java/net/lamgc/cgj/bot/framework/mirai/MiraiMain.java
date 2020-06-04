@@ -1,5 +1,7 @@
 package net.lamgc.cgj.bot.framework.mirai;
 
+import net.lamgc.cgj.bot.boot.ApplicationBoot;
+import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageEvent;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
@@ -35,7 +37,7 @@ public class MiraiMain implements Closeable {
             return;
         }
 
-        File botPropFile = new File(System.getProperty("cgj.botDataDir"), "./bot.properties");
+        File botPropFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "./bot.properties");
         try (Reader reader = new BufferedReader(new FileReader(botPropFile))) {
             botProperties.load(reader);
         } catch (IOException e) {
@@ -55,7 +57,7 @@ public class MiraiMain implements Closeable {
                 event -> BotEventHandler.setMuteState(event.getGroup().getId(), false));
         bot.login();
         MessageSenderBuilder.setCurrentMessageSenderFactory(new MiraiMessageSenderFactory(bot));
-        BotEventHandler.preLoad();
+        ApplicationBoot.initialBot();
         bot.join();
     }
 

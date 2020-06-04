@@ -1,6 +1,7 @@
 package net.lamgc.cgj.bot;
 
 import com.google.common.base.Throwables;
+import net.lamgc.cgj.bot.boot.BotGlobal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -157,7 +158,7 @@ public final class SettingProperties {
      * @return 返回目录File对象.
      */
     private static File getPropertiesDir() {
-        File propDir = new File(System.getProperty("cgj.botDataDir"), "/setting/");
+        File propDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "/setting/");
         if(!propDir.exists() && !propDir.mkdirs()) {
             log.warn("Setting文件夹创建失败!");
         }

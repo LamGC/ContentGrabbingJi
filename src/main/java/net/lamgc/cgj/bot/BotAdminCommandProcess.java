@@ -5,6 +5,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import net.lamgc.cgj.bot.message.MessageSource;
 import net.lamgc.cgj.pixiv.PixivDownload;
@@ -22,7 +23,7 @@ public class BotAdminCommandProcess {
 
     private final static Logger log = LoggerFactory.getLogger(BotAdminCommandProcess.class.getName());
 
-    private final static File pushListFile = new File(System.getProperty("cgj.botDataDir"), "pushList.json");
+    private final static File pushListFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "pushList.json");
 
     private final static Hashtable<Long, JsonObject> pushInfoMap = new Hashtable<>();
 
@@ -182,8 +183,8 @@ public class BotAdminCommandProcess {
     @Command
     public static String savePushList() {
         try {
-            if(!pushListFile.exists()) {
-                pushListFile.createNewFile();
+            if(!pushListFile.exists() && !pushListFile.createNewFile()) {
+                throw new IOException("文件夹创建失败!(Path: " + pushListFile.getPath() + ")");
             }
         } catch (IOException e) {
             log.error("PushList.json文件创建失败", e);

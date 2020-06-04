@@ -5,8 +5,8 @@ import com.google.common.base.Throwables;
 import com.google.gson.*;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.Main;
+import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.cache.*;
-import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.event.BufferMessageEvent;
 import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
@@ -41,7 +41,7 @@ public class BotCommandProcess {
 
     private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class.getName());
 
-    private final static File imageStoreDir = new File(System.getProperty("cgj.botDataDir"), "data/image/cgj/");
+    private final static File imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
     private final static Gson gson = new GsonBuilder()
             .serializeNulls()
             .create();
@@ -54,38 +54,38 @@ public class BotCommandProcess {
      * 作品信息缓存 - 不过期
      */
     private final static CacheStore<JsonElement> illustInfoCache =
-            new JsonRedisCacheStore(BotEventHandler.redisServer, "illustInfo", gson);
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "illustInfo", gson);
 
     /**
      * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期1 ± 0.25
      */
     private final static CacheStore<JsonElement> illustPreLoadDataCache =
             CacheStoreUtils.hashLocalHotDataStore(
-                new JsonRedisCacheStore(BotEventHandler.redisServer, "illustPreLoadData", gson),
+                new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "illustPreLoadData", gson),
                 3600000, 900000);
     /**
      * 搜索内容缓存, 有效期 2 小时
      */
     private final static CacheStore<JsonElement> searchBodyCache =
-            new JsonRedisCacheStore(BotEventHandler.redisServer, "searchBody", gson);
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "searchBody", gson);
 
     /**
      * 排行榜缓存, 不过期
      */
     private final static CacheStore<List<JsonObject>> rankingCache =
-            new JsonObjectRedisListCacheStore(BotEventHandler.redisServer, "ranking", gson);
+            new JsonObjectRedisListCacheStore(BotGlobal.getGlobal().getRedisServer(), "ranking", gson);
 
     /**
      * 作品页面下载链接缓存 - 不过期
      */
     private final static CacheStore<List<String>> pagesCache =
-            new StringListRedisCacheStore(BotEventHandler.redisServer, "imagePages");
+            new StringListRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "imagePages");
 
     /**
      * 作品报告存储 - 不过期
      */
     public final static CacheStore<JsonElement> reportStore =
-            new JsonRedisCacheStore(BotEventHandler.redisServer, "report", gson);
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "report", gson);
 
     private final static RankingUpdateTimer updateTimer = new RankingUpdateTimer();
 
@@ -462,8 +462,6 @@ public class BotCommandProcess {
                         PixivURL.getPixivRefererLink(illustId)
                 );
 
-                //pageCount
-
                 String imageMsg = getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
                 if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), true)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
@@ -663,7 +661,7 @@ public class BotCommandProcess {
         illustPreLoadDataCache.clear();
         pagesCache.clear();
         searchBodyCache.clear();
-        File imageStoreDir = new File(System.getProperty("cgj.botDataDir") + "data/image/cgj/");
+        File imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
         File[] listFiles = imageStoreDir.listFiles();
         if (listFiles == null) {
             log.debug("图片缓存目录为空或内部文件获取失败!");

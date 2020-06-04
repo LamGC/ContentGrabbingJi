@@ -20,10 +20,8 @@ import net.lamgc.utils.event.EventObject;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import redis.clients.jedis.JedisPool;
 
 import java.lang.reflect.Method;
-import java.net.URI;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -45,12 +43,6 @@ public class BotEventHandler implements EventHandler {
     private final static Map<Long, AtomicBoolean> muteStateMap = new Hashtable<>();
 
     /**
-     * 所有缓存共用的JedisPool
-     */
-    private final static URI redisServerUri = URI.create("redis://" + System.getProperty("cgj.redisAddress"));
-    public final static JedisPool redisServer = new JedisPool(redisServerUri.getHost(), redisServerUri.getPort() == -1 ? 6379 : redisServerUri.getPort());
-
-    /**
      * 消息事件执行器
      */
     private final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
@@ -66,10 +58,10 @@ public class BotEventHandler implements EventHandler {
     ));
 
     private static boolean initialled = false;
-    static {
-        initial();
-    }
 
+    /**
+     * 初始化BotEventHandler
+     */
     public synchronized static void initial() {
         if(initialled) {
             Logger logger = LoggerFactory.getLogger("BotEventHandler@<init>");
@@ -92,25 +84,19 @@ public class BotEventHandler implements EventHandler {
         });
         try {
             executor.addHandler(new BotEventHandler());
+            Thread shutdownThread = new Thread(() -> executor.shutdown(true));
+            shutdownThread.setName("Thread-EventHandlerShutdown");
+            Runtime.getRuntime().addShutdownHook(shutdownThread);
         } catch (IllegalAccessException e) {
             LoggerFactory.getLogger("BotEventHandler@Static").error("添加Handler时发生异常", e);
         }
-        initialled = true;
-    }
 
-    private final static AtomicBoolean preLoaded = new AtomicBoolean();
-    /**
-     * 预加载
-     */
-    public synchronized static void preLoad() {
-        if(preLoaded.get()) {
-            return;
-        }
         try {
             BotAdminCommandProcess.loadPushList();
-        } finally {
-            preLoaded.set(true);
+        } catch(Throwable e) {
+            log.error("加载推送列表失败", e);
         }
+        initialled = true;
     }
 
     private BotEventHandler() {
@@ -159,7 +145,7 @@ public class BotEventHandler implements EventHandler {
     public void processMessage(MessageEvent event) {
         String msg = event.getMessage();
         log.debug(event.toString());
-        if(!match(msg)) {
+        if(mismatch(msg)) {
             return;
         } else if(isMute(event.getFromGroup())) {
             log.debug("机器人已被禁言, 忽略请求.");
@@ -253,8 +239,8 @@ public class BotEventHandler implements EventHandler {
      * @param message 要检查的消息
      * @return 如果为true则提交
      */
-    public static boolean match(String message) {
-        return message.startsWith(COMMAND_PREFIX) || message.startsWith(ADMIN_COMMAND_PREFIX);
+    public static boolean mismatch(String message) {
+        return !message.startsWith(COMMAND_PREFIX) && !message.startsWith(ADMIN_COMMAND_PREFIX);
     }
 
     private static boolean isMute(long groupId) {

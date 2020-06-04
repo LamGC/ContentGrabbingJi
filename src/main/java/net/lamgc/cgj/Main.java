@@ -12,6 +12,7 @@ import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.util.PropertiesUtils;
 import net.lamgc.plps.PixivLoginProxyServer;
 import net.lamgc.utils.base.ArgumentsProperties;
 import net.lamgc.utils.base.runner.Argument;
@@ -54,11 +55,13 @@ public class Main {
         log.trace("ContentGrabbingJi 正在启动...");
         log.debug("Args: {}, LogsPath: {}", Arrays.toString(args), System.getProperty("cgj.logsPath"));
         log.debug("运行目录: {}", System.getProperty("user.dir"));
+
+        ApplicationBoot.initialApplication(args);
+        log.debug("botDataDir: {}", System.getProperty("cgj.botDataDir"));
         ArgumentsProperties argsProp = new ArgumentsProperties(args);
 
-
-        if(!getSettingToSysProp(argsProp, "proxy", null)) {
-            getEnvSettingToSysProp("CGJ_PROXY", "proxy", null);
+        if(!PropertiesUtils.getSettingToSysProp(argsProp, "proxy", null)) {
+            PropertiesUtils.getEnvSettingToSysProp("CGJ_PROXY", "proxy", null);
         }
 
         String proxyAddress = System.getProperty("cgj.proxy");
@@ -70,20 +73,7 @@ public class Main {
             proxy = null;
         }
 
-        if(!storeDir.exists() && !storeDir.mkdirs()) {
-            log.error("创建文件夹失败!");
-        }
-
-        if(!getSettingToSysProp(argsProp, "botDataDir", "./") &&
-                !getEnvSettingToSysProp("CGJ_BOT_DATA_DIR", "botDataDir", "./")) {
-            log.warn("未设置botDataDir, 当前运行目录将作为酷Q机器人所在目录.");
-        }
-        if(!getSettingToSysProp(argsProp, "redisAddress", "127.0.0.1") &&
-                !getEnvSettingToSysProp("CGJ_REDIS_URI", "redisAddress", "127.0.0.1")) {
-            log.warn("未设置RedisAddress, 将使用默认值连接Redis服务器(127.0.0.1:6379)");
-        }
-
-        File cookieStoreFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
+        File cookieStoreFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "cookies.store");
         if(!cookieStoreFile.exists()) {
             log.warn("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
             try(Scanner scanner = new Scanner(System.in)) {
@@ -104,37 +94,7 @@ public class Main {
         log.debug("传入参数: {}", Arrays.toString(args));
 
         ArgumentsRunner.run(Main.class, args);
-    }
-
-    /**
-     * 从ArgumentsProperties获取设置项到System Properties
-     * @param prop ArgumentsProperties对象
-     * @param key 设置项key
-     * @param defaultValue 默认值
-     * @return 如果成功从ArgumentsProperties获得设置项, 返回true, 如未找到(使用了defaultValue或null), 返回false;
-     */
-    private static boolean getSettingToSysProp(ArgumentsProperties prop, String key, String defaultValue) {
-        if(prop.containsKey(key)) {
-            log.info("{}: {}", key, prop.getValue(key));
-            System.setProperty("cgj." + key, prop.getValue(key));
-            return true;
-        } else {
-            if(defaultValue != null) {
-                System.setProperty("cgj." + key, defaultValue);
-            }
-            return false;
-        }
-    }
-
-    private static boolean getEnvSettingToSysProp(String envKey, String sysPropKey, String defaultValue) {
-        String env = System.getenv(envKey);
-        if(env != null) {
-            System.setProperty("cgj." + sysPropKey, env);
-            return true;
-        } else if(defaultValue != null) {
-            System.setProperty("cgj." + sysPropKey, defaultValue);
-        }
-        return false;
+        System.exit(0);
     }
 
     @Command
@@ -146,10 +106,7 @@ public class Main {
 
     @Command
     public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
-        if(!System.getProperty("cgj.botDataDir").endsWith("\\") && !System.getProperty("cgj.botDataDir").endsWith("/")) {
-            System.setProperty("cgj.botDataDir", System.getProperty("cgj.botDataDir") + "/");
-        }
-        log.info("酷Q机器人根目录: {}", System.getProperty("cgj.botDataDir"));
+        log.info("酷Q机器人根目录: {}", BotGlobal.getGlobal().getDataStoreDir().getPath());
         CQConfig.init();
         Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
         Matcher matcher = pattern.matcher(Strings.nullToEmpty(argsStr));
@@ -165,7 +122,7 @@ public class Main {
     @Command
     public static void collectionDownload() throws IOException {
         PixivDownload pixivDownload = new PixivDownload(Objects.requireNonNull(cookieStore), proxy);
-        File outputFile = new File(storeDir, "collection.zip");
+        File outputFile = new File(getStoreDir(), "collection.zip");
         if(!outputFile.exists() && !outputFile.createNewFile()) {
             log.error("文件创建失败: " + outputFile.getAbsolutePath());
         }
@@ -192,10 +149,10 @@ public class Main {
         PixivDownload pixivDownload = new PixivDownload(Objects.requireNonNull(cookieStore), proxy);
         String date = new SimpleDateFormat("yyyyMMdd").format(new Date());
         int id = 1;
-        File outputFile = new File(storeDir, "recommends-" + date + "-" + id + ".zip");
+        File outputFile = new File(getStoreDir(), "recommends-" + date + "-" + id + ".zip");
         while(outputFile.exists()) {
             id++;
-            outputFile = new File(storeDir, "recommends-" + date + "-" + id + ".zip");
+            outputFile = new File(getStoreDir(), "recommends-" + date + "-" + id + ".zip");
         }
 
         if(!outputFile.createNewFile()) {
@@ -259,10 +216,10 @@ public class Main {
         }
 
         int id = 1;
-        File outputFile = new File(storeDir, "ranking" + rankingMode.modeParam + "-" + date + "-" + id + ".zip");
+        File outputFile = new File(getStoreDir(), "ranking" + rankingMode.modeParam + "-" + date + "-" + id + ".zip");
         while(outputFile.exists()) {
             id++;
-            outputFile = new File(storeDir, "ranking" + rankingMode.modeParam + "-" + date + "-" + id + ".zip");
+            outputFile = new File(getStoreDir(), "ranking" + rankingMode.modeParam + "-" + date + "-" + id + ".zip");
         }
 
         if(!outputFile.createNewFile()) {
@@ -401,7 +358,7 @@ public class Main {
 
     private static void saveCookieStoreToFile() throws IOException {
         log.info("正在保存CookieStore...");
-        File outputFile = new File(System.getProperty("cgj.botDataDir"), "cookies.store");
+        File outputFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "cookies.store");
         if(!outputFile.exists() && !outputFile.createNewFile()){
             log.error("保存CookieStore失败.");
             return;
@@ -450,4 +407,11 @@ public class Main {
         }
     }
 
+    private static File getStoreDir() {
+        if(!storeDir.exists() && !storeDir.mkdirs()) {
+            log.error("创建文件夹失败!");
+        }
+        return storeDir;
+    }
+    
 }

@@ -33,6 +33,12 @@ public final class ImageCacheStore {
 
     private final static ImageCacheHandler handler = new ImageCacheHandler();
 
+    static {
+        Thread shutdownThread = new Thread(imageCacheExecutor::shutdownNow);
+        shutdownThread.setName("Thread-ImageCacheShutdown");
+        Runtime.getRuntime().addShutdownHook(shutdownThread);
+    }
+
     private ImageCacheStore() {}
 
     /**
