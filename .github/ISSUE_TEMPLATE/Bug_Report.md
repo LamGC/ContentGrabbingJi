@@ -1,7 +1,12 @@
 ---
 name: Bug Report
 about: Use this template to feedback bugs.
+title: ''
+labels: bug
+assignees: ''
+
 ---
+
 ## Environmental information ##
 OS(e.g: Windows 10 1909): 
 Java(e.g: Oracle Jdk 8.242): 
@@ -18,4 +23,4 @@ Issue version(versionTag or commitId):
 
 ## Recurrence steps ##
 // What can we do to recreate this situation?  
-1. 
+1.
