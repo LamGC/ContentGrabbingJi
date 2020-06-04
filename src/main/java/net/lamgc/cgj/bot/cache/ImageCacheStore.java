@@ -1,8 +1,13 @@
 package net.lamgc.cgj.bot.cache;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import net.lamgc.cgj.bot.cache.exception.HttpRequestException;
 
 import java.util.Hashtable;
 import java.util.Map;
@@ -34,29 +39,30 @@ public final class ImageCacheStore {
      * 传递图片缓存任务, 并等待缓存完成.
      * @param cacheObject 缓存任务组
      */
-    public static void executeCacheRequest(ImageCacheObject cacheObject) throws InterruptedException {
+    public static Throwable executeCacheRequest(ImageCacheObject cacheObject) throws InterruptedException {
         Task task = getTaskState(cacheObject);
         if(task.taskState.get() == TaskState.COMPLETE) {
-            return;
+            return null;
         }
 
         boolean locked = false;
         try {
             if(task.taskState.get() == TaskState.COMPLETE) {
-                return;
+                return null;
             }
             task.lock.lock();
             locked = true;
             // 双重检查
             if(task.taskState.get() == TaskState.COMPLETE) {
-                return;
+                return null;
             }
 
             // 置任务状态
             task.taskState.set(TaskState.RUNNING);
 
+            Throwable throwable = null;
             try {
-                Throwable throwable = imageCacheExecutor.submit(() -> {
+                throwable = imageCacheExecutor.submit(() -> {
                     try {
                         handler.getImageToCache(cacheObject);
                     } catch (Throwable e) {
@@ -73,6 +79,7 @@ public final class ImageCacheStore {
             } catch (ExecutionException e) {
                 log.error("执行图片缓存任务时发生异常", e);
             }
+            return throwable;
         } finally {
             if(locked) {
                 task.lock.unlock();
@@ -86,6 +93,23 @@ public final class ImageCacheStore {
             cacheMap.put(cacheObject, new Task());
         }
         return cacheMap.get(cacheObject);
+    }
+
+    /**
+     * 获取错误信息
+     */
+    public static String getErrorMessageFromThrowable(Throwable throwable, boolean onlyRequestException) {
+        if(throwable == null) {
+            return "";
+        } else if(!(throwable instanceof HttpRequestException)) {
+            if(onlyRequestException) {
+                return "";
+            }
+            return throwable.getMessage();
+        }
+        JsonObject result = new Gson()
+            .fromJson(((HttpRequestException) throwable).getContent(), JsonObject.class);
+        return result.get("msg").getAsString();
     }
 
     /**

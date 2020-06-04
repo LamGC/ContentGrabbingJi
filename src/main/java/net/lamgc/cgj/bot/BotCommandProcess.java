@@ -110,34 +110,27 @@ public class BotCommandProcess {
 
     @Command(defaultCommand = true)
     public static String help() {
-        StringBuilder helpStrBuilder = new StringBuilder();
-        helpStrBuilder.append("CGJ Bot使用指南").append("\n");
-        helpStrBuilder.append("使用方法：.cgj <命令> [参数...]").append("\n");
-        helpStrBuilder.append("例如查询作品信息功能：").append("\n");
-        helpStrBuilder.append(".cgj info -id 80846159").append("\n");
-        helpStrBuilder.append("目前可用的命令:").append("\n");
-        helpStrBuilder.append("\t").append("ranking - 获取今天或指定日期排行榜的前10名作品").append("\n");
-        helpStrBuilder.append("\t\t").append("-date - 指定查询日期(年-月-日)").append("\n");
-        helpStrBuilder.append("\t\t").append("-type - 排行榜类型(illust/插画, ugoira/动图, manga/漫画)").append("\n");
-
-        helpStrBuilder.append("\t").append("search - 搜索指定关键词并显示前10个作品").append("\n");
-        helpStrBuilder.append("\t\t").append("-content - 搜索内容").append("\n");
-
-        helpStrBuilder.append("\t").append("link - 获取作品的Pixiv页面").append("\n");
-        helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
-
-        helpStrBuilder.append("\t").append("info - 获取Pixiv作品信息").append("\n");
-        helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
-
-        helpStrBuilder.append("\t").append("image - 获取指定作品的图片").append("\n");
-        helpStrBuilder.append("\t\t").append("-id - 作品id").append("\n");
-        helpStrBuilder.append("\t\t").append("-quality - 图片质量(original/原图 regular/预览图)").append("\n");
-        helpStrBuilder.append("\t\t").append("-page - 页数").append("\n");
-
-        helpStrBuilder.append("\t").append("report - 报告不当作品").append("\n");
-        helpStrBuilder.append("\t\t").append("-id - 作品Id").append("\n");
-        helpStrBuilder.append("\t\t").append("-msg - 报告原因").append("\n");
-        return helpStrBuilder.toString();
+        return "CGJ Bot使用指南" + "\n" +
+                "使用方法：.cgj <命令> [参数...]" + "\n" +
+                "例如查询作品信息功能：" + "\n" +
+                ".cgj info -id 80846159" + "\n" +
+                "目前可用的命令:" + "\n" +
+                "\t" + "ranking - 获取今天或指定日期排行榜的前10名作品" + "\n" +
+                "\t\t" + "-date - 指定查询日期(年-月-日)" + "\n" +
+                "\t\t" + "-type - 排行榜类型(illust/插画, ugoira/动图, manga/漫画)" + "\n" +
+                "\t" + "search - 搜索指定关键词并显示前10个作品" + "\n" +
+                "\t\t" + "-content - 搜索内容" + "\n" +
+                "\t" + "link - 获取作品的Pixiv页面" + "\n" +
+                "\t\t" + "-id - 作品id" + "\n" +
+                "\t" + "info - 获取Pixiv作品信息" + "\n" +
+                "\t\t" + "-id - 作品id" + "\n" +
+                "\t" + "image - 获取指定作品的图片" + "\n" +
+                "\t\t" + "-id - 作品id" + "\n" +
+                "\t\t" + "-quality - 图片质量(original/原图 regular/预览图)" + "\n" +
+                "\t\t" + "-page - 页数" + "\n" +
+                "\t" + "report - 报告不当作品" + "\n" +
+                "\t\t" + "-id - 作品Id" + "\n" +
+                "\t\t" + "-msg - 报告原因" + "\n";
     }
 
     /**
@@ -158,25 +151,24 @@ public class BotCommandProcess {
             }
 
             JsonObject illustPreLoadData = getIllustPreLoadData(illustId, false);
-            StringBuilder builder = new StringBuilder("色图姬帮你了解了这个作品的信息！\n");
-            builder.append("---------------- 作品信息 ----------------");
-            builder.append("\n作品Id: ").append(illustId);
-            builder.append("\n作品标题：").append(illustPreLoadData.get("illustTitle").getAsString());
-            builder.append("\n作者(作者Id)：").append(illustPreLoadData.get("userName").getAsString())
-                    .append("(").append(illustPreLoadData.get("userId").getAsInt()).append(")");
-            builder.append("\n点赞数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt());
-            builder.append("\n收藏数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt());
-            builder.append("\n围观数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt());
-            builder.append("\n评论数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt());
-            builder.append("\n页数：").append(illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt()).append("页");
-            builder.append("\n作品链接：").append(artworksLink(fromGroup, illustId)).append("\n");
-            builder.append("---------------- 作品图片 ----------------\n");
-            builder.append(getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
-            builder.append("使用 \".cgj image -id ")
-                    .append(illustId)
-                    .append("\" 获取原图。\n如有不当作品，可使用\".cgj report -id ")
-                    .append(illustId).append("\"向色图姬反馈。");
-            return builder.toString();
+            // 在 Java 6 开始, 编译器会将用'+'进行的字符串拼接将自动转换成StringBuilder拼接
+            return "色图姬帮你了解了这个作品的信息！\n" + "---------------- 作品信息 ----------------" +
+                    "\n作品Id: " + illustId +
+                    "\n作品标题：" + illustPreLoadData.get("illustTitle").getAsString() +
+                    "\n作者(作者Id)：" + illustPreLoadData.get("userName").getAsString() +
+                    "(" + illustPreLoadData.get("userId").getAsInt() + ")" +
+                    "\n点赞数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt() +
+                    "\n收藏数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt() +
+                    "\n围观数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt() +
+                    "\n评论数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt() +
+                    "\n页数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt() + "页" +
+                    "\n作品链接：" + artworksLink(fromGroup, illustId) + "\n" +
+                    "---------------- 作品图片 ----------------\n" +
+                    getImageById(fromGroup, illustId, PageQuality.REGULAR, 1) + "\n" +
+                    "使用 \".cgj image -id " +
+                    illustId +
+                    "\" 获取原图。\n如有不当作品，可使用\".cgj report -id " +
+                    illustId + "\"向色图姬反馈。";
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -583,7 +575,7 @@ public class BotCommandProcess {
             }
         } catch (IOException e) {
             log.warn("作品信息无法获取!", e);
-            return "发生网络异常，无法获取图片！";
+            return "（发生网络异常，无法获取图片！）";
         }
 
         List<String> pagesList;
@@ -631,10 +623,16 @@ public class BotCommandProcess {
             }
 
             try {
-                ImageCacheStore.executeCacheRequest(new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
+                Throwable throwable = ImageCacheStore.executeCacheRequest(new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
+                if(throwable != null) {
+                    throw throwable;
+                }
             } catch (InterruptedException e) {
                 log.warn("图片缓存被中断", e);
                 return "(错误：图片获取超时)";
+            } catch (Throwable e) {
+                log.error("图片 {} 获取失败:\n{}", illustId + "p" + pageIndex, Throwables.getStackTraceAsString(e));
+                return "(错误: 图片获取出错)";
             }
         } else {
             log.debug("图片 {} 缓存命中.", fileName);
@@ -650,7 +648,7 @@ public class BotCommandProcess {
      * @return 返回设定好参数的BotCode
      */
     private static BotCode getImageToBotCode(File targetFile, boolean updateCache) {
-        String fileName = targetFile.getName();
+        String fileName = Objects.requireNonNull(targetFile, "targetFile is null").getName();
         BotCode code = BotCode.parse(CQCode.image(getImageStoreDir().getName() + "/" + fileName));
         code.addParameter("absolutePath", targetFile.getAbsolutePath());
         code.addParameter("imageName", fileName.substring(0, fileName.lastIndexOf(".")));

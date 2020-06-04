@@ -1,6 +1,7 @@
 package net.lamgc.cgj.bot.cache;
 
 import net.lamgc.cgj.Main;
+import net.lamgc.cgj.bot.cache.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.event.EventHandler;
@@ -60,8 +61,9 @@ public class ImageCacheHandler implements EventHandler {
                 throw e;
             }
             if(response.getStatusLine().getStatusCode() != 200) {
-                log.warn("Http请求异常：{}", response.getStatusLine());
-                throw new IOException("Http Response Error: " + response.getStatusLine());
+                HttpRequestException requestException = new HttpRequestException(response);
+                log.warn("Http请求异常：{}", requestException.getStatusLine());
+                throw requestException;
             }
 
             log.debug("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
