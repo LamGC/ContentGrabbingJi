@@ -14,6 +14,8 @@ import java.net.URL;
 
 public final class BotGlobal {
 
+    private final static Logger log = LoggerFactory.getLogger(BotGlobal.class);
+
     private final static BotGlobal instance = new BotGlobal();
 
     public static BotGlobal getGlobal() {
@@ -22,8 +24,6 @@ public final class BotGlobal {
         }
         return instance;
     }
-
-    private final static Logger log = LoggerFactory.getLogger(BotGlobal.class);
 
     private final URI redisUri;
 
@@ -53,7 +53,7 @@ public final class BotGlobal {
             try {
                 URL proxyUrl = new URL(proxyAddress);
                 temp = new HttpHost(proxyUrl.getHost(), proxyUrl.getPort());
-                log.info("已启用Http协议代理：{}", temp.toHostString());
+                log.info("已启用代理：{}", temp.toHostString());
             } catch (MalformedURLException e) {
                 log.error("Proxy地址解析失败, 代理将不会启用.", e);
             }
