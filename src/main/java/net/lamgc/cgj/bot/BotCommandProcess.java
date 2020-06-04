@@ -331,88 +331,7 @@ public class BotCommandProcess {
             @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
         log.info("正在执行搜索...");
-        PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
-        if (type != null) {
-            try {
-                searchBuilder.setSearchType(PixivSearchBuilder.SearchType.valueOf(type.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchType: {}", type);
-            }
-        }
-        if (area != null) {
-            try {
-                searchBuilder.setSearchArea(PixivSearchBuilder.SearchArea.valueOf(area));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchArea: {}", area);
-            }
-        }
-        if (contentOption != null) {
-            try {
-                searchBuilder.setSearchContentOption(PixivSearchBuilder.SearchContentOption.valueOf(contentOption));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchContentOption: {}", contentOption);
-            }
-        }
-
-        if (!Strings.isNullOrEmpty(includeKeywords)) {
-            for (String keyword : includeKeywords.split(";")) {
-                searchBuilder.removeExcludeKeyword(keyword.trim());
-                searchBuilder.addIncludeKeyword(keyword.trim());
-                log.debug("已添加关键字: {}", keyword);
-            }
-        }
-        if (!Strings.isNullOrEmpty(excludeKeywords)) {
-            for (String keyword : excludeKeywords.split(";")) {
-                searchBuilder.removeIncludeKeyword(keyword.trim());
-                searchBuilder.addExcludeKeyword(keyword.trim());
-                log.debug("已添加排除关键字: {}", keyword);
-            }
-        }
-
-        log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
-
-        String requestUrl = searchBuilder.buildURL().intern();
-        log.debug("RequestUrl: {}", requestUrl);
-        JsonObject resultBody = null;
-        if(!searchBodyCache.exists(requestUrl)) {
-            synchronized (requestUrl) {
-                if (!searchBodyCache.exists(requestUrl)) {
-                    log.debug("searchBody缓存失效, 正在更新...");
-                    JsonObject jsonObject;
-                    HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().createHttpGetRequest(requestUrl);
-                    HttpResponse response = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(httpGetRequest);
-
-                    String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    log.debug("ResponseBody: {}", responseBody);
-                    jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
-
-                    if (jsonObject.get("error").getAsBoolean()) {
-                        log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
-                        return "处理命令时发生错误！";
-                    }
-
-                    long expire = 7200 * 1000;
-                    String propValue = SettingProperties
-                            .getProperty(SettingProperties.GLOBAL, "cache.searchBody.expire", "7200000");
-                    try {
-                        expire = Long.parseLong(propValue);
-                    } catch (Exception e) {
-                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
-                    }
-                    resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
-                    searchBodyCache.update(requestUrl, jsonObject, expire);
-                    log.debug("searchBody缓存已更新(有效时间: {})", expire);
-                } else {
-                    log.debug("搜索缓存命中.");
-                }
-            }
-        } else {
-            log.debug("搜索缓存命中.");
-        }
-
-        if(Objects.isNull(resultBody)) {
-            resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
-        }
+        JsonObject resultBody = getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
 
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
         log.debug("正在处理信息...");
@@ -722,6 +641,22 @@ public class BotCommandProcess {
     }
 
     /**
+     * 获取图片存储目录.
+     * <p>每次调用都会检查目录是否存在, 如不存在则会抛出异常</p>
+     * @return 返回File对象
+     * @throws RuntimeException 当目录创建失败时将包装{@link IOException}异常并抛出.
+     */
+    private static File getImageStoreDir() {
+        if(!imageStoreDir.exists() && !Files.isSymbolicLink(imageStoreDir.toPath())) {
+            if(!imageStoreDir.mkdirs()) {
+                log.warn("酷Q图片缓存目录失效！(Path: {} )", imageStoreDir.getAbsolutePath());
+                throw new RuntimeException(new IOException("文件夹创建失败!"));
+            }
+        }
+        return imageStoreDir;
+    }
+
+    /**
      * 获取作品信息
      * @param illustId 作品Id
      * @param flushCache 强制刷新缓存
@@ -811,23 +746,6 @@ public class BotCommandProcess {
         return result;
     }
 
-    /**
-     * 获取图片存储目录.
-     * <p>每次调用都会检查目录是否存在, 如不存在则会抛出异常</p>
-     * @return 返回File对象
-     * @throws RuntimeException 当目录创建失败时将包装{@link IOException}异常并抛出.
-     */
-    private static File getImageStoreDir() {
-        if(!imageStoreDir.exists() && !Files.isSymbolicLink(imageStoreDir.toPath())) {
-            if(!imageStoreDir.mkdirs()) {
-                log.warn("酷Q图片缓存目录失效！(Path: {} )", imageStoreDir.getAbsolutePath());
-                throw new RuntimeException(new IOException("文件夹创建失败!"));
-            }
-        }
-        return imageStoreDir;
-    }
-
-
     private final static Random expireTimeFloatRandom = new Random();
     /**
      * 获取排行榜
@@ -880,6 +798,110 @@ public class BotCommandProcess {
         log.debug("Result-Length: {}", result.size());
         return PixivDownload.getRanking(result, start - 1, range);
     }
+
+    /**
+     * 获取搜索结果
+     * @param content 搜索内容
+     * @param type 类型
+     * @param area 范围
+     * @param includeKeywords 包含关键词
+     * @param excludeKeywords 排除关键词
+     * @param contentOption 内容类型
+     * @return 返回完整搜索结果
+     * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
+     */
+    public static JsonObject getSearchBody(
+            String content,
+            String type,
+            String area,
+            String includeKeywords,
+            String excludeKeywords,
+            String contentOption) throws IOException {
+        PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
+        if (type != null) {
+            try {
+                searchBuilder.setSearchType(PixivSearchBuilder.SearchType.valueOf(type.toUpperCase()));
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的SearchType: {}", type);
+            }
+        }
+        if (area != null) {
+            try {
+                searchBuilder.setSearchArea(PixivSearchBuilder.SearchArea.valueOf(area));
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的SearchArea: {}", area);
+            }
+        }
+        if (contentOption != null) {
+            try {
+                searchBuilder.setSearchContentOption(PixivSearchBuilder.SearchContentOption.valueOf(contentOption));
+            } catch (IllegalArgumentException e) {
+                log.warn("不支持的SearchContentOption: {}", contentOption);
+            }
+        }
+
+        if (!Strings.isNullOrEmpty(includeKeywords)) {
+            for (String keyword : includeKeywords.split(";")) {
+                searchBuilder.removeExcludeKeyword(keyword.trim());
+                searchBuilder.addIncludeKeyword(keyword.trim());
+                log.debug("已添加关键字: {}", keyword);
+            }
+        }
+        if (!Strings.isNullOrEmpty(excludeKeywords)) {
+            for (String keyword : excludeKeywords.split(";")) {
+                searchBuilder.removeIncludeKeyword(keyword.trim());
+                searchBuilder.addExcludeKeyword(keyword.trim());
+                log.debug("已添加排除关键字: {}", keyword);
+            }
+        }
+
+        log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
+
+        String requestUrl = searchBuilder.buildURL().intern();
+        log.debug("RequestUrl: {}", requestUrl);
+        JsonObject resultBody = null;
+        if(!searchBodyCache.exists(requestUrl)) {
+            synchronized (requestUrl) {
+                if (!searchBodyCache.exists(requestUrl)) {
+                    log.debug("searchBody缓存失效, 正在更新...");
+                    JsonObject jsonObject;
+                    HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().createHttpGetRequest(requestUrl);
+                    HttpResponse response = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(httpGetRequest);
+
+                    String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                    log.debug("ResponseBody: {}", responseBody);
+                    jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
+
+                    if (jsonObject.get("error").getAsBoolean()) {
+                        log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
+                        throw new IOException("Interface Request Error: " + jsonObject.get("message").getAsString());
+                    }
+
+                    long expire = 7200 * 1000;
+                    String propValue = SettingProperties
+                            .getProperty(SettingProperties.GLOBAL, "cache.searchBody.expire", "7200000");
+                    try {
+                        expire = Long.parseLong(propValue);
+                    } catch (Exception e) {
+                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
+                    }
+                    resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
+                    searchBodyCache.update(requestUrl, jsonObject, expire);
+                    log.debug("searchBody缓存已更新(有效时间: {})", expire);
+                } else {
+                    log.debug("搜索缓存命中.");
+                }
+            }
+        } else {
+            log.debug("搜索缓存命中.");
+        }
+
+        if(Objects.isNull(resultBody)) {
+            resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
+        }
+        return resultBody;
+    }
+
 
     private static String buildSyncKey(String... keys) {
         StringBuilder sb = new StringBuilder();

@@ -45,7 +45,7 @@ public final class BotGlobal {
             .serializeNulls()
             .create();
 
-    private final PixivDownload pixivDownload;
+    private PixivDownload pixivDownload;
 
     private BotGlobal() {
         this.redisUri = URI.create("redis://" + System.getProperty("cgj.redisAddress"));
@@ -68,9 +68,6 @@ public final class BotGlobal {
             }
         }
         this.proxy = temp;
-
-        this.pixivDownload =
-                new PixivDownload(BotGlobal.getGlobal().getCookieStore(), BotGlobal.getGlobal().getProxy());
     }
 
     public URI getRedisUri() {
@@ -94,11 +91,19 @@ public final class BotGlobal {
 
 
     public CookieStore getCookieStore() {
+        if(pixivDownload == null) {
+            throw new IllegalStateException("CookieStore needs to be set before PixivDownload can be obtained");
+        }
         return cookieStore;
     }
 
     public void setCookieStore(CookieStore cookieStore) {
+        if(this.cookieStore != null) {
+            throw new IllegalStateException("CookieStore set");
+        }
         this.cookieStore = cookieStore;
+        this.pixivDownload =
+                new PixivDownload(cookieStore, proxy);
     }
 
     public Gson getGson() {
