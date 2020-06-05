@@ -1,6 +1,7 @@
 package net.lamgc.cgj.bot;
 
 import com.google.gson.JsonObject;
+import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivURL;
@@ -61,7 +62,7 @@ public class RandomRankingArtworksSender extends AutoSender {
 
         int selectRanking = rankingStart + new Random().nextInt(rankingStop - rankingStart + 1);
         try {
-            List<JsonObject> rankingList = BotCommandProcess.getRankingInfoByCache(
+            List<JsonObject> rankingList = CacheStoreCentral.getRankingInfoByCache(
                     contentType,
                     mode,
                     queryDate,
@@ -76,7 +77,8 @@ public class RandomRankingArtworksSender extends AutoSender {
 
             JsonObject rankingInfo = rankingList.get(0);
             int illustId = rankingInfo.get("illust_id").getAsInt();
-            if(BotCommandProcess.isNoSafe(illustId, SettingProperties.getProperties(SettingProperties.GLOBAL), false)) {
+            if(BotCommandProcess.isNoSafe(illustId,
+                    SettingProperties.getProperties(SettingProperties.GLOBAL), false)) {
                 log.warn("作品为r18作品, 取消本次发送.");
                 return;
             } else if(BotCommandProcess.isReported(illustId)) {
@@ -84,13 +86,12 @@ public class RandomRankingArtworksSender extends AutoSender {
                 return;
             }
 
-            StringBuilder message = new StringBuilder();
-            message.append("#美图推送 - 今日排行榜 第 ").append(rankingInfo.get("rank").getAsInt()).append(" 名\n");
-            message.append("标题：").append(rankingInfo.get("title").getAsString()).append("(").append(illustId).append(")\n");
-            message.append("作者：").append(rankingInfo.get("user_name").getAsString()).append("\n");
-            message.append(BotCommandProcess.getImageById(0, illustId, quality, 1));
-            message.append("\n如有不当作品，可使用\".cgj report -id ").append(illustId).append("\"向色图姬反馈。");
-            getMessageSender().sendMessage(message.toString());
+            String message = "#美图推送 - 今日排行榜 第 " + rankingInfo.get("rank").getAsInt() + " 名\n" +
+                    "标题：" + rankingInfo.get("title").getAsString() + "(" + illustId + ")\n" +
+                    "作者：" + rankingInfo.get("user_name").getAsString() + "\n" +
+                    BotCommandProcess.getImageById(0, illustId, quality, 1) +
+                    "\n如有不当作品，可使用\".cgj report -id " + illustId + "\"向色图姬反馈。";
+            getMessageSender().sendMessage(message);
         } catch (Exception e) {
             log.error("发送随机作品时发生异常", e);
         }

@@ -3,6 +3,7 @@ package net.lamgc.cgj.bot.sort;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.BotCommandProcess;
+import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -30,9 +31,13 @@ public class PreLoadDataComparator implements Comparator<JsonElement> {
             }
         }
         try {
-            JsonObject illustPreLoadData1 = BotCommandProcess.getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false);
-            JsonObject illustPreLoadData2 = BotCommandProcess.getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false);
-            return Integer.compare(illustPreLoadData2.get(attribute.attrName).getAsInt(), illustPreLoadData1.get(attribute.attrName).getAsInt());
+            JsonObject illustPreLoadData1 =
+                    CacheStoreCentral.getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false);
+            JsonObject illustPreLoadData2 =
+                    CacheStoreCentral.getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false);
+            return Integer.compare(
+                    illustPreLoadData2.get(attribute.attrName).getAsInt(),
+                    illustPreLoadData1.get(attribute.attrName).getAsInt());
         } catch (IOException e) {
             e.printStackTrace();
             return 0;

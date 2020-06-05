@@ -2,16 +2,18 @@ package net.lamgc.cgj.bot;
 
 import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.event.BufferMessageEvent;
 import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
+import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
-import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
 import net.lamgc.cgj.pixiv.PixivURL.RankingContentType;
 import net.lamgc.cgj.pixiv.PixivURL.RankingMode;
 import net.lamgc.cgj.util.URLs;
@@ -19,21 +21,18 @@ import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
 import net.lz1998.cq.utils.CQCode;
 import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpHead;
-import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-@SuppressWarnings({"SynchronizationOnLocalVariableOrMethodParameter", "SameParameterValue"})
+@SuppressWarnings({"SameParameterValue"})
 public class BotCommandProcess {
 
     private final static Logger log = LoggerFactory.getLogger(BotCommandProcess.class);
@@ -43,41 +42,6 @@ public class BotCommandProcess {
     /* -------------------- 缓存 -------------------- */
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
-
-    /**
-     * 作品信息缓存 - 不过期
-     */
-    private final static CacheStore<JsonElement> illustInfoCache =
-            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
-                    "illustInfo", BotGlobal.getGlobal().getGson());
-
-    /**
-     * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期1 ± 0.25
-     */
-    private final static CacheStore<JsonElement> illustPreLoadDataCache =
-            CacheStoreUtils.hashLocalHotDataStore(
-                new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
-                        "illustPreLoadData", BotGlobal.getGlobal().getGson()),
-                    3600000, 900000);
-    /**
-     * 搜索内容缓存, 有效期 2 小时
-     */
-    private final static CacheStore<JsonElement> searchBodyCache =
-            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
-                    "searchBody", BotGlobal.getGlobal().getGson());
-
-    /**
-     * 排行榜缓存, 不过期
-     */
-    private final static CacheStore<List<JsonObject>> rankingCache =
-            new JsonObjectRedisListCacheStore(BotGlobal.getGlobal().getRedisServer(),
-                    "ranking", BotGlobal.getGlobal().getGson());
-
-    /**
-     * 作品页面下载链接缓存 - 不过期
-     */
-    private final static CacheStore<List<String>> pagesCache =
-            new StringListRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "imagePages");
 
     /**
      * 作品报告存储 - 不过期
@@ -139,7 +103,8 @@ public class BotCommandProcess {
      * @return 返回作品信息
      */
     @Command(commandName = "info")
-    public static String artworkInfo(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
+    public static String artworkInfo(@Argument(name = "$fromGroup") long fromGroup,
+                                     @Argument(name = "id") int illustId) {
         if(illustId <= 0) {
             return "这个作品Id是错误的！";
         }
@@ -149,7 +114,7 @@ public class BotCommandProcess {
                 return "阅览禁止：该作品已被封印！！";
             }
 
-            JsonObject illustPreLoadData = getIllustPreLoadData(illustId, false);
+            JsonObject illustPreLoadData = CacheStoreCentral.getIllustPreLoadData(illustId, false);
             // 在 Java 6 开始, 编译器会将用'+'进行的字符串拼接将自动转换成StringBuilder拼接
             return "色图姬帮你了解了这个作品的信息！\n" + "---------------- 作品信息 ----------------" +
                     "\n作品Id: " + illustId +
@@ -213,7 +178,8 @@ public class BotCommandProcess {
         PixivURL.RankingMode mode;
         try {
             String rankingModeValue = contentMode.toUpperCase();
-            mode = PixivURL.RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ? rankingModeValue : "MODE_" + rankingModeValue);
+            mode = PixivURL.RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ?
+                    rankingModeValue : "MODE_" + rankingModeValue);
         } catch (IllegalArgumentException e) {
             log.warn("无效的RankingMode值: {}", contentMode);
             return "参数无效, 请查看帮助信息";
@@ -222,7 +188,8 @@ public class BotCommandProcess {
         PixivURL.RankingContentType type;
         try {
             String contentTypeValue = contentType.toUpperCase();
-            type = PixivURL.RankingContentType.valueOf(contentTypeValue.startsWith("TYPE_") ? contentTypeValue : "TYPE_" + contentTypeValue);
+            type = PixivURL.RankingContentType.valueOf(
+                    contentTypeValue.startsWith("TYPE_") ? contentTypeValue : "TYPE_" + contentTypeValue);
         } catch (IllegalArgumentException e) {
             log.warn("无效的RankingContentType值: {}", contentType);
             return "参数无效, 请查看帮助信息";
@@ -234,7 +201,8 @@ public class BotCommandProcess {
             return "不支持的内容类型或模式!";
         }
 
-        StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ").append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
+        StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ")
+                .append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
         try {
             int index = 0;
             int itemLimit = 10;
@@ -255,7 +223,8 @@ public class BotCommandProcess {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
-            List<JsonObject> rankingInfoList = getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
+            List<JsonObject> rankingInfoList = CacheStoreCentral
+                    .getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
             }
@@ -269,16 +238,20 @@ public class BotCommandProcess {
                 String authorName = rankInfo.get("user_name").getAsString();
                 String title = rankInfo.get("title").getAsString();
                 resultBuilder.append(rank).append(". (id: ").append(illustId).append(") ").append(title)
-                        .append("(Author: ").append(authorName).append(",").append(authorId).append(") ").append(pagesCount).append("p.\n");
+                        .append("(Author: ").append(authorName).append(",").append(authorId).append(") ")
+                        .append(pagesCount).append("p.\n");
                 if (index <= imageLimit) {
-                    resultBuilder.append(getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1)).append("\n");
+                    resultBuilder
+                            .append(getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1))
+                            .append("\n");
                 }
             }
         } catch (IOException e) {
             log.error("消息处理异常", e);
             return "排名榜获取失败！详情请查看机器人控制台。";
         }
-        return resultBuilder.append("如查询当前时间获取到昨天时间，则今日排名榜未更新。\n如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。").toString();
+        return resultBuilder.append("如查询当前时间获取到昨天时间，则今日排名榜未更新。\n" +
+                "如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。").toString();
     }
 
     /**
@@ -331,7 +304,8 @@ public class BotCommandProcess {
             @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
         log.info("正在执行搜索...");
-        JsonObject resultBody = getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
+        JsonObject resultBody = CacheStoreCentral
+                .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
 
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
         log.debug("正在处理信息...");
@@ -343,7 +317,8 @@ public class BotCommandProcess {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
         for (PixivSearchBuilder.SearchArea searchArea : PixivSearchBuilder.SearchArea.values()) {
-            if (!resultBody.has(searchArea.jsonKey) || resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
+            if (!resultBody.has(searchArea.jsonKey) ||
+                    resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
                 log.debug("返回数据不包含 {}", searchArea.jsonKey);
                 continue;
             }
@@ -367,7 +342,8 @@ public class BotCommandProcess {
                 StringBuilder builder = new StringBuilder("[");
                 illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
                 builder.replace(builder.length() - 2, builder.length(), "]");
-                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t页数: {}页, \n\t作品链接: {}",
+                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t" +
+                                "作品标题: {}, \n\t作品Tags: {}, \n\t页数: {}页, \n\t作品链接: {}",
                         searchArea.name(),
                         count,
                         illustsList.size(),
@@ -389,7 +365,7 @@ public class BotCommandProcess {
                     continue;
                 }
 
-                JsonObject illustPreLoadData = getIllustPreLoadData(illustId, false);
+                JsonObject illustPreLoadData = CacheStoreCentral.getIllustPreLoadData(illustId, false);
                 result.append(searchArea.name()).append(" (").append(count).append(" / ")
                         .append(limit).append(")\n\t作品id: ").append(illustId)
                         .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
@@ -410,7 +386,10 @@ public class BotCommandProcess {
                 break;
             }
         }
-        return Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图\n如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。";
+        return Strings.isNullOrEmpty(result.toString()) ?
+                "搜索完成，未找到相关作品。" :
+                Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图\n" +
+                "如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。";
     }
 
     /**
@@ -429,8 +408,13 @@ public class BotCommandProcess {
                 log.warn("来源群 {} 查询的作品Id {} 为R18作品, 根据配置设定, 屏蔽该作品.", fromGroup, illustId);
                 return "该作品已被封印！";
             }
-            List<String> pagesList = PixivDownload.getIllustAllPageDownload(BotGlobal.getGlobal().getPixivDownload().getHttpClient(), BotGlobal.getGlobal().getPixivDownload().getCookieStore(), illustId, quality);
-            StringBuilder builder = new StringBuilder("作品ID ").append(illustId).append(" 共有").append(pagesList.size()).append("页：").append("\n");
+            List<String> pagesList =
+                    PixivDownload.getIllustAllPageDownload(
+                            BotGlobal.getGlobal().getPixivDownload().getHttpClient(),
+                            BotGlobal.getGlobal().getPixivDownload().getCookieStore(),
+                            illustId, quality);
+            StringBuilder builder = new StringBuilder("作品ID ").append(illustId)
+                    .append(" 共有").append(pagesList.size()).append("页：").append("\n");
             int index = 0;
             for (String link : pagesList) {
                 builder.append("Page ").append(++index).append(": ").append(link).append("\n");
@@ -449,7 +433,8 @@ public class BotCommandProcess {
      * @return 返回作品在Pixiv的链接
      */
     @Command(commandName = "link")
-    public static String artworksLink(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "id") int illustId) {
+    public static String artworksLink(@Argument(name = "$fromGroup") long fromGroup,
+                                      @Argument(name = "id") int illustId) {
         try {
             if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
                 log.warn("作品Id {} 已被屏蔽.", illustId);
@@ -496,7 +481,7 @@ public class BotCommandProcess {
 
         List<String> pagesList;
         try {
-            pagesList = getIllustPages(illustId, quality, false);
+            pagesList = CacheStoreCentral.getIllustPages(illustId, quality, false);
         } catch (IOException e) {
             log.error("获取下载链接列表时发生异常", e);
             return "发生网络异常，无法获取图片！";
@@ -505,7 +490,8 @@ public class BotCommandProcess {
         if(log.isDebugEnabled()) {
             StringBuilder logBuilder = new StringBuilder("作品Id " + illustId + " 所有页面下载链接: \n");
             AtomicInteger index = new AtomicInteger();
-            pagesList.forEach(item -> logBuilder.append(index.incrementAndGet()).append(". ").append(item).append("\n"));
+            pagesList.forEach(item ->
+                    logBuilder.append(index.incrementAndGet()).append(". ").append(item).append("\n"));
             log.debug(logBuilder.toString());
         }
 
@@ -529,7 +515,9 @@ public class BotCommandProcess {
                     log.error("获取图片大小失败！", e);
                     return "图片获取失败!";
                 }
-                String contentLengthStr = headResponse.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue();
+                String contentLengthStr = headResponse
+                        .getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString())
+                        .getValue();
                 log.debug("图片大小: {}B", contentLengthStr);
                 if (imageFile.length() == Long.parseLong(contentLengthStr)) {
                     imageCache.put(URLs.getResourceName(downloadLink), imageFile);
@@ -539,7 +527,8 @@ public class BotCommandProcess {
             }
 
             try {
-                Throwable throwable = ImageCacheStore.executeCacheRequest(new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
+                Throwable throwable = ImageCacheStore.executeCacheRequest(
+                        new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
                 if(throwable != null) {
                     throw throwable;
                 }
@@ -575,10 +564,7 @@ public class BotCommandProcess {
     static void clearCache() {
         log.warn("正在清除所有缓存...");
         imageCache.clear();
-        illustInfoCache.clear();
-        illustPreLoadDataCache.clear();
-        pagesCache.clear();
-        searchBodyCache.clear();
+        CacheStoreCentral.clearCache();
         File imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
         File[] listFiles = imageStoreDir.listFiles();
         if (listFiles == null) {
@@ -635,9 +621,22 @@ public class BotCommandProcess {
      * @throws IOException 获取数据时发生异常时抛出
      * @throws NoSuchElementException 当作品不存在时抛出
      */
-    public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw) throws IOException, NoSuchElementException {
-        boolean rawValue = getIllustInfo(illustId, false).getAsJsonArray("tags").contains(new JsonPrimitive("R-18"));
-        return returnRaw || settingProp == null ? rawValue : rawValue && !settingProp.getProperty("image.allowR18", "false").equalsIgnoreCase("true");
+    public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw)
+            throws IOException, NoSuchElementException {
+        // TODO(LamGC, 20200604): 看看能不能通过官方获得作品R18信息, 进而加强过滤;
+        JsonArray tags = CacheStoreCentral.getIllustInfo(illustId, false).getAsJsonArray("tags");
+        boolean rawValue = false;
+        for(JsonElement tag : tags) {
+            boolean current = tag.getAsString().matches("R-*18") || tag.getAsString().contains("R18");
+            // log.warn("Match: {}, Tag: {}", current, tag.getAsString());
+            if (current) {
+                rawValue = true;
+                break;
+            }
+        }
+        return returnRaw || settingProp == null ? rawValue :
+                rawValue && !settingProp.getProperty("image.allowR18", "false")
+                        .equalsIgnoreCase("true");
     }
 
     /**
@@ -656,258 +655,4 @@ public class BotCommandProcess {
         return imageStoreDir;
     }
 
-    /**
-     * 获取作品信息
-     * @param illustId 作品Id
-     * @param flushCache 强制刷新缓存
-     * @return 返回作品信息
-     * @throws IOException 当Http请求发生异常时抛出
-     * @throws NoSuchElementException 当作品未找到时抛出
-     */
-    private static JsonObject getIllustInfo(int illustId, boolean flushCache) throws IOException, NoSuchElementException {
-        String illustIdStr = buildSyncKey(Integer.toString(illustId));
-        JsonObject illustInfoObj = null;
-        if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-            synchronized (illustIdStr) {
-                if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-                    illustInfoObj = BotGlobal.getGlobal().getPixivDownload().getIllustInfoByIllustId(illustId);
-                    illustInfoCache.update(illustIdStr, illustInfoObj, null);
-                }
-            }
-        }
-
-        if(Objects.isNull(illustInfoObj)) {
-            illustInfoObj = illustInfoCache.getCache(illustIdStr).getAsJsonObject();
-            log.debug("作品Id {} IllustInfo缓存命中.", illustId);
-        }
-        return illustInfoObj;
-    }
-
-    /**
-     * 获取作品预加载数据.
-     * 可以获取作品的一些与用户相关的信息
-     * @param illustId 作品Id
-     * @param flushCache 是否刷新缓存
-     * @return 成功返回JsonObject对象
-     * @throws IOException 当Http请求处理发生异常时抛出
-     */
-    public static JsonObject getIllustPreLoadData(int illustId, boolean flushCache) throws IOException {
-        String illustIdStr = buildSyncKey(Integer.toString(illustId));
-        JsonObject result = null;
-        if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-            synchronized (illustIdStr) {
-                if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-                    log.debug("IllustId {} 缓存失效, 正在更新...", illustId);
-                    JsonObject preLoadDataObj = BotGlobal.getGlobal().getPixivDownload().getIllustPreLoadDataById(illustId)
-                            .getAsJsonObject("illust")
-                            .getAsJsonObject(Integer.toString(illustId));
-
-                    long expire = 7200 * 1000;
-                    String propValue = SettingProperties.
-                            getProperty(SettingProperties.GLOBAL, "cache.illustPreLoadData.expire", "7200000");
-                    log.debug("PreLoadData有效时间设定: {}", propValue);
-                    try {
-                        expire = Long.parseLong(propValue);
-                    } catch (Exception e) {
-                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
-                    }
-
-                    result = preLoadDataObj;
-                    illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, expire);
-                    log.debug("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
-                }
-            }
-        }
-
-        if(Objects.isNull(result)) {
-            result = illustPreLoadDataCache.getCache(illustIdStr).getAsJsonObject();
-            log.debug("作品Id {} PreLoadData缓存命中.", illustId);
-        }
-        return result;
-    }
-
-    public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality, boolean flushCache) throws IOException {
-        String pagesSign = buildSyncKey(Integer.toString(illustId), ".", quality.name());
-        List<String> result = null;
-        if (!pagesCache.exists(pagesSign) || flushCache) {
-            synchronized (pagesSign) {
-                if (!pagesCache.exists(pagesSign) || flushCache) {
-                    List<String> linkList = PixivDownload.getIllustAllPageDownload(BotGlobal.getGlobal().getPixivDownload().getHttpClient(), BotGlobal.getGlobal().getPixivDownload().getCookieStore(), illustId, quality);
-                    result = linkList;
-                    pagesCache.update(pagesSign, linkList, null);
-                }
-            }
-        }
-
-        if(Objects.isNull(result)) {
-            result = pagesCache.getCache(pagesSign);
-            log.debug("作品Id {} Pages缓存命中.", illustId);
-        }
-        return result;
-    }
-
-    private final static Random expireTimeFloatRandom = new Random();
-    /**
-     * 获取排行榜
-     * @param contentType 排行榜类型
-     * @param mode 排行榜模式
-     * @param queryDate 查询时间
-     * @param start 开始排名, 从1开始
-     * @param range 取范围
-     * @param flushCache 是否强制刷新缓存
-     * @return 成功返回有值List, 失败且无异常返回空
-     * @throws IOException 获取异常时抛出
-     */
-    public static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode, Date queryDate, int start, int range, boolean flushCache) throws IOException {
-        if(!contentType.isSupportedMode(mode)) {
-            log.warn("试图获取不支持的排行榜类型已拒绝.(ContentType: {}, RankingMode: {})", contentType.name(), mode.name());
-            if(log.isDebugEnabled()) {
-                try {
-                    Thread.dumpStack();
-                } catch(Exception e) {
-                    log.debug("本次非法请求的堆栈信息如下: \n{}", Throwables.getStackTraceAsString(e));
-                }
-            }
-            return new ArrayList<>(0);
-        }
-
-        String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
-        String requestSign = buildSyncKey(contentType.name(), ".", mode.name(), ".", date);
-        List<JsonObject> result = null;
-        if(!rankingCache.exists(requestSign) || flushCache) {
-            synchronized(requestSign) {
-                if(!rankingCache.exists(requestSign) || flushCache) {
-                    log.debug("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
-                    List<JsonObject> rankingResult = BotGlobal.getGlobal().getPixivDownload().getRanking(contentType, mode, queryDate, 1, 500);
-                    long expireTime = 0;
-                    if(rankingResult.size() == 0) {
-                        expireTime = 5400000 + expireTimeFloatRandom.nextInt(1800000);
-                        log.warn("数据获取失败, 将设置浮动有效时间以准备下次更新. (ExpireTime: {}ms)", expireTime);
-                    }
-                    result = new ArrayList<>(rankingResult).subList(start - 1, start + range - 1);
-                    rankingCache.update(requestSign, rankingResult, expireTime);
-                    log.debug("Ranking缓存更新完成.(RequestSign: {})", requestSign);
-                }
-            }
-        }
-
-        if (Objects.isNull(result)) {
-            result = rankingCache.getCache(requestSign, start - 1, range);
-            log.debug("RequestSign [{}] 缓存命中.", requestSign);
-        }
-        log.debug("Result-Length: {}", result.size());
-        return PixivDownload.getRanking(result, start - 1, range);
-    }
-
-    /**
-     * 获取搜索结果
-     * @param content 搜索内容
-     * @param type 类型
-     * @param area 范围
-     * @param includeKeywords 包含关键词
-     * @param excludeKeywords 排除关键词
-     * @param contentOption 内容类型
-     * @return 返回完整搜索结果
-     * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
-     */
-    public static JsonObject getSearchBody(
-            String content,
-            String type,
-            String area,
-            String includeKeywords,
-            String excludeKeywords,
-            String contentOption) throws IOException {
-        PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
-        if (type != null) {
-            try {
-                searchBuilder.setSearchType(PixivSearchBuilder.SearchType.valueOf(type.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchType: {}", type);
-            }
-        }
-        if (area != null) {
-            try {
-                searchBuilder.setSearchArea(PixivSearchBuilder.SearchArea.valueOf(area));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchArea: {}", area);
-            }
-        }
-        if (contentOption != null) {
-            try {
-                searchBuilder.setSearchContentOption(PixivSearchBuilder.SearchContentOption.valueOf(contentOption));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchContentOption: {}", contentOption);
-            }
-        }
-
-        if (!Strings.isNullOrEmpty(includeKeywords)) {
-            for (String keyword : includeKeywords.split(";")) {
-                searchBuilder.removeExcludeKeyword(keyword.trim());
-                searchBuilder.addIncludeKeyword(keyword.trim());
-                log.debug("已添加关键字: {}", keyword);
-            }
-        }
-        if (!Strings.isNullOrEmpty(excludeKeywords)) {
-            for (String keyword : excludeKeywords.split(";")) {
-                searchBuilder.removeIncludeKeyword(keyword.trim());
-                searchBuilder.addExcludeKeyword(keyword.trim());
-                log.debug("已添加排除关键字: {}", keyword);
-            }
-        }
-
-        log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
-
-        String requestUrl = searchBuilder.buildURL().intern();
-        log.debug("RequestUrl: {}", requestUrl);
-        JsonObject resultBody = null;
-        if(!searchBodyCache.exists(requestUrl)) {
-            synchronized (requestUrl) {
-                if (!searchBodyCache.exists(requestUrl)) {
-                    log.debug("searchBody缓存失效, 正在更新...");
-                    JsonObject jsonObject;
-                    HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().createHttpGetRequest(requestUrl);
-                    HttpResponse response = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(httpGetRequest);
-
-                    String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    log.debug("ResponseBody: {}", responseBody);
-                    jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
-
-                    if (jsonObject.get("error").getAsBoolean()) {
-                        log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
-                        throw new IOException("Interface Request Error: " + jsonObject.get("message").getAsString());
-                    }
-
-                    long expire = 7200 * 1000;
-                    String propValue = SettingProperties
-                            .getProperty(SettingProperties.GLOBAL, "cache.searchBody.expire", "7200000");
-                    try {
-                        expire = Long.parseLong(propValue);
-                    } catch (Exception e) {
-                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
-                    }
-                    resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
-                    searchBodyCache.update(requestUrl, jsonObject, expire);
-                    log.debug("searchBody缓存已更新(有效时间: {})", expire);
-                } else {
-                    log.debug("搜索缓存命中.");
-                }
-            }
-        } else {
-            log.debug("搜索缓存命中.");
-        }
-
-        if(Objects.isNull(resultBody)) {
-            resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
-        }
-        return resultBody;
-    }
-
-
-    private static String buildSyncKey(String... keys) {
-        StringBuilder sb = new StringBuilder();
-        for (String string : keys) {
-            sb.append(string);
-        }
-        return sb.toString().intern();
-    }
 }
