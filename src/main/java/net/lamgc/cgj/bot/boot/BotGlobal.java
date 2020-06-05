@@ -11,9 +11,11 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.JedisPool;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.nio.file.Files;
 
 public final class BotGlobal {
 
@@ -47,6 +49,8 @@ public final class BotGlobal {
 
     private PixivDownload pixivDownload;
 
+    private final File imageStoreDir;
+
     private BotGlobal() {
         this.redisUri = URI.create("redis://" + System.getProperty("cgj.redisAddress"));
         this.redisServer = new JedisPool(
@@ -55,6 +59,8 @@ public final class BotGlobal {
         String dataStoreDirPath = System.getProperty("cgj.botDataDir");
         this.dataStoreDir = new File((!dataStoreDirPath.endsWith("/") || !dataStoreDirPath.endsWith("\\")) ?
                 dataStoreDirPath + System.getProperty("file.separator") : dataStoreDirPath);
+
+        this.imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
 
         String proxyAddress = System.getProperty("cgj.proxy");
         HttpHost temp = null;
@@ -89,7 +95,6 @@ public final class BotGlobal {
         return proxy;
     }
 
-
     public CookieStore getCookieStore() {
         if(pixivDownload == null) {
             throw new IllegalStateException("CookieStore needs to be set before PixivDownload can be obtained");
@@ -112,5 +117,15 @@ public final class BotGlobal {
 
     public PixivDownload getPixivDownload() {
         return pixivDownload;
+    }
+
+    public File getImageStoreDir() {
+        if(!imageStoreDir.exists() && !Files.isSymbolicLink(imageStoreDir.toPath())) {
+            if(!imageStoreDir.mkdirs()) {
+                log.warn("酷Q图片缓存目录失效！(Path: {} )", imageStoreDir.getAbsolutePath());
+                throw new RuntimeException(new IOException("文件夹创建失败!"));
+            }
+        }
+        return imageStoreDir;
     }
 }

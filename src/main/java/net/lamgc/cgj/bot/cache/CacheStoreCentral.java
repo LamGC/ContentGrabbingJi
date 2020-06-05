@@ -4,21 +4,31 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
+import io.netty.handler.codec.http.HttpHeaderNames;
+import net.lamgc.cgj.bot.BotCode;
+import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.SettingProperties;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.util.URLs;
+import net.lamgc.utils.base.runner.Argument;
+import net.lamgc.utils.base.runner.Command;
+import net.lz1998.cq.utils.CQCode;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpHead;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 
 @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public final class CacheStoreCentral {
@@ -26,6 +36,8 @@ public final class CacheStoreCentral {
     private CacheStoreCentral() {}
 
     private final static Logger log = LoggerFactory.getLogger(CacheStoreCentral.class);
+
+    private final static Hashtable<String, File> imageCache = new Hashtable<>();
 
     /**
      * 作品信息缓存 - 不过期
@@ -66,11 +78,126 @@ public final class CacheStoreCentral {
      * 清空所有缓存
      */
     public static void clearCache() {
+        imageCache.clear();
         illustInfoCache.clear();
         illustPreLoadDataCache.clear();
         searchBodyCache.clear();
         rankingCache.clear();
         pagesCache.clear();
+    }
+
+    /**
+     * 通过illustId获取作品图片
+     * @param fromGroup 来源群(系统提供)
+     * @param illustId 作品Id
+     * @param quality 图片质量
+     * @param pageIndex 指定页面索引, 从1开始
+     * @return 如果成功, 返回BotCode, 否则返回错误信息.
+     */
+    @Command(commandName = "image")
+    public static String getImageById(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "id") int illustId,
+            @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
+            @Argument(name = "page", force = false, defaultValue = "1") int pageIndex) {
+        log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
+
+        try {
+            if (BotCommandProcess.isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
+                log.warn("作品 {} 存在R-18内容且设置\"image.allowR18\"为false，将屏蔽该作品不发送.", illustId);
+                return "（根据设置，该作品已被屏蔽！）";
+            } else if(BotCommandProcess.isReported(illustId)) {
+                log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
+                return "（该作品已被封印）";
+            }
+        } catch (IOException e) {
+            log.warn("作品信息无法获取!", e);
+            return "（发生网络异常，无法获取图片！）";
+        }
+
+        List<String> pagesList;
+        try {
+            pagesList = CacheStoreCentral.getIllustPages(illustId, quality, false);
+        } catch (IOException e) {
+            log.error("获取下载链接列表时发生异常", e);
+            return "发生网络异常，无法获取图片！";
+        }
+
+        if(log.isDebugEnabled()) {
+            StringBuilder logBuilder = new StringBuilder("作品Id " + illustId + " 所有页面下载链接: \n");
+            AtomicInteger index = new AtomicInteger();
+            pagesList.forEach(item ->
+                    logBuilder.append(index.incrementAndGet()).append(". ").append(item).append("\n"));
+            log.debug(logBuilder.toString());
+        }
+
+        if (pagesList.size() < pageIndex || pageIndex <= 0) {
+            log.warn("指定的页数超出了总页数({} / {})", pageIndex, pagesList.size());
+            return "指定的页数超出了范围(总共 " + pagesList.size() + " 页)";
+        }
+
+        String downloadLink = pagesList.get(pageIndex - 1);
+        String fileName = URLs.getResourceName(Strings.nullToEmpty(downloadLink));
+        File imageFile = new File(BotGlobal.getGlobal().getImageStoreDir(),
+                downloadLink.substring(downloadLink.lastIndexOf("/") + 1));
+        log.debug("FileName: {}, DownloadLink: {}", fileName, downloadLink);
+        if(!imageCache.containsKey(fileName)) {
+            if(imageFile.exists()) {
+                HttpHead headRequest = new HttpHead(downloadLink);
+                headRequest.addHeader("Referer", PixivURL.getPixivRefererLink(illustId));
+                HttpResponse headResponse;
+                try {
+                    headResponse = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(headRequest);
+                } catch (IOException e) {
+                    log.error("获取图片大小失败！", e);
+                    return "图片获取失败!";
+                }
+                String contentLengthStr = headResponse
+                        .getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString())
+                        .getValue();
+                log.debug("图片大小: {}B", contentLengthStr);
+                if (imageFile.length() == Long.parseLong(contentLengthStr)) {
+                    imageCache.put(URLs.getResourceName(downloadLink), imageFile);
+                    log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, pageIndex);
+                    return getImageToBotCode(imageFile, false).toString();
+                }
+            }
+
+            try {
+                Throwable throwable = ImageCacheStore.executeCacheRequest(
+                        new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
+                if(throwable != null) {
+                    throw throwable;
+                }
+            } catch (InterruptedException e) {
+                log.warn("图片缓存被中断", e);
+                return "(错误：图片获取超时)";
+            } catch (Throwable e) {
+                log.error("图片 {} 获取失败:\n{}", illustId + "p" + pageIndex, Throwables.getStackTraceAsString(e));
+                return "(错误: 图片获取出错)";
+            }
+        } else {
+            log.debug("图片 {} 缓存命中.", fileName);
+        }
+
+        return getImageToBotCode(imageCache.get(fileName), false).toString();
+    }
+
+    /**
+     * 通过文件获取图片的BotCode代码
+     * @param targetFile 图片文件
+     * @param updateCache 是否刷新缓存(只是让机器人重新上传, 如果上传接口有重复检测的话是无法处理的)
+     * @return 返回设定好参数的BotCode
+     */
+    @SuppressWarnings("SameParameterValue")
+    private static BotCode getImageToBotCode(File targetFile, boolean updateCache) {
+        String fileName = Objects.requireNonNull(targetFile, "targetFile is null").getName();
+        BotCode code = BotCode.parse(
+                CQCode.image(BotGlobal.getGlobal().getImageStoreDir().getName() + "/" + fileName));
+        code.addParameter("absolutePath", targetFile.getAbsolutePath());
+        code.addParameter("imageName", fileName.substring(0, fileName.lastIndexOf(".")));
+        code.addParameter("updateCache", updateCache ? "true" : "false");
+        return code;
     }
 
     /**
