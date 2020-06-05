@@ -60,7 +60,7 @@ public final class BotGlobal {
         this.dataStoreDir = new File((!dataStoreDirPath.endsWith("/") || !dataStoreDirPath.endsWith("\\")) ?
                 dataStoreDirPath + System.getProperty("file.separator") : dataStoreDirPath);
 
-        this.imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
+        this.imageStoreDir = new File(getDataStoreDir(), "data/image/cgj/");
 
         String proxyAddress = System.getProperty("cgj.proxy");
         HttpHost temp = null;

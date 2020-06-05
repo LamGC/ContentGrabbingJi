@@ -305,6 +305,7 @@ public class BotCommandProcess {
         } catch (Exception e) {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
+        int totalCount = 0;
         for (PixivSearchBuilder.SearchArea searchArea : PixivSearchBuilder.SearchArea.values()) {
             if (!resultBody.has(searchArea.jsonKey) ||
                     resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
@@ -371,12 +372,13 @@ public class BotCommandProcess {
                         .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt())
                         .append("\n").append(imageMsg).append("\n");
                 count++;
+                totalCount++;
             }
             if (count > limit) {
                 break;
             }
         }
-        return Strings.isNullOrEmpty(result.toString()) ?
+        return totalCount <= 0 ?
                 "搜索完成，未找到相关作品。" :
                 Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图\n" +
                 "如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。";
@@ -501,15 +503,17 @@ public class BotCommandProcess {
      */
     public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw)
             throws IOException, NoSuchElementException {
-        // TODO(LamGC, 20200604): 看看能不能通过官方获得作品R18信息, 进而加强过滤;
-        JsonArray tags = CacheStoreCentral.getIllustInfo(illustId, false).getAsJsonArray("tags");
-        boolean rawValue = false;
-        for(JsonElement tag : tags) {
-            boolean current = tag.getAsString().matches("R-*18") || tag.getAsString().contains("R18");
-            // log.warn("Match: {}, Tag: {}", current, tag.getAsString());
-            if (current) {
-                rawValue = true;
-                break;
+        JsonObject illustInfo = CacheStoreCentral.getIllustInfo(illustId, false);
+        JsonArray tags = illustInfo.getAsJsonArray("tags");
+        boolean rawValue = illustInfo.get("xRestrict").getAsInt() != 0;
+        if(!rawValue) {
+            for(JsonElement tag : tags) {
+                boolean current = tag.getAsString().matches("R-*18") || tag.getAsString().contains("R18");
+                // log.warn("Match: {}, Tag: {}", current, tag.getAsString());
+                if (current) {
+                    rawValue = true;
+                    break;
+                }
             }
         }
         return returnRaw || settingProp == null ? rawValue :
