@@ -13,9 +13,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import java.io.*;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
@@ -69,8 +67,20 @@ public class ImageCacheHandler implements EventHandler {
             }
 
             log.debug("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
-            try(FileOutputStream fos = new FileOutputStream(storeFile)) {
-                IOUtils.copy(response.getEntity().getContent(), fos);
+            ByteArrayOutputStream bufferOutputStream = new ByteArrayOutputStream();
+            try(FileOutputStream fileOutputStream = new FileOutputStream(storeFile)) {
+                IOUtils.copy(response.getEntity().getContent(), bufferOutputStream);
+                ByteArrayInputStream bufferInputStream = new ByteArrayInputStream(bufferOutputStream.toByteArray());
+                CacheStoreCentral.ImageChecksum imageChecksum = CacheStoreCentral.ImageChecksum
+                        .buildImageChecksumFromStream(
+                                event.getIllustId(),
+                                event.getPageIndex(),
+                                event.getStoreFile().getName(),
+                                bufferInputStream
+                            );
+                bufferInputStream.reset();
+                IOUtils.copy(bufferInputStream, fileOutputStream);
+                CacheStoreCentral.setImageChecksum(imageChecksum);
             } catch (IOException e) {
                 log.error("下载图片时发生异常", e);
                 throw e;

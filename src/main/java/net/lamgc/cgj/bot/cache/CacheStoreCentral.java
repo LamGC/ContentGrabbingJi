@@ -4,7 +4,6 @@ import com.google.common.base.Strings;
 import com.google.common.base.Throwables;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.bot.BotCode;
 import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.SettingProperties;
@@ -15,17 +14,18 @@ import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
+import net.lamgc.utils.encrypt.MessageDigestUtils;
 import net.lz1998.cq.utils.CQCode;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpHead;
 import org.apache.http.util.EntityUtils;
+import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
-import java.io.IOException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -38,6 +38,10 @@ public final class CacheStoreCentral {
     private final static Logger log = LoggerFactory.getLogger(CacheStoreCentral.class);
 
     private final static Hashtable<String, File> imageCache = new Hashtable<>();
+
+    private final static JsonRedisCacheStore imageChecksumCache =
+            new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
+                    "imageChecksum", BotGlobal.getGlobal().getGson());
 
     /**
      * 作品信息缓存 - 不过期
@@ -142,30 +146,29 @@ public final class CacheStoreCentral {
                 downloadLink.substring(downloadLink.lastIndexOf("/") + 1));
         log.debug("FileName: {}, DownloadLink: {}", fileName, downloadLink);
         if(!imageCache.containsKey(fileName)) {
-            if(imageFile.exists()) {
-                HttpHead headRequest = new HttpHead(downloadLink);
-                headRequest.addHeader("Referer", PixivURL.getPixivRefererLink(illustId));
-                HttpResponse headResponse;
-                try {
-                    headResponse = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(headRequest);
-                } catch (IOException e) {
-                    log.error("获取图片大小失败！", e);
-                    return "图片获取失败!";
-                }
-                String contentLengthStr = headResponse
-                        .getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString())
-                        .getValue();
-                log.debug("图片大小: {}B", contentLengthStr);
-                if (imageFile.length() == Long.parseLong(contentLengthStr)) {
-                    imageCache.put(URLs.getResourceName(downloadLink), imageFile);
-                    log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, pageIndex);
-                    return getImageToBotCode(imageFile, false).toString();
+            if(imageFile.exists() && imageFile.isFile()) {
+                ImageChecksum imageChecksum = getImageChecksum(illustId, pageIndex);
+                if(imageChecksum != null) {
+                    try {
+                        log.debug("正在检查作品Id {} 第 {} 页图片文件 {} ...", illustId, pageIndex, imageFile.getName());
+                        if (ImageChecksum.checkFile(imageChecksum, Files.readAllBytes(imageFile.toPath()))) {
+                            imageCache.put(URLs.getResourceName(downloadLink), imageFile);
+                            log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, pageIndex);
+                            return getImageToBotCode(imageFile, false).toString();
+                        } else {
+                            log.warn("图片文件 {} 校验失败, 重新下载图片...", imageFile.getName());
+                        }
+                    } catch(IOException e) {
+                        log.error("文件检验时读取失败, 重新下载文件...(file: {})", imageFile.getPath());
+                    }
+                } else {
+                    log.warn("图片存在但校验不存在, 重新下载图片...");
                 }
             }
 
             try {
                 Throwable throwable = ImageCacheStore.executeCacheRequest(
-                        new ImageCacheObject(imageCache, illustId, downloadLink, imageFile));
+                        new ImageCacheObject(imageCache, illustId, pageIndex, downloadLink, imageFile));
                 if(throwable != null) {
                     throw throwable;
                 }
@@ -457,6 +460,20 @@ public final class CacheStoreCentral {
         return resultBody;
     }
 
+    protected static ImageChecksum getImageChecksum(int illustId, int pageIndex) {
+        String cacheKey = illustId + ":" + pageIndex;
+        if(!imageChecksumCache.exists(cacheKey)) {
+            return null;
+        } else {
+            return ImageChecksum.fromJsonObject(imageChecksumCache.getCache(cacheKey).getAsJsonObject());
+        }
+    }
+
+    protected static void setImageChecksum(ImageChecksum checksum) {
+        String cacheKey = checksum.getIllustId() + ":" + checksum.getPage();
+        imageChecksumCache.update(cacheKey, ImageChecksum.toJsonObject(checksum), 0);
+    }
+
     /**
      * 合并String并存取到常量池, 以保证对象一致
      * @param keys String对象
@@ -468,5 +485,151 @@ public final class CacheStoreCentral {
             sb.append(string);
         }
         return sb.toString().intern();
+    }
+
+    /**
+     * 图片检验信息
+     */
+    public static class ImageChecksum implements Serializable {
+        
+        private final static MessageDigestUtils.Algorithm ALGORITHM = MessageDigestUtils.Algorithm.SHA256;
+
+        private ImageChecksum() {}
+        
+        private int illustId;
+
+        private int page;
+
+        private String fileName;
+
+        private long size;
+
+        private byte[] checksum;
+
+        public long getSize() {
+            return size;
+        }
+
+        public void setSize(long size) {
+            this.size = size;
+        }
+
+        public byte[] getChecksum() {
+            return checksum;
+        }
+
+        public void setChecksum(byte[] checksum) {
+            this.checksum = checksum;
+        }
+
+        public int getIllustId() {
+            return illustId;
+        }
+
+        public void setIllustId(int illustId) {
+            this.illustId = illustId;
+        }
+
+        public String getFileName() {
+            return fileName;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public int getPage() {
+            return page;
+        }
+
+        public void setPage(int page) {
+            this.page = page;
+        }
+
+        public static ImageChecksum buildImageChecksumFromStream(
+                int illustId, int pageIndex,
+                String fileName, InputStream imageStream) throws IOException {
+            ImageChecksum checksum = new ImageChecksum();
+            checksum.setIllustId(illustId);
+            checksum.setPage(pageIndex);
+            checksum.setFileName(fileName);
+            ByteArrayOutputStream bufferStream = new ByteArrayOutputStream();
+            checksum.setSize(IOUtils.copyLarge(imageStream, bufferStream));
+            checksum.setChecksum(
+                    MessageDigestUtils.encrypt(bufferStream.toByteArray(), ALGORITHM));
+            return checksum;
+        }
+
+        /**
+         * 将图片检验信息转换成JsonObject
+         * @param checksum 检验信息对象
+         * @return 转换后的JsonObject对象
+         */
+        public static JsonObject toJsonObject(ImageChecksum checksum) {
+            JsonObject result = new JsonObject();
+            result.addProperty("illustId", checksum.getIllustId());
+            result.addProperty("page", checksum.getPage());
+            result.addProperty("fileName", checksum.getFileName());
+            result.addProperty("size", checksum.getSize());
+            result.addProperty("checksum", Base64.getEncoder().encodeToString(checksum.getChecksum()));
+            return result;
+        }
+
+        /**
+         * 从JsonObject转换到图片检验信息
+         * @param checksumObject JsonObject对象
+         * @return 转换后的图片检验信息对象
+         */
+        public static ImageChecksum fromJsonObject(JsonObject checksumObject) {
+            ImageChecksum checksum = new ImageChecksum();
+            checksum.setIllustId(checksumObject.get("illustId").getAsInt());
+            checksum.setPage(checksumObject.get("page").getAsInt());
+            checksum.setFileName(checksumObject.get("fileName").getAsString());
+            checksum.setSize(checksumObject.get("size").getAsLong());
+            checksum.setChecksum(Base64.getDecoder().decode(checksumObject.get("checksum").getAsString()));
+            return checksum;
+        }
+
+        /**
+         * 比对图片文件是否完整.
+         * @param checksum 图片检验信息
+         * @param imageData 图片数据
+         * @return 如果检验成功, 则返回true
+         */
+        public static boolean checkFile(ImageChecksum checksum, byte[] imageData) {
+            byte[] sha256Checksum = MessageDigestUtils.encrypt(imageData, ALGORITHM);
+            return checksum.getSize() == imageData.length &&
+                   Arrays.equals(checksum.getChecksum(), sha256Checksum);
+        }
+
+        @Override
+        public String toString() {
+            return "ImageChecksum{" +
+                    "illustId=" + illustId +
+                    ", page=" + page +
+                    ", fileName='" + fileName + '\'' +
+                    ", size=" + size +
+                    ", checksum=" + Base64.getEncoder().encodeToString(getChecksum()) +
+                    '}';
+        }
+
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            ImageChecksum checksum1 = (ImageChecksum) o;
+            return illustId == checksum1.illustId &&
+                    page == checksum1.page &&
+                    size == checksum1.size &&
+                    Objects.equals(fileName, checksum1.fileName) &&
+                    Arrays.equals(checksum, checksum1.checksum);
+        }
+
+        @Override
+        public int hashCode() {
+            int result = Objects.hash(illustId, page, fileName, size);
+            result = 31 * result + Arrays.hashCode(checksum);
+            return result;
+        }
     }
 }

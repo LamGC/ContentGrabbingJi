@@ -12,13 +12,16 @@ public class ImageCacheObject implements EventObject {
 
     private final int illustId;
 
+    private final int pageIndex;
+
     private final String downloadLink;
 
     private final File storeFile;
 
-    public ImageCacheObject(Map<String, File> imageCache, int illustId, String downloadLink, File storeFile) {
+    public ImageCacheObject(Map<String, File> imageCache, int illustId, int pageIndex, String downloadLink, File storeFile) {
         this.imageCache = imageCache;
         this.illustId = illustId;
+        this.pageIndex = pageIndex;
         this.downloadLink = downloadLink;
         this.storeFile = storeFile;
     }
@@ -39,12 +42,17 @@ public class ImageCacheObject implements EventObject {
         return illustId;
     }
 
+    public int getPageIndex() {
+        return pageIndex;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         ImageCacheObject that = (ImageCacheObject) o;
         return illustId == that.illustId &&
+                pageIndex == that.pageIndex &&
                 Objects.equals(imageCache, that.imageCache) &&
                 Objects.equals(downloadLink, that.downloadLink) &&
                 Objects.equals(storeFile, that.storeFile);
@@ -52,13 +60,15 @@ public class ImageCacheObject implements EventObject {
 
     @Override
     public int hashCode() {
-        return Objects.hash(imageCache, illustId, downloadLink, storeFile);
+        return Objects.hash(imageCache, illustId, pageIndex, downloadLink, storeFile);
     }
 
     @Override
     public String toString() {
-        return "ImageCacheObject@" + Integer.toHexString(hashCode()) + "{" +
-                "illustId=" + illustId +
+        return "ImageCacheObject{" +
+                "imageCache=" + imageCache +
+                ", illustId=" + illustId +
+                ", pageIndex=" + pageIndex +
                 ", downloadLink='" + downloadLink + '\'' +
                 ", storeFile=" + storeFile +
                 '}';
