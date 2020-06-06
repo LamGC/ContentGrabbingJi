@@ -21,21 +21,21 @@ GET https://www.pixiv.net/ajax/top/{type}?mode={mode}&lang={lang}
 - `lang`: 语言(只写几个)
     - `zh`: 中文
 
-> 是否需要登录: `是`  
-> 是否为Pixiv接口标准返回格式: `是`  
-> 是否需要Referer请求头: `未知`
+- 是否需要登录: `是`  
+- 是否为Pixiv接口标准返回格式: `是`  
+- 是否需要Referer请求头: `是`
 
-请求Url示例:
+### 请求示例 ###
 ```
 GET https://www.pixiv.net/ajax/top/illust?mode=all&lang=zh
 ```
 
-响应示例:
+### 返回数据 ###
+#### 数据示例 ####
 ```
 (内容过长, 略)
 ```
-
-返回内容(Json):
+#### 字段说明 ####
 - `page`: 网页相关内容
     - `tags`: (`Object[]`) 热门标签
         - `tag`: (`String`) 标签名

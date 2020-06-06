@@ -5,7 +5,9 @@
 GET https://www.pixiv.net/ranking.php
 ```
 
-- 需要登录: `是`
+- 是否需要登录: `是`
+- 是否为Pixiv标准接口返回格式: `否`
+- 是否需要Referer请求头: `否`
 ### 参数 ###
 > 提示: 该接口参数较为复杂，请结合表格查看
 
@@ -113,7 +115,7 @@ female_r18|`√`|×|×|×
 }
 ```
 
-#### 参数详解 ####
+#### 字段说明 ####
 - `contents`: (`Object[]`) 排行榜数组, 最多50行排行榜信息
     - `illust_id`: (`number`) 作品Id
     - `title`: (`string`) 作品标题
@@ -126,9 +128,24 @@ female_r18|`√`|×|×|×
     - `user_name`: (`string`) 画师用户名
     - `user_id`: (`number`) 画师用户Id
     - `profile_img`: (`string`) 画师用户头像
-    - `illust_content_type`: (`Object`) 作品内容信息
-        - 待补充
-    - `illust_series`: (`boolean`) 不明?
+    - `illust_content_type`: (`Object`) 作品内容信息(警告: 文档内容仅作为开发参考, 并不传播相关内容!!!)
+        - `sexual`: (`number`) 作品内容分级
+            - `0`: 全年龄
+            - `1`: 青少年
+            - `2`: 成人级
+        - `lo`: (`boolean`) 是否为loli作品
+        - `grotesque`: (`boolean`) 是否为怪诞作品
+        - `violent`: (`boolean`) 作品是否含有暴力/强暴相关元素
+        - `homosexual`: (`boolean`) 作品是否含有同性恋相关元素
+        - `drug`: (`boolean`) 作品是否含有药物相关元素
+        - `thoughts`: (`boolean`) 作品是否含有思维/记忆相关元素(这个属性翻译起来有些问题, 待纠正)?
+        - `antisocial`: (`boolean`) 作品是否含有反社会, 令人厌恶的相关元素
+        - `religion`: (`boolean`) 作品是否含有宗教, 信仰相关元素
+        - `original`: (`boolean`) 作品是否为原创作品
+        - `furry`: (`boolean`) 作品是否有兽人相关元素
+        - `bl`: (`boolean`) 作品是否有耽美相关元素
+        - `yuri`: (`boolean`) 作品是否有百合相关元素
+    - `illust_series`: (`boolean`) 是否为系列作品
     - `width`: (`number`) 作品宽度(建议以原图为准)
     - `height`: (`number`) 作品高度(建议以原图为准)
     - `rank`: (`number`) 本期排行榜排名
