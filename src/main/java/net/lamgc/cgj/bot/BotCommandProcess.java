@@ -348,7 +348,7 @@ public class BotCommandProcess {
 
                 String imageMsg =
                         CacheStoreCentral.getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
-                if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), true)) {
+                if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
                 } else if(isReported(illustId)) {
