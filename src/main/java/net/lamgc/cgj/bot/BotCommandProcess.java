@@ -509,7 +509,6 @@ public class BotCommandProcess {
         if(!rawValue) {
             for(JsonElement tag : tags) {
                 boolean current = tag.getAsString().matches("R-*18") || tag.getAsString().contains("R18");
-                // log.warn("Match: {}, Tag: {}", current, tag.getAsString());
                 if (current) {
                     rawValue = true;
                     break;
