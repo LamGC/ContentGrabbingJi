@@ -12,6 +12,10 @@ public class ConsoleMain {
         MessageSenderBuilder.setCurrentMessageSenderFactory(new ConsoleMessageSenderFactory());
         ApplicationBoot.initialBot();
         Scanner scanner = new Scanner(System.in);
+        System.out.print("会话QQ:");
+        long qqId = scanner.nextLong();
+        System.out.print("会话群组号:");
+        long groupId = scanner.nextLong();
         boolean isGroup = false;
         do {
             String input = scanner.nextLine();
@@ -23,7 +27,7 @@ public class ConsoleMain {
                 System.out.println("System: 群模式状态已变更: " + isGroup);
                 continue;
             }
-            BotEventHandler.executeMessageEvent(new ConsoleMessageEvent(input, isGroup));
+            BotEventHandler.executeMessageEvent(new ConsoleMessageEvent(isGroup ? groupId : 0, qqId, input));
         } while(true);
     }
 

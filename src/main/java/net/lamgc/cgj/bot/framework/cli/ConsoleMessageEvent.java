@@ -6,8 +6,8 @@ import java.util.Date;
 
 public class ConsoleMessageEvent extends MessageEvent {
 
-    public ConsoleMessageEvent(String message, boolean isGroup) {
-        super(isGroup ? 1 : 0, 1, message);
+    public ConsoleMessageEvent(long groupId, long qqId, String message) {
+        super(groupId, qqId, message);
     }
 
     @Override
