@@ -289,7 +289,7 @@ public class BotCommandProcess {
             @Argument(name = "area", force = false) String area,
             @Argument(name = "in", force = false) String includeKeywords,
             @Argument(name = "ex", force = false) String excludeKeywords,
-            @Argument(name = "contentOption", force = false) String contentOption,
+            @Argument(name = "option", force = false) String contentOption,
             @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
         log.info("正在执行搜索...");
