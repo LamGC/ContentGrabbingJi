@@ -2,7 +2,6 @@ package net.lamgc.cgj.bot.sort;
 
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 
 import java.io.IOException;
@@ -21,6 +20,15 @@ public class PreLoadDataComparator implements Comparator<JsonElement> {
 
     @Override
     public int compare(JsonElement o1, JsonElement o2) {
+        if(!o1.isJsonObject() || !o2.isJsonObject()) {
+            if(o1.isJsonObject()) {
+                return 1;
+            } else if(o2.isJsonObject()) {
+                return -1;
+            } else {
+                return 0;
+            }
+        }
         if(!o1.getAsJsonObject().has("illustId") || !o2.getAsJsonObject().has("illustId")) {
             if(o1.getAsJsonObject().has("illustId")) {
                 return 1;
