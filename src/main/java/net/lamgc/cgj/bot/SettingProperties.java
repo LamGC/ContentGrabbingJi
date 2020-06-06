@@ -51,6 +51,10 @@ public final class SettingProperties {
             long groupId;
             try {
                 groupId = Long.parseLong(name.substring(name.indexOf("group.") + 6, name.lastIndexOf(".properties")));
+                if(groupId <= 0) {
+                    log.warn("无效的群配置文件: {}", groupId);
+                    continue;
+                }
             } catch (NumberFormatException e) {
                 log.error("非法的配置文件名: {}", name);
                 continue;
@@ -233,7 +237,7 @@ public final class SettingProperties {
      * @return 如果群组存在所属Properties, 则返回群组Properties, 否则返回GlobalProperties.
      */
     public static Properties getProperties(long groupId) {
-        if(groupPropMap.containsKey(groupId)) {
+        if(groupId > 0 && groupPropMap.containsKey(groupId)) {
             return groupPropMap.get(groupId);
         }
         return getGlobalProperties();
