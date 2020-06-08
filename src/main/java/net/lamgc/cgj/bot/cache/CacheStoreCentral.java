@@ -12,7 +12,6 @@ import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
-import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.encrypt.MessageDigestUtils;
 import net.lz1998.cq.utils.CQCode;
 import org.apache.http.HttpResponse;
@@ -97,11 +96,7 @@ public final class CacheStoreCentral {
      * @param pageIndex 指定页面索引, 从1开始
      * @return 如果成功, 返回BotCode, 否则返回错误信息.
      */
-    public static String getImageById(
-            @Argument(name = "$fromGroup") long fromGroup,
-            @Argument(name = "id") int illustId,
-            @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
-            @Argument(name = "page", force = false, defaultValue = "1") int pageIndex) {
+    public static String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
 
         try {
