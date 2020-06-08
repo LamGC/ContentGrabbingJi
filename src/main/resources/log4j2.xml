@@ -11,7 +11,8 @@
         <Console name="CONSOLE_STDOUT" target="SYSTEM_OUT">
             <PatternLayout pattern="${pattern}" charset="${charset}"/>
             <Filters>
-                <LevelRangeFilter minLevel="INFO" maxLevel="INFO" />
+                <ThresholdFilter level="warn" onMatch="DENY" onMismatch="NEUTRAL"/>
+                <ThresholdFilter level="info" onMatch="ACCEPT" onMismatch="DENY"/>
             </Filters>
         </Console>
         <Console name="CONSOLE_STDERR" target="SYSTEM_ERR">
@@ -31,7 +32,7 @@
 
     <Loggers>
         <Logger level="INFO" name="org.apache.http"/>
-        <Root level="TRACE">
+        <Root level="INFO">
             <AppenderRef ref="CONSOLE_STDOUT"/>
             <AppenderRef ref="CONSOLE_STDERR"/>
             <AppenderRef ref="rollingFile"/>
