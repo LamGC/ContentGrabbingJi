@@ -39,7 +39,7 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
             AutoCleanTimer.add(this);
         }
 
-        log.debug("HotDataCacheStore初始化完成. " +
+        log.trace("HotDataCacheStore初始化完成. " +
                         "(Parent: {}, Current: {}, expireTime: {}, expireFloatRange: {}, autoClean: {})",
                 parent, current, expireTime, expireFloatRange, autoClean);
     }
@@ -58,24 +58,24 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
     @Override
     public T getCache(String key) {
         if(!exists(key)) {
-            log.debug("查询缓存键名不存在, 直接返回null.");
+            log.trace("查询缓存键名不存在, 直接返回null.");
             return null;
         }
         T result = current.getCache(key);
         if(Objects.isNull(result)) {
-            log.debug("Current缓存库未命中, 查询Parent缓存库");
+            log.trace("Current缓存库未命中, 查询Parent缓存库");
             T parentResult = parent.getCache(key);
             if(Objects.isNull(parentResult)) {
-                log.debug("Parent缓存库未命中, 缓存不存在");
+                log.trace("Parent缓存库未命中, 缓存不存在");
                 return null;
             }
-            log.debug("Parent缓存命中, 正在更新Current缓存库...");
+            log.trace("Parent缓存命中, 正在更新Current缓存库...");
             current.update(key, parentResult,
                     expireTime + (expireFloatRange <= 0 ? 0 : random.nextInt(expireFloatRange)));
-            log.debug("Current缓存库更新完成.");
+            log.trace("Current缓存库更新完成.");
             result = parentResult;
         } else {
-            log.debug("Current缓存库缓存命中.");
+            log.trace("Current缓存库缓存命中.");
         }
         return result;
     }
