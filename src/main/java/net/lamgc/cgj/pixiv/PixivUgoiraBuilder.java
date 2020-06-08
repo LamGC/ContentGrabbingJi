@@ -82,7 +82,33 @@ public final class PixivUgoiraBuilder {
         log.debug("IllustId: {}, UgoiraMeta: {}", this.illustId, this.ugoiraMeta);
     }
 
+    /**
+     * 获取动图元数据
+     * @return 动图元数据, 返回的对象不影响Builder中的meta对象
+     */
+    public JsonObject getUgoiraMeta() {
+        return this.ugoiraMeta.deepCopy();
+    }
+
+    /**
+     * 构建动图
+     * @param original 是否为原图画质
+     * @return 返回动图数据输入流
+     * @throws IOException 当获取数据发生异常时抛出
+     */
     public InputStream buildUgoira(boolean original) throws IOException {
+        ByteArrayOutputStream bufferOutput = new ByteArrayOutputStream();
+        buildUgoira(bufferOutput, original);
+        return new ByteArrayInputStream(bufferOutput.toByteArray());
+    }
+
+    /**
+     * 构建动图
+     * @param outputStream 动图输出流
+     * @param original 是否为原图画质
+     * @throws IOException 当获取数据发生异常时抛出
+     */
+    public void buildUgoira(OutputStream outputStream, boolean original) throws IOException {
         getUgoiraImageSize();
         log.debug("动图尺寸信息: Height: {}, Width: {}", height, width);
 
@@ -95,7 +121,6 @@ public final class PixivUgoiraBuilder {
         HttpResponse response = httpClient.execute(request);
         log.trace("请求已发送, 正在处理响应...");
         ZipInputStream zipInputStream = new ZipInputStream(new BufferedInputStream(response.getEntity().getContent(), 64 * 1024));
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         ZipEntry entry;
         ByteArrayOutputStream cacheOutputStream = new ByteArrayOutputStream(512);
         HashMap<String, InputStream> frameMap = new HashMap<>(frames.size());
@@ -140,7 +165,6 @@ public final class PixivUgoiraBuilder {
             }
         });
         encoder.finishEncoding();
-        return new ByteArrayInputStream(outputStream.toByteArray());
     }
 
     /**
