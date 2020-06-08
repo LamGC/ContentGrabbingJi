@@ -134,6 +134,7 @@ public class MiraiMessageSender implements MessageSender {
      * @param code 图片BotCode
      * @return Image对象
      */
+    @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
     public Image uploadImage(BotCode code) {
         log.debug("传入BotCode信息:\n{}", code);
         String absolutePath = code.getParameter("absolutePath");

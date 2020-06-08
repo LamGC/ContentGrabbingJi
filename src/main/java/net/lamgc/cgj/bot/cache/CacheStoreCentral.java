@@ -98,6 +98,10 @@ public final class CacheStoreCentral {
      */
     public static String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
+        if(pageIndex <= 0) {
+            log.warn("指定的页数不能小于或等于0: {}", pageIndex);
+            return "指定的页数不能小于或等于0！";
+        }
 
         try {
             if (BotCommandProcess.isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
@@ -128,7 +132,7 @@ public final class CacheStoreCentral {
             log.debug(logBuilder.toString());
         }
 
-        if (pagesList.size() < pageIndex || pageIndex <= 0) {
+        if (pagesList.size() < pageIndex) {
             log.warn("指定的页数超出了总页数({} / {})", pageIndex, pagesList.size());
             return "指定的页数超出了范围(总共 " + pagesList.size() + " 页)";
         }
