@@ -477,6 +477,16 @@ public class BotCommandProcess {
         log.warn("缓存删除完成.");
     }
 
+    @Command(commandName = "image")
+    public static String getImageById(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "id") int illustId,
+            @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
+            @Argument(name = "page", force = false, defaultValue = "1") int pageIndex
+    ) {
+        return CacheStoreCentral.getImageById(fromGroup, illustId, quality, pageIndex);
+    }
+
     /**
      * 举报某一作品
      * @param fromGroup 来源群(系统提供)
