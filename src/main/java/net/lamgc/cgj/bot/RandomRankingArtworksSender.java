@@ -19,6 +19,7 @@ import java.util.Random;
 public class RandomRankingArtworksSender extends AutoSender {
 
     private final Logger log;
+    private final long groupId;
     private final int rankingStart;
     private final int rankingStop;
     private final PixivURL.RankingMode mode;
@@ -35,8 +36,37 @@ public class RandomRankingArtworksSender extends AutoSender {
      * @param quality 图片质量, 详见{@link PixivDownload.PageQuality}
      * @throws IndexOutOfBoundsException 当 rankingStart > rankingStop时抛出
      */
-    public RandomRankingArtworksSender(MessageSender messageSender, int rankingStart, int rankingStop, PixivURL.RankingMode mode, PixivURL.RankingContentType contentType, PixivDownload.PageQuality quality) {
+    public RandomRankingArtworksSender(
+            MessageSender messageSender,
+            int rankingStart,
+            int rankingStop,
+            PixivURL.RankingMode mode,
+            PixivURL.RankingContentType contentType,
+            PixivDownload.PageQuality quality) {
+        this(messageSender, 0, rankingStart, rankingStop, mode, contentType, quality);
+    }
+
+    /**
+     * 构造一个推荐作品发送器
+     * @param messageSender 消息发送器
+     * @param groupId 群组Id, 如果发送目标为群组, 则可设置群组Id, 以使用群组配置.
+     * @param rankingStart 排行榜开始范围(从1开始, 名次)，如传入0或负数则为默认值，默认为1
+     * @param rankingStop 排名榜结束范围(包括该名次)，如传入0或负数则为默认值，默认为150
+     * @param mode 排行榜模式
+     * @param contentType 排行榜内容类型
+     * @param quality 图片质量, 详见{@link PixivDownload.PageQuality}
+     * @throws IndexOutOfBoundsException 当 rankingStart > rankingStop时抛出
+     */
+    public RandomRankingArtworksSender(
+            MessageSender messageSender,
+            long groupId,
+            int rankingStart,
+            int rankingStop,
+            PixivURL.RankingMode mode,
+            PixivURL.RankingContentType contentType,
+            PixivDownload.PageQuality quality) {
         super(messageSender);
+        this.groupId = groupId;
         this.mode = mode;
         this.contentType = contentType;
         log = LoggerFactory.getLogger(this.toString());
@@ -78,7 +108,7 @@ public class RandomRankingArtworksSender extends AutoSender {
             JsonObject rankingInfo = rankingList.get(0);
             int illustId = rankingInfo.get("illust_id").getAsInt();
             if(BotCommandProcess.isNoSafe(illustId,
-                    SettingProperties.getProperties(SettingProperties.GLOBAL), false)) {
+                    SettingProperties.getProperties(groupId), false)) {
                 log.warn("作品为r18作品, 取消本次发送.");
                 return;
             } else if(BotCommandProcess.isReported(illustId)) {

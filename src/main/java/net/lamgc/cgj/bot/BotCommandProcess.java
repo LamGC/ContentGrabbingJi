@@ -14,8 +14,6 @@ import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
 import net.lamgc.cgj.pixiv.PixivSearchBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
-import net.lamgc.cgj.pixiv.PixivURL.RankingContentType;
-import net.lamgc.cgj.pixiv.PixivURL.RankingMode;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
 import org.slf4j.Logger;
@@ -257,13 +255,34 @@ public class BotCommandProcess {
      * 随机获取一副作品
      */
     @Command(commandName = "random")
-    public static String randomImage() {
+    public static String randomImage(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
+            @Argument(force = false, name = "type", defaultValue = "ILLUST") String contentType) {
+        PixivURL.RankingMode mode;
+        try {
+            String rankingModeValue = contentMode.toUpperCase();
+            mode = PixivURL.RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ?
+                    rankingModeValue : "MODE_" + rankingModeValue);
+        } catch (IllegalArgumentException e) {
+            log.warn("无效的RankingMode值: {}", contentMode);
+            return "参数无效, 请查看帮助信息";
+        }
+
+        PixivURL.RankingContentType type;
+        try {
+            String contentTypeValue = contentType.toUpperCase();
+            type = PixivURL.RankingContentType.valueOf(
+                    contentTypeValue.startsWith("TYPE_") ? contentTypeValue : "TYPE_" + contentTypeValue);
+        } catch (IllegalArgumentException e) {
+            log.warn("无效的RankingContentType值: {}", contentType);
+            return "参数无效, 请查看帮助信息";
+        }
+
         BufferMessageEvent event = new BufferMessageEvent();
         RandomRankingArtworksSender artworksSender = 
-            new RandomRankingArtworksSender(event, 1, 200, 
-            RankingMode.MODE_MALE, 
-            RankingContentType.TYPE_ALL, 
-            PageQuality.ORIGINAL);
+            new RandomRankingArtworksSender(event, fromGroup, 1, 200, mode, type,
+                    PageQuality.ORIGINAL);
         artworksSender.send();
         return event.getBufferMessage();
     }

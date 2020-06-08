@@ -8,7 +8,9 @@ import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.exceptions.JedisConnectionException;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,6 +58,12 @@ public final class BotGlobal {
         this.redisServer = new JedisPool(
                 getRedisUri().getHost(),
                 getRedisUri().getPort() == -1 ? 6379 : getRedisUri().getPort());
+        try (Jedis jedis = this.redisServer.getResource()) {
+            log.warn("Redis连接状态(Ping): {}", jedis.ping().equalsIgnoreCase("pong"));
+        } catch(JedisConnectionException e) {
+            log.warn("Redis连接失败, 将会影响到后续功能运行.", e);
+        }
+
         String dataStoreDirPath = System.getProperty("cgj.botDataDir");
         this.dataStoreDir = new File((!dataStoreDirPath.endsWith("/") || !dataStoreDirPath.endsWith("\\")) ?
                 dataStoreDirPath + System.getProperty("file.separator") : dataStoreDirPath);
@@ -93,13 +101,6 @@ public final class BotGlobal {
 
     public HttpHost getProxy() {
         return proxy;
-    }
-
-    public CookieStore getCookieStore() {
-        if(pixivDownload == null) {
-            throw new IllegalStateException("CookieStore needs to be set before PixivDownload can be obtained");
-        }
-        return cookieStore;
     }
 
     public void setCookieStore(CookieStore cookieStore) {
