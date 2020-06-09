@@ -3,26 +3,39 @@
     <properties>
         <property name="logStorePath">./logs</property>
         <property name="charset">UTF-8</property>
-        <property name="pattern">[%-d{HH:mm:ss.SSS} %5level][%logger.%method():%-3L][%thread]: %msg%n</property>
+        <property name="standard_pattern">[%-d{HH:mm:ss.SSS} %5level][%logger.%method():%-3L][%thread]: %msg%n</property>
+        <property name="mirai_pattern">[%-d{HH:mm:ss.SSS} %5level][%logger]: %msg%n</property>
         <property name="logsDir">${sys:cgj.logsPath:-logs}</property>
     </properties>
 
     <Appenders>
-        <Console name="CONSOLE_STDOUT" target="SYSTEM_OUT">
-            <PatternLayout pattern="${pattern}" charset="${charset}"/>
+        <Console name="STANDARD_STDOUT" target="SYSTEM_OUT">
+            <PatternLayout charset="${charset}">
+                <MarkerPatternSelector defaultPattern="${standard_pattern}">
+                    <PatternMatch key="mirai" pattern="${mirai_pattern}" />
+                </MarkerPatternSelector>
+            </PatternLayout>
             <Filters>
                 <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="ACCEPT"/>
             </Filters>
         </Console>
-        <Console name="CONSOLE_STDERR" target="SYSTEM_ERR">
-            <PatternLayout pattern="${pattern}" charset="${charset}"/>
+        <Console name="STANDARD_STDERR" target="SYSTEM_ERR">
+            <PatternLayout charset="${charset}">
+                <MarkerPatternSelector defaultPattern="${standard_pattern}">
+                    <PatternMatch key="mirai" pattern="${mirai_pattern}" />
+                </MarkerPatternSelector>
+            </PatternLayout>
             <Filters>
                 <ThresholdFilter level="WARN" onMatch="ACCEPT" onMismatch="DENY"/>
             </Filters>
         </Console>
 
         <RollingFile name="rollingFile" fileName="${logsDir}/latest.log" filePattern="${logsDir}/running.%-d{yyyy-MM-dd_HH-mm-ss}.log.gz">
-            <PatternLayout pattern="${pattern}" charset="${charset}"/>
+            <PatternLayout charset="${charset}">
+                <MarkerPatternSelector defaultPattern="${standard_pattern}">
+                    <PatternMatch key="mirai" pattern="${mirai_pattern}" />
+                </MarkerPatternSelector>
+            </PatternLayout>
             <Policies>
                 <OnStartupTriggeringPolicy />
             </Policies>
@@ -32,8 +45,8 @@
     <Loggers>
         <Logger level="INFO" name="org.apache.http"/>
         <Root level="TRACE">
-            <AppenderRef ref="CONSOLE_STDOUT"/>
-            <AppenderRef ref="CONSOLE_STDERR"/>
+            <AppenderRef ref="STANDARD_STDOUT"/>
+            <AppenderRef ref="STANDARD_STDERR"/>
             <AppenderRef ref="rollingFile"/>
         </Root>
     </Loggers>

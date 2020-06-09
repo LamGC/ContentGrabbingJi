@@ -4,15 +4,19 @@ import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageEvent;
-import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageSenderFactory;
+import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import net.mamoe.mirai.Bot;
 import net.mamoe.mirai.BotFactoryJvm;
 import net.mamoe.mirai.event.events.BotMuteEvent;
 import net.mamoe.mirai.event.events.BotUnmuteEvent;
 import net.mamoe.mirai.japt.Events;
-import net.mamoe.mirai.message.*;
+import net.mamoe.mirai.message.FriendMessageEvent;
+import net.mamoe.mirai.message.GroupMessageEvent;
+import net.mamoe.mirai.message.MessageEvent;
+import net.mamoe.mirai.message.TempMessageEvent;
 import net.mamoe.mirai.utils.BotConfiguration;
+import net.mamoe.mirai.utils.Utils;
 import org.apache.commons.net.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +49,7 @@ public class MiraiMain implements Closeable {
             return;
         }
 
+        Utils.setDefaultLogger(MiraiToSlf4jLogger::new);
         BotConfiguration configuration = new BotConfiguration();
         configuration.setProtocol(BotConfiguration.MiraiProtocol.ANDROID_PAD);
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), configuration);

@@ -64,14 +64,13 @@ public class BotEventHandler implements EventHandler {
      */
     public synchronized static void initial() {
         if(initialled) {
-            Logger logger = LoggerFactory.getLogger("BotEventHandler@<init>");
-            logger.warn("BotEventHandler已经执行过初始化方法, 可能存在多次执行的问题, 堆栈信息: \n {}",
+            log.warn("BotEventHandler已经执行过初始化方法, 可能存在多次执行的问题, 堆栈信息: \n {}",
                     Throwables.getStackTraceAsString(new Exception()));
             return;
         }
 
         executor.setEventUncaughtExceptionHandler(new EventUncaughtExceptionHandler() {
-            private final Logger log = LoggerFactory.getLogger("EventUncaughtExceptionHandler");
+            private final Logger log = LoggerFactory.getLogger(this.getClass());
             @Override
             public void exceptionHandler(Thread executeThread, EventHandler handler, Method handlerMethod, EventObject event, Throwable cause) {
                 log.error("发生未捕获异常:\nThread:{}, EventHandler: {}, HandlerMethod: {}, EventObject: {}\n{}",
@@ -88,7 +87,7 @@ public class BotEventHandler implements EventHandler {
             shutdownThread.setName("Thread-EventHandlerShutdown");
             Runtime.getRuntime().addShutdownHook(shutdownThread);
         } catch (IllegalAccessException e) {
-            LoggerFactory.getLogger("BotEventHandler@Static").error("添加Handler时发生异常", e);
+            log.error("添加Handler时发生异常", e);
         }
 
         try {
