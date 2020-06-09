@@ -17,15 +17,12 @@ public class ConsoleMain {
     private final static Logger log = LoggerFactory.getLogger(ConsoleMain.class);
 
     public static void start() throws IOException {
-        ConsoleMessageSenderFactory senderFactory = new ConsoleMessageSenderFactory();
-        MessageSenderBuilder.setCurrentMessageSenderFactory(senderFactory);
+        MessageSenderBuilder.setCurrentMessageSenderFactory(new ConsoleMessageSenderFactory());
         ApplicationBoot.initialBot();
         LineReader lineReader = LineReaderBuilder.builder()
                 .appName("CGJ")
                 .history(new DefaultHistory())
-                .terminal(TerminalBuilder.builder()
-                        .dumb(true)
-                        .build())
+                .terminal(TerminalBuilder.terminal())
                 .build();
 
         long qqId = Long.parseLong(lineReader.readLine("会话QQ: "));
