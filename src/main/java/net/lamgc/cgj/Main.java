@@ -93,7 +93,7 @@ public class Main {
     }
 
     @Command
-    public static void consoleMode() {
+    public static void consoleMode() throws IOException {
         ConsoleMain.start();
     }
 

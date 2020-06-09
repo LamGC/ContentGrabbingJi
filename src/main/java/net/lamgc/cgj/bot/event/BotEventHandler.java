@@ -120,20 +120,38 @@ public class BotEventHandler implements EventHandler {
      */
     @NotAccepted
     public static void executeMessageEvent(MessageEvent event) {
+        try {
+            executeMessageEvent(event, false);
+        } catch (InterruptedException e) {
+            log.error("执行时发生异常", e);
+            throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * 投递消息事件
+     * @param event 事件对象
+     */
+    @NotAccepted
+    public static void executeMessageEvent(MessageEvent event, boolean sync) throws InterruptedException {
         String debuggerName = SettingProperties.getProperty(0, "debug.debugger");
         if(!event.getMessage().startsWith(ADMIN_COMMAND_PREFIX) &&
                 !Strings.isNullOrEmpty(debuggerName)) {
             try {
                 MessageEventExecutionDebugger debugger = MessageEventExecutionDebugger.valueOf(debuggerName.toUpperCase());
                 debugger.debugger.accept(executor, event, SettingProperties.getProperties(SettingProperties.GLOBAL),
-                                MessageEventExecutionDebugger.getDebuggerLogger(debugger));
+                        MessageEventExecutionDebugger.getDebuggerLogger(debugger));
             } catch(IllegalArgumentException e) {
                 log.warn("未找到指定调试器: '{}'", debuggerName);
             } catch (Exception e) {
                 log.error("事件调试处理时发生异常", e);
             }
         } else {
-            BotEventHandler.executor.executor(event);
+            if(sync) {
+                BotEventHandler.executor.executorSync(event);
+            } else {
+                BotEventHandler.executor.executor(event);
+            }
         }
     }
 
