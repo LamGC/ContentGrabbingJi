@@ -19,7 +19,7 @@
                 </MarkerPatternSelector>
             </PatternLayout>
             <Filters>
-                <ThresholdFilter level="WARN" onMatch="DENY" onMismatch="ACCEPT"/>
+                <LevelRangeFilter minLevel="INFO" maxLevel="INFO" onMatch="ACCEPT" onMismatch="DENY"/>
             </Filters>
         </Console>
         <Console name="STANDARD_STDERR" target="SYSTEM_ERR">
@@ -46,19 +46,9 @@
     </Appenders>
 
     <Loggers>
-        <Logger level="INFO" name="org.apache.http">
-            <AppenderRef ref="STANDARD_STDOUT"/>
-            <AppenderRef ref="STANDARD_STDERR"/>
-        </Logger>
-        <Logger level="INFO" name="mirai">
-            <AppenderRef ref="STANDARD_STDOUT"/>
-            <AppenderRef ref="STANDARD_STDERR"/>
-        </Logger>
-        <Logger level="INFO" name="net.lamgc.cgj">
-            <AppenderRef ref="STANDARD_STDOUT"/>
-            <AppenderRef ref="STANDARD_STDERR"/>
-        </Logger>
         <Root level="TRACE">
+            <AppenderRef ref="STANDARD_STDOUT"/>
+            <AppenderRef ref="STANDARD_STDERR"/>
             <AppenderRef ref="rollingFile"/>
         </Root>
     </Loggers>

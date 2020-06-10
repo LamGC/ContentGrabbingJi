@@ -52,7 +52,7 @@ public class Main {
     private static HttpHost proxy;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
-        log.trace("ContentGrabbingJi 正在启动...");
+        log.info("ContentGrabbingJi 正在启动...");
         log.debug("Args: {}, LogsPath: {}", Arrays.toString(args), System.getProperty("cgj.logsPath"));
         log.debug("运行目录: {}", System.getProperty("user.dir"));
 

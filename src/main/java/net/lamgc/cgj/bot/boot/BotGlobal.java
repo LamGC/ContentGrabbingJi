@@ -61,7 +61,7 @@ public final class BotGlobal {
         try (Jedis jedis = this.redisServer.getResource()) {
             log.warn("Redis连接状态(Ping): {}", jedis.ping().equalsIgnoreCase("pong"));
         } catch(JedisConnectionException e) {
-            log.warn("Redis连接失败, 将会影响到后续功能运行.", e);
+            log.warn("Redis连接失败, 将会影响到后续功能运行.({})", e.getCause().getMessage());
         }
 
         String dataStoreDirPath = System.getProperty("cgj.botDataDir");
