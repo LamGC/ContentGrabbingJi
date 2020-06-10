@@ -17,11 +17,11 @@ import net.mamoe.mirai.message.MessageEvent;
 import net.mamoe.mirai.message.TempMessageEvent;
 import net.mamoe.mirai.utils.BotConfiguration;
 import net.mamoe.mirai.utils.Utils;
-import org.apache.commons.net.util.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.util.Base64;
 import java.util.Properties;
 
 public class MiraiMain implements Closeable {
@@ -52,7 +52,8 @@ public class MiraiMain implements Closeable {
         Utils.setDefaultLogger(MiraiToSlf4jLoggerAdapter::new);
         BotConfiguration configuration = new BotConfiguration();
         configuration.setProtocol(BotConfiguration.MiraiProtocol.ANDROID_PAD);
-        bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), configuration);
+        bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")),
+                Base64.getDecoder().decode(botProperties.getProperty("bot.password", "")), configuration);
         Events.subscribeAlways(GroupMessageEvent.class, this::executeMessageEvent);
         Events.subscribeAlways(FriendMessageEvent.class, this::executeMessageEvent);
         Events.subscribeAlways(TempMessageEvent.class, this::executeMessageEvent);

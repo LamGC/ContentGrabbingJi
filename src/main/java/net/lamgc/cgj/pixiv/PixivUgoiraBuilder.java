@@ -7,11 +7,11 @@ import com.squareup.gifencoder.GifEncoder;
 import com.squareup.gifencoder.Image;
 import com.squareup.gifencoder.ImageOptions;
 import io.netty.handler.codec.http.HttpHeaderNames;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
+import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -126,7 +126,7 @@ public final class PixivUgoiraBuilder {
         HashMap<String, InputStream> frameMap = new HashMap<>(frames.size());
         while((entry = zipInputStream.getNextEntry()) != null) {
             log.trace("ZipEntry {} 正在接收...", entry);
-            IOUtils.copy(zipInputStream, cacheOutputStream);
+            Streams.copy(zipInputStream, cacheOutputStream, false);
             frameMap.put(entry.getName(), new ByteArrayInputStream(cacheOutputStream.toByteArray()));
             log.trace("ZipEntry {} 已接收完成.", entry);
             cacheOutputStream.reset();

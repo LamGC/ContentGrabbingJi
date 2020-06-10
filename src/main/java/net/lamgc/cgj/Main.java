@@ -19,12 +19,12 @@ import net.lamgc.plps.PixivLoginProxyServer;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.ArgumentsRunner;
 import net.lamgc.utils.base.runner.Command;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
+import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -127,7 +127,7 @@ public class Main {
                 ZipEntry entry = new ZipEntry(link.substring(link.lastIndexOf("/") + 1));
                 log.info("正在写入: " + entry.getName());
                 zos.putNextEntry(entry);
-                IOUtils.copy(inputStream, zos);
+                Streams.copy(inputStream, zos, false);
                 zos.flush();
             } catch (IOException e) {
                 log.error("写入文件项时发生异常", e);
@@ -159,7 +159,7 @@ public class Main {
                 ZipEntry entry = new ZipEntry(link.substring(link.lastIndexOf("/") + 1));
                 log.info("正在写入: " + entry.getName());
                 zos.putNextEntry(entry);
-                IOUtils.copy(inputStream, zos);
+                Streams.copy(inputStream, zos, false);
                 zos.flush();
                 log.info("已成功写入 {}", entry.getName());
             } catch (IOException e) {
@@ -230,7 +230,7 @@ public class Main {
                     entry.setComment(rankInfo.toString());
                     log.info("正在写入: " + entry.getName());
                     zos.putNextEntry(entry);
-                    IOUtils.copy(inputStream, zos);
+                    Streams.copy(inputStream, zos, false);
                     zos.flush();
                     log.info("已成功写入 {}", entry.getName());
                 } catch (IOException e) {

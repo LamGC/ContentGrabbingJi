@@ -5,11 +5,11 @@ import net.lamgc.cgj.bot.cache.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.event.EventHandler;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -69,7 +69,7 @@ public class ImageCacheHandler implements EventHandler {
             log.debug("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
             ByteArrayOutputStream bufferOutputStream = new ByteArrayOutputStream();
             try(FileOutputStream fileOutputStream = new FileOutputStream(storeFile)) {
-                IOUtils.copy(response.getEntity().getContent(), bufferOutputStream);
+                Streams.copy(response.getEntity().getContent(), bufferOutputStream, false);
                 ByteArrayInputStream bufferInputStream = new ByteArrayInputStream(bufferOutputStream.toByteArray());
                 CacheStoreCentral.ImageChecksum imageChecksum = CacheStoreCentral.ImageChecksum
                         .buildImageChecksumFromStream(
@@ -79,7 +79,7 @@ public class ImageCacheHandler implements EventHandler {
                                 bufferInputStream
                             );
                 bufferInputStream.reset();
-                IOUtils.copy(bufferInputStream, fileOutputStream);
+                Streams.copy(bufferInputStream, fileOutputStream, false);
                 CacheStoreCentral.setImageChecksum(imageChecksum);
             } catch (IOException e) {
                 log.error("下载图片时发生异常", e);

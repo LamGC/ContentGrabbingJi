@@ -2,7 +2,6 @@ package net.lamgc.cgj.pixiv;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.apache.commons.io.IOUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.CookieStore;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -10,6 +9,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.util.EntityUtils;
+import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.junit.Assert;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
@@ -64,7 +64,7 @@ public class PixivDownloadTest {
                 ZipEntry entry = new ZipEntry(link.substring(link.lastIndexOf("/") + 1));
                 log.info("正在写入: " + entry.getName());
                 zos.putNextEntry(entry);
-                IOUtils.copy(inputStream, zos);
+                Streams.copy(inputStream, zos, false);
                 zos.flush();
             } catch (IOException e) {
                 log.error("写入文件项时发生异常", e);
@@ -96,7 +96,7 @@ public class PixivDownloadTest {
                 ZipEntry entry = new ZipEntry(link.substring(link.lastIndexOf("/") + 1));
                 log.info("正在写入: " + entry.getName());
                 zos.putNextEntry(entry);
-                IOUtils.copy(inputStream, zos);
+                Streams.copy(inputStream, zos, false);
                 zos.flush();
                 log.info("已成功写入 {}", entry.getName());
             } catch (IOException e) {
@@ -139,7 +139,7 @@ public class PixivDownloadTest {
                     entry.setComment(rankInfo.toString());
                     log.info("正在写入: " + entry.getName());
                     zos.putNextEntry(entry);
-                    IOUtils.copy(inputStream, zos);
+                    Streams.copy(inputStream, zos, false);
                     zos.flush();
                     log.info("已成功写入 {}", entry.getName());
                 } catch (IOException e) {
