@@ -53,6 +53,20 @@ public class MiraiMain implements Closeable {
         BotConfiguration configuration = new BotConfiguration();
         configuration.randomDeviceInfo();
         configuration.setProtocol(BotConfiguration.MiraiProtocol.ANDROID_PAD);
+
+        // 心跳包周期间隔 (ms)
+        configuration.setHeartbeatPeriodMillis(
+                Long.parseLong(botProperties.getProperty("network.heartbeatPeriodMillis", "60000")));
+        // 心跳包超时时间 (ms)
+        configuration.setHeartbeatTimeoutMillis(
+                Long.parseLong(botProperties.getProperty("network.heartbeatTimeoutMillis", "5000")));
+        // 重连间隔时间
+        configuration.setReconnectPeriodMillis(
+                Integer.parseInt(botProperties.getProperty("network.reconnectPeriodMillis", "5")));
+        // 重连最大次数
+        configuration.setReconnectionRetryTimes(
+                Integer.parseInt(botProperties.getProperty("network.reconnectionRetryTimes", "10")));
+
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")),
                 Base64.getDecoder().decode(botProperties.getProperty("bot.password", "")), configuration);
         Events.subscribeAlways(GroupMessageEvent.class, this::executeMessageEvent);
