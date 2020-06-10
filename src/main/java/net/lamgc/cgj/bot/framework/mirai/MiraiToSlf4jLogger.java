@@ -8,6 +8,11 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.Marker;
 import org.slf4j.MarkerFactory;
 
+/**
+ * MiraiLoggerToSlf4jLogger适配器
+ * <p>该Logger通过Slf4j的Marker进行标识, loggerName为{@code mirai.[identity]}</p>
+ * <p>由于适配器适配方式的原因, 日志输出的调用信息将不可用(调用指向了适配器内的方法);</p>
+ */
 public class MiraiToSlf4jLogger extends MiraiLoggerPlatformBase {
     
     private final static Marker marker = MarkerFactory.getMarker("mirai");
