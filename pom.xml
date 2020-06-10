@@ -8,6 +8,14 @@
     <artifactId>ContentGrabbingJi</artifactId>
     <version>2.5.2-20200610.2-SNAPSHOT</version>
 
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License 3.0</name>
+            <url>https://www.gnu.org/licenses/agpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
     <repositories>
         <repository>
             <id>jcenter-aliyun</id>

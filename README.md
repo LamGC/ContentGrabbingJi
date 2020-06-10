@@ -1,4 +1,4 @@
-# ContentGrabbingJi
+# ContentGrabbingJi #
 Pixiv爬虫一只，同时也是一个机器人/插件！
 
 ## 支持的机器人平台 ##
@@ -37,3 +37,25 @@ Pixiv爬虫一只，同时也是一个机器人/插件！
 
 > 注意: 除去机器人模式外, 其他功能后续可能会出现改动.
 
+## LICENSE ##
+本项目基于 `GNU Affero General Public License 3.0` 开源许可协议开源，  
+你可以在本项目目录下的 `LICENSE` 文件查阅协议副本，  
+或浏览 [https://www.gnu.org/licenses/agpl-3.0.html](https://www.gnu.org/licenses/agpl-3.0.html) 查阅协议副本。
+```
+    ContentGrabbingJi - A pixiv robot used in chat
+    Copyright (C) 2020  LamGC (lam827@lamgc.net)
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Affero General Public License as
+    published by the Free Software Foundation, either version 3 of the
+    License, or any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Affero General Public License for more details.
+
+    You should have received a copy of the GNU Affero General Public License
+    along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
+```
+尤其注意：根据协议，如果你基于本项目开发本项目的衍生版本并通过网络为他人提供服务，则必须遵守该协议，向 *服务的使用者* 提供 **为其服务的衍生版本** 的 **完整源代码**。
