@@ -50,7 +50,7 @@
             <AppenderRef ref="STANDARD_STDOUT"/>
             <AppenderRef ref="STANDARD_STDERR"/>
         </Logger>
-        <Logger level="TRACE" name="mirai">
+        <Logger level="INFO" name="mirai">
             <AppenderRef ref="STANDARD_STDOUT"/>
             <AppenderRef ref="STANDARD_STDERR"/>
         </Logger>
