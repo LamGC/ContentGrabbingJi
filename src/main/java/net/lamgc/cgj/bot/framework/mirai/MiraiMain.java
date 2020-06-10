@@ -49,7 +49,7 @@ public class MiraiMain implements Closeable {
             return;
         }
 
-        Utils.setDefaultLogger(MiraiToSlf4jLogger::new);
+        Utils.setDefaultLogger(MiraiToSlf4jLoggerAdapter::new);
         BotConfiguration configuration = new BotConfiguration();
         configuration.setProtocol(BotConfiguration.MiraiProtocol.ANDROID_PAD);
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")), Base64.decodeBase64(botProperties.getProperty("bot.password", "")), configuration);
