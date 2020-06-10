@@ -100,7 +100,7 @@ public class BotCommandProcess {
                 return "阅览禁止：该作品已被封印！！";
             }
 
-            JsonObject illustPreLoadData = CacheStoreCentral.getIllustPreLoadData(illustId, false);
+            JsonObject illustPreLoadData = CacheStoreCentral.getCentral().getIllustPreLoadData(illustId, false);
             // 在 Java 6 开始, 编译器会将用'+'进行的字符串拼接将自动转换成StringBuilder拼接
             return "色图姬帮你了解了这个作品的信息！\n" + "---------------- 作品信息 ----------------" +
                     "\n作品Id: " + illustId +
@@ -114,7 +114,7 @@ public class BotCommandProcess {
                     "\n页数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt() + "页" +
                     "\n作品链接：" + artworksLink(fromGroup, illustId) + "\n" +
                     "---------------- 作品图片 ----------------\n" +
-                    CacheStoreCentral.getImageById(fromGroup, illustId, PageQuality.REGULAR, 1) + "\n" +
+                    CacheStoreCentral.getCentral().getImageById(fromGroup, illustId, PageQuality.REGULAR, 1) + "\n" +
                     "使用 \".cgj image -id " +
                     illustId +
                     "\" 获取原图。\n如有不当作品，可使用\".cgj report -id " +
@@ -209,7 +209,7 @@ public class BotCommandProcess {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
-            List<JsonObject> rankingInfoList = CacheStoreCentral
+            List<JsonObject> rankingInfoList = CacheStoreCentral.getCentral()
                     .getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
@@ -228,7 +228,7 @@ public class BotCommandProcess {
                         .append(pagesCount).append("p.\n");
                 if (index <= imageLimit) {
                     resultBuilder
-                            .append(CacheStoreCentral
+                            .append(CacheStoreCentral.getCentral()
                                     .getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1))
                             .append("\n");
                 }
@@ -312,7 +312,7 @@ public class BotCommandProcess {
             @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
         log.info("正在执行搜索...");
-        JsonObject resultBody = CacheStoreCentral
+        JsonObject resultBody = CacheStoreCentral.getCentral()
                 .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
 
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
@@ -365,8 +365,8 @@ public class BotCommandProcess {
                         PixivURL.getPixivRefererLink(illustId)
                 );
 
-                String imageMsg =
-                        CacheStoreCentral.getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
+                String imageMsg = CacheStoreCentral.getCentral()
+                        .getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
                 if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
@@ -375,7 +375,8 @@ public class BotCommandProcess {
                     continue;
                 }
 
-                JsonObject illustPreLoadData = CacheStoreCentral.getIllustPreLoadData(illustId, false);
+                JsonObject illustPreLoadData = CacheStoreCentral.getCentral()
+                        .getIllustPreLoadData(illustId, false);
                 result.append(searchArea.name()).append(" (").append(count).append(" / ")
                         .append(limit).append(")\n\t作品id: ").append(illustId)
                         .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
@@ -463,7 +464,7 @@ public class BotCommandProcess {
 
     static void clearCache() {
         log.warn("正在清除所有缓存...");
-        CacheStoreCentral.clearCache();
+        CacheStoreCentral.getCentral().clearCache();
         File imageStoreDir = new File(BotGlobal.getGlobal().getDataStoreDir(), "data/image/cgj/");
         File[] listFiles = imageStoreDir.listFiles();
         if (listFiles == null) {
@@ -484,7 +485,7 @@ public class BotCommandProcess {
             @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
             @Argument(name = "page", force = false, defaultValue = "1") int pageIndex
     ) {
-        return CacheStoreCentral.getImageById(fromGroup, illustId, quality, pageIndex);
+        return CacheStoreCentral.getCentral().getImageById(fromGroup, illustId, quality, pageIndex);
     }
 
     /**
@@ -532,7 +533,7 @@ public class BotCommandProcess {
      */
     public static boolean isNoSafe(int illustId, Properties settingProp, boolean returnRaw)
             throws IOException, NoSuchElementException {
-        JsonObject illustInfo = CacheStoreCentral.getIllustInfo(illustId, false);
+        JsonObject illustInfo = CacheStoreCentral.getCentral().getIllustInfo(illustId, false);
         JsonArray tags = illustInfo.getAsJsonArray("tags");
         boolean rawValue = illustInfo.get("xRestrict").getAsInt() != 0;
         if(!rawValue) {

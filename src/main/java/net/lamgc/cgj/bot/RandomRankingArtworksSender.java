@@ -92,7 +92,7 @@ public class RandomRankingArtworksSender extends AutoSender {
 
         int selectRanking = rankingStart + new Random().nextInt(rankingStop - rankingStart + 1);
         try {
-            List<JsonObject> rankingList = CacheStoreCentral.getRankingInfoByCache(
+            List<JsonObject> rankingList = CacheStoreCentral.getCentral().getRankingInfoByCache(
                     contentType,
                     mode,
                     queryDate,
@@ -119,7 +119,7 @@ public class RandomRankingArtworksSender extends AutoSender {
             String message = "#美图推送 - 今日排行榜 第 " + rankingInfo.get("rank").getAsInt() + " 名\n" +
                     "标题：" + rankingInfo.get("title").getAsString() + "(" + illustId + ")\n" +
                     "作者：" + rankingInfo.get("user_name").getAsString() + "\n" +
-                    CacheStoreCentral.getImageById(0, illustId, quality, 1) +
+                    CacheStoreCentral.getCentral().getImageById(0, illustId, quality, 1) +
                     "\n如有不当作品，可使用\".cgj report -id " + illustId + "\"向色图姬反馈。";
             getMessageSender().sendMessage(message);
         } catch (Exception e) {

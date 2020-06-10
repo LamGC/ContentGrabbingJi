@@ -39,10 +39,10 @@ public class PreLoadDataComparator implements Comparator<JsonElement> {
             }
         }
         try {
-            JsonObject illustPreLoadData1 =
-                    CacheStoreCentral.getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false);
-            JsonObject illustPreLoadData2 =
-                    CacheStoreCentral.getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false);
+            JsonObject illustPreLoadData1 = CacheStoreCentral.getCentral()
+                    .getIllustPreLoadData(o1.getAsJsonObject().get("illustId").getAsInt(), false);
+            JsonObject illustPreLoadData2 = CacheStoreCentral.getCentral()
+                    .getIllustPreLoadData(o2.getAsJsonObject().get("illustId").getAsInt(), false);
             return Integer.compare(
                     illustPreLoadData2.get(attribute.attrName).getAsInt(),
                     illustPreLoadData1.get(attribute.attrName).getAsInt());

@@ -80,7 +80,7 @@ public class ImageCacheHandler implements EventHandler {
                             );
                 bufferInputStream.reset();
                 Streams.copy(bufferInputStream, fileOutputStream, false);
-                CacheStoreCentral.setImageChecksum(imageChecksum);
+                CacheStoreCentral.getCentral().setImageChecksum(imageChecksum);
             } catch (IOException e) {
                 log.error("下载图片时发生异常", e);
                 throw e;

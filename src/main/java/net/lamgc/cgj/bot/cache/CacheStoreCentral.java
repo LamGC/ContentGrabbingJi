@@ -31,27 +31,44 @@ import java.util.concurrent.atomic.AtomicInteger;
 @SuppressWarnings("SynchronizationOnLocalVariableOrMethodParameter")
 public final class CacheStoreCentral {
 
-    private CacheStoreCentral() {}
-
     private final static Logger log = LoggerFactory.getLogger(CacheStoreCentral.class);
 
-    private final static Hashtable<String, File> imageCache = new Hashtable<>();
+    private static CacheStoreCentral central = new CacheStoreCentral();
 
-    private final static JsonRedisCacheStore imageChecksumCache =
+    public static CacheStoreCentral getCentral() {
+        if(central == null) {
+            initialCentral();
+        }
+        return central;
+    }
+
+    private synchronized static void initialCentral() {
+        if(central != null) {
+            return;
+        }
+
+        central = new CacheStoreCentral();
+    }
+
+    private CacheStoreCentral() {}
+
+    private final Hashtable<String, File> imageCache = new Hashtable<>();
+
+    private final CacheStore<JsonElement> imageChecksumCache =
             new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
                     "imageChecksum", BotGlobal.getGlobal().getGson());
 
     /**
      * 作品信息缓存 - 不过期
      */
-    private final static CacheStore<JsonElement> illustInfoCache =
+    private final CacheStore<JsonElement> illustInfoCache =
             new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
                     "illustInfo", BotGlobal.getGlobal().getGson());
 
     /**
      * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期1 ± 0.25
      */
-    private final static CacheStore<JsonElement> illustPreLoadDataCache =
+    private final CacheStore<JsonElement> illustPreLoadDataCache =
             CacheStoreUtils.hashLocalHotDataStore(
                     new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
                             "illustPreLoadData", BotGlobal.getGlobal().getGson()),
@@ -59,27 +76,27 @@ public final class CacheStoreCentral {
     /**
      * 搜索内容缓存, 有效期 2 小时
      */
-    private final static CacheStore<JsonElement> searchBodyCache =
+    private final CacheStore<JsonElement> searchBodyCache =
             new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
                     "searchBody", BotGlobal.getGlobal().getGson());
 
     /**
      * 排行榜缓存, 不过期
      */
-    private final static CacheStore<List<JsonObject>> rankingCache =
+    private final CacheStore<List<JsonObject>> rankingCache =
             new JsonObjectRedisListCacheStore(BotGlobal.getGlobal().getRedisServer(),
                     "ranking", BotGlobal.getGlobal().getGson());
 
     /**
      * 作品页面下载链接缓存 - 不过期
      */
-    private final static CacheStore<List<String>> pagesCache =
+    private final CacheStore<List<String>> pagesCache =
             new StringListRedisCacheStore(BotGlobal.getGlobal().getRedisServer(), "imagePages");
 
     /**
      * 清空所有缓存
      */
-    public static void clearCache() {
+    public void clearCache() {
         imageCache.clear();
         illustInfoCache.clear();
         illustPreLoadDataCache.clear();
@@ -96,7 +113,7 @@ public final class CacheStoreCentral {
      * @param pageIndex 指定页面索引, 从1开始
      * @return 如果成功, 返回BotCode, 否则返回错误信息.
      */
-    public static String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) {
+    public String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
         if(pageIndex <= 0) {
             log.warn("指定的页数不能小于或等于0: {}", pageIndex);
@@ -118,7 +135,7 @@ public final class CacheStoreCentral {
 
         List<String> pagesList;
         try {
-            pagesList = CacheStoreCentral.getIllustPages(illustId, quality, false);
+            pagesList = getIllustPages(illustId, quality, false);
         } catch (IOException e) {
             log.error("获取下载链接列表时发生异常", e);
             return "发生网络异常，无法获取图片！";
@@ -190,7 +207,7 @@ public final class CacheStoreCentral {
      * @return 返回设定好参数的BotCode
      */
     @SuppressWarnings("SameParameterValue")
-    private static BotCode getImageToBotCode(File targetFile, boolean updateCache) {
+    private BotCode getImageToBotCode(File targetFile, boolean updateCache) {
         String fileName = Objects.requireNonNull(targetFile, "targetFile is null").getName();
         BotCode code = BotCode.parse(
                 CQCode.image(BotGlobal.getGlobal().getImageStoreDir().getName() + "/" + fileName));
@@ -208,7 +225,7 @@ public final class CacheStoreCentral {
      * @throws IOException 当Http请求发生异常时抛出
      * @throws NoSuchElementException 当作品未找到时抛出
      */
-    public static JsonObject getIllustInfo(int illustId, boolean flushCache)
+    public JsonObject getIllustInfo(int illustId, boolean flushCache)
             throws IOException, NoSuchElementException {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
         JsonObject illustInfoObj = null;
@@ -236,7 +253,7 @@ public final class CacheStoreCentral {
      * @return 成功返回JsonObject对象
      * @throws IOException 当Http请求处理发生异常时抛出
      */
-    public static JsonObject getIllustPreLoadData(int illustId, boolean flushCache) throws IOException {
+    public JsonObject getIllustPreLoadData(int illustId, boolean flushCache) throws IOException {
         String illustIdStr = buildSyncKey(Integer.toString(illustId));
         JsonObject result = null;
         if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
@@ -272,7 +289,7 @@ public final class CacheStoreCentral {
         return result;
     }
 
-    public static List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality, boolean flushCache)
+    public List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality, boolean flushCache)
             throws IOException {
         String pagesSign = buildSyncKey(Integer.toString(illustId), ".", quality.name());
         List<String> result = null;
@@ -295,7 +312,7 @@ public final class CacheStoreCentral {
         return result;
     }
 
-    private final static Random expireTimeFloatRandom = new Random();
+    private final Random expireTimeFloatRandom = new Random();
     /**
      * 获取排行榜
      * @param contentType 排行榜类型
@@ -307,7 +324,7 @@ public final class CacheStoreCentral {
      * @return 成功返回有值List, 失败且无异常返回空
      * @throws IOException 获取异常时抛出
      */
-    public static List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType,
+    public List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType,
                                                          PixivURL.RankingMode mode,
                                                          Date queryDate, int start, int range, boolean flushCache)
             throws IOException {
@@ -363,7 +380,7 @@ public final class CacheStoreCentral {
      * @return 返回完整搜索结果
      * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
      */
-    public static JsonObject getSearchBody(
+    public JsonObject getSearchBody(
             String content,
             String type,
             String area,
@@ -457,7 +474,7 @@ public final class CacheStoreCentral {
         return resultBody;
     }
 
-    protected static ImageChecksum getImageChecksum(int illustId, int pageIndex) {
+    protected ImageChecksum getImageChecksum(int illustId, int pageIndex) {
         String cacheKey = illustId + ":" + pageIndex;
         if(!imageChecksumCache.exists(cacheKey)) {
             return null;
@@ -466,7 +483,7 @@ public final class CacheStoreCentral {
         }
     }
 
-    protected static void setImageChecksum(ImageChecksum checksum) {
+    protected void setImageChecksum(ImageChecksum checksum) {
         String cacheKey = checksum.getIllustId() + ":" + checksum.getPage();
         imageChecksumCache.update(cacheKey, ImageChecksum.toJsonObject(checksum), 0);
     }
