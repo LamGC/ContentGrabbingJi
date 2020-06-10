@@ -1,4 +1,4 @@
-package net.lamgc.cgj.bot.framework.cli;
+package net.lamgc.cgj.bot.framework.cli.message;
 
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.bot.message.MessageSenderFactory;

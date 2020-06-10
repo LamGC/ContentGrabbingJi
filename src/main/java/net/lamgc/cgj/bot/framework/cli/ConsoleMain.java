@@ -2,6 +2,8 @@ package net.lamgc.cgj.bot.framework.cli;
 
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.framework.cli.message.ConsoleMessageEvent;
+import net.lamgc.cgj.bot.framework.cli.message.ConsoleMessageSenderFactory;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import org.jline.reader.LineReader;
 import org.jline.reader.LineReaderBuilder;
