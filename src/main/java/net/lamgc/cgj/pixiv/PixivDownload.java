@@ -31,6 +31,7 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
+@SuppressWarnings("ALL")
 public class PixivDownload {
 
     private final static Logger log = LoggerFactory.getLogger(PixivDownload.class);
@@ -115,10 +116,10 @@ public class PixivDownload {
                 }
             }
         } while(!document.select(".pager-container>.next").isEmpty());
-        log.debug("获取完成.");
+        log.trace("获取完成.");
         AtomicInteger count = new AtomicInteger(1);
         linkList.forEach(link -> {
-            log.debug("Next Link [{}]: {}", count.getAndIncrement(), link);
+            log.trace("Next Link [{}]: {}", count.getAndIncrement(), link);
             InputStream imageInputStream = null;
             int tryCount = 0;
             do {
@@ -133,9 +134,9 @@ public class PixivDownload {
             } while(imageInputStream == null);
 
             try(InputStream imageInput = new BufferedInputStream(imageInputStream, 256 * 1024)) {
-                log.debug("调用回调方法...");
+                log.trace("调用回调方法...");
                 fn.accept(link, imageInput);
-                log.debug("回调方法调用完成.");
+                log.trace("回调方法调用完成.");
             } catch (IOException e) {
                 log.error("图片获取失败", e);
             }
@@ -219,8 +220,8 @@ public class PixivDownload {
             int authorId = rankInfo.get("user_id").getAsInt();
             String authorName = rankInfo.get("user_name").getAsString();
             String title = rankInfo.get("title").getAsString();
-            log.debug("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
-            log.debug("正在获取PagesLink...");
+            log.trace("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+            log.trace("正在获取PagesLink...");
             List<String> linkList;
             try {
                 linkList = getIllustAllPageDownload(httpClient, this.cookieStore, illustId, quality);
@@ -235,14 +236,14 @@ public class PixivDownload {
             log.debug("PagesLink 获取完成, 总数: {}", linkList.size());
             for (int pageIndex = 0; pageIndex < linkList.size(); pageIndex++) {
                 String downloadLink = linkList.get(pageIndex);
-                log.debug("当前Page: {}/{}", pageIndex + 1, linkList.size());
+                log.trace("当前Page: {}/{}", pageIndex + 1, linkList.size());
                 try(InputStream imageInputStream = new BufferedInputStream(getImageAsInputStream(HttpClientBuilder.create().build(), downloadLink), 256 * 1024)) {
                     fn.download(rank, downloadLink, rankInfo.deepCopy(), imageInputStream);
                 } catch(IOException e) {
                     log.error("下载插画时发生异常", e);
                     return;
                 }
-                log.debug("完成.");
+                log.trace("完成.");
             }
         });
     }
@@ -265,7 +266,7 @@ public class PixivDownload {
             int authorId = rankInfo.get("user_id").getAsInt();
             String authorName = rankInfo.get("user_name").getAsString();
             String title = rankInfo.get("title").getAsString();
-            log.debug("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range, range, illustId, authorId, authorName, title);
+            log.trace("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range, range, illustId, authorId, authorName, title);
             results.add(rankInfo);
         }
         log.debug("JsonArray读取完成.");
@@ -320,10 +321,10 @@ public class PixivDownload {
         boolean canNext = true;
         for (int pageIndex = startPages; canNext && pageIndex <= endPages && count < range; pageIndex++) {
             HttpGet request = createHttpGetRequest(PixivURL.getRankingLink(contentType, mode, time, pageIndex, true));
-            log.debug("RequestUri: {}", request.getURI());
+            log.trace("RequestUri: {}", request.getURI());
             HttpResponse response = httpClient.execute(request);
             String responseBody = EntityUtils.toString(response.getEntity());
-            log.debug("ResponseBody: {}", responseBody);
+            log.trace("ResponseBody: {}", responseBody);
             if(response.getStatusLine().getStatusCode() != 200) {
                 throw new IOException("Http Response Error: '" + response.getStatusLine() + "', ResponseBody: '" + responseBody + '\'');
             }
@@ -399,7 +400,7 @@ public class PixivDownload {
 
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
-            log.debug("请求错误, 错误信息: {}", message);
+            log.warn("作品页面接口请求错误, 错误信息: {}", message);
             throw new IOException(message);
         }
 
@@ -473,9 +474,11 @@ public class PixivDownload {
         request.addHeader(HttpHeaderNames.REFERER.toString(), referer);
 
         HttpResponse response = httpClient.execute(request);
-        log.debug("response: {}", response);
-        log.debug("Content Length: {}KB", Float.parseFloat(response.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue()) / 1024F);
-        log.debug("{}", response.getFirstHeader(HttpHeaderNames.CONTENT_TYPE.toString()));
+        log.trace("response: {}", response);
+        log.trace("Content Length: {}KB",
+                Float.parseFloat(response.getFirstHeader(HttpHeaderNames.CONTENT_LENGTH.toString()).getValue()) / 1024F
+        );
+        log.trace(response.getFirstHeader(HttpHeaderNames.CONTENT_TYPE.toString()).toString());
         return response.getEntity().getContent();
     }
 
@@ -548,7 +551,7 @@ public class PixivDownload {
         HttpGet request = createHttpGetRequest(PixivURL.getPixivIllustInfoAPI(illustId));
         HttpResponse response = httpClient.execute(request);
         String responseStr = EntityUtils.toString(response.getEntity());
-        log.debug("Response Content: {}", responseStr);
+        log.trace("Response Content: {}", responseStr);
         JsonObject responseObj = new Gson().fromJson(responseStr, JsonObject.class);
 
         if(responseObj.get("error").getAsBoolean()) {

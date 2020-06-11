@@ -149,7 +149,7 @@ public class LocalHashCacheStore<T> implements CacheStore<T>, Cleanable {
     }
 
     @Override
-    public void clean() throws Exception {
+    public void clean() {
         Date currentDate = new Date();
         cache.forEach((key, value) -> {
             if(value.isExpire(currentDate)) {
@@ -160,8 +160,8 @@ public class LocalHashCacheStore<T> implements CacheStore<T>, Cleanable {
 
     public static class CacheObject<T> implements Comparable<CacheObject<T>> {
 
-        private AtomicReference<T> value;
-        private AtomicReference<Date> expire;
+        private final AtomicReference<T> value;
+        private final AtomicReference<Date> expire;
 
         public CacheObject(T value, Date expire) {
             this.value = new AtomicReference<>(value);

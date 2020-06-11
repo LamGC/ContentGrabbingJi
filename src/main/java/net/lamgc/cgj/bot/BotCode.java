@@ -64,7 +64,7 @@ public class BotCode {
 
     private String platformName;
     private String functionName;
-    private Hashtable<String, String> parameter = new Hashtable<>();
+    private final Hashtable<String, String> parameter = new Hashtable<>();
 
     /**
      * 构造一个机器功能码

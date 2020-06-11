@@ -164,10 +164,10 @@ public final class CacheStoreCentral {
                 ImageChecksum imageChecksum = getImageChecksum(illustId, pageIndex);
                 if(imageChecksum != null) {
                     try {
-                        log.debug("正在检查作品Id {} 第 {} 页图片文件 {} ...", illustId, pageIndex, imageFile.getName());
+                        log.trace("正在检查作品Id {} 第 {} 页图片文件 {} ...", illustId, pageIndex, imageFile.getName());
                         if (ImageChecksum.checkFile(imageChecksum, Files.readAllBytes(imageFile.toPath()))) {
                             imageCache.put(URLs.getResourceName(downloadLink), imageFile);
-                            log.debug("作品Id {} 第 {} 页缓存已补充.", illustId, pageIndex);
+                            log.trace("作品Id {} 第 {} 页缓存已补充.", illustId, pageIndex);
                             return getImageToBotCode(imageFile, false).toString();
                         } else {
                             log.warn("图片文件 {} 校验失败, 重新下载图片...", imageFile.getName());
@@ -194,7 +194,7 @@ public final class CacheStoreCentral {
                 return "(错误: 图片获取出错)";
             }
         } else {
-            log.debug("图片 {} 缓存命中.", fileName);
+            log.trace("图片 {} 缓存命中.", fileName);
         }
 
         return getImageToBotCode(imageCache.get(fileName), false).toString();
@@ -240,7 +240,7 @@ public final class CacheStoreCentral {
 
         if(Objects.isNull(illustInfoObj)) {
             illustInfoObj = illustInfoCache.getCache(illustIdStr).getAsJsonObject();
-            log.debug("作品Id {} IllustInfo缓存命中.", illustId);
+            log.trace("作品Id {} IllustInfo缓存命中.", illustId);
         }
         return illustInfoObj;
     }
@@ -259,7 +259,7 @@ public final class CacheStoreCentral {
         if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
             synchronized (illustIdStr) {
                 if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-                    log.debug("IllustId {} 缓存失效, 正在更新...", illustId);
+                    log.trace("IllustId {} 缓存失效, 正在更新...", illustId);
                     JsonObject preLoadDataObj = BotGlobal.getGlobal().getPixivDownload()
                             .getIllustPreLoadDataById(illustId)
                             .getAsJsonObject("illust")
@@ -277,14 +277,14 @@ public final class CacheStoreCentral {
 
                     result = preLoadDataObj;
                     illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, expire);
-                    log.debug("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
+                    log.trace("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
                 }
             }
         }
 
         if(Objects.isNull(result)) {
             result = illustPreLoadDataCache.getCache(illustIdStr).getAsJsonObject();
-            log.debug("作品Id {} PreLoadData缓存命中.", illustId);
+            log.trace("作品Id {} PreLoadData缓存命中.", illustId);
         }
         return result;
     }
@@ -307,7 +307,7 @@ public final class CacheStoreCentral {
 
         if(Objects.isNull(result)) {
             result = pagesCache.getCache(pagesSign);
-            log.debug("作品Id {} Pages缓存命中.", illustId);
+            log.trace("作品Id {} Pages缓存命中.", illustId);
         }
         return result;
     }
@@ -346,7 +346,7 @@ public final class CacheStoreCentral {
         if(!rankingCache.exists(requestSign) || flushCache) {
             synchronized(requestSign) {
                 if(!rankingCache.exists(requestSign) || flushCache) {
-                    log.debug("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
+                    log.trace("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
                     List<JsonObject> rankingResult = BotGlobal.getGlobal().getPixivDownload()
                             .getRanking(contentType, mode, queryDate, 1, 500);
                     long expireTime = 0;
@@ -356,16 +356,15 @@ public final class CacheStoreCentral {
                     }
                     result = new ArrayList<>(rankingResult).subList(start - 1, start + range - 1);
                     rankingCache.update(requestSign, rankingResult, expireTime);
-                    log.debug("Ranking缓存更新完成.(RequestSign: {})", requestSign);
+                    log.trace("Ranking缓存更新完成.(RequestSign: {})", requestSign);
                 }
             }
         }
 
         if (Objects.isNull(result)) {
             result = rankingCache.getCache(requestSign, start - 1, range);
-            log.debug("RequestSign [{}] 缓存命中.", requestSign);
+            log.trace("RequestSign [{}] 缓存命中.", requestSign);
         }
-        log.debug("Result-Length: {}", result.size());
         return PixivDownload.getRanking(result, start - 1, range);
     }
 
@@ -414,14 +413,14 @@ public final class CacheStoreCentral {
             for (String keyword : includeKeywords.split(";")) {
                 searchBuilder.removeExcludeKeyword(keyword.trim());
                 searchBuilder.addIncludeKeyword(keyword.trim());
-                log.debug("已添加关键字: {}", keyword);
+                log.trace("已添加关键字: {}", keyword);
             }
         }
         if (!Strings.isNullOrEmpty(excludeKeywords)) {
             for (String keyword : excludeKeywords.split(";")) {
                 searchBuilder.removeIncludeKeyword(keyword.trim());
                 searchBuilder.addExcludeKeyword(keyword.trim());
-                log.debug("已添加排除关键字: {}", keyword);
+                log.trace("已添加排除关键字: {}", keyword);
             }
         }
 
@@ -433,7 +432,7 @@ public final class CacheStoreCentral {
         if(!searchBodyCache.exists(requestUrl)) {
             synchronized (requestUrl) {
                 if (!searchBodyCache.exists(requestUrl)) {
-                    log.debug("searchBody缓存失效, 正在更新...");
+                    log.trace("searchBody缓存失效, 正在更新...");
                     JsonObject jsonObject;
                     HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().
                             createHttpGetRequest(requestUrl);
@@ -441,7 +440,7 @@ public final class CacheStoreCentral {
                             getHttpClient().execute(httpGetRequest);
 
                     String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    log.debug("ResponseBody: {}", responseBody);
+                    log.trace("ResponseBody: {}", responseBody);
                     jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
 
                     if (jsonObject.get("error").getAsBoolean()) {
@@ -459,13 +458,13 @@ public final class CacheStoreCentral {
                     }
                     resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
                     searchBodyCache.update(requestUrl, jsonObject, expire);
-                    log.debug("searchBody缓存已更新(有效时间: {})", expire);
+                    log.trace("searchBody缓存已更新(有效时间: {})", expire);
                 } else {
-                    log.debug("搜索缓存命中.");
+                    log.trace("搜索缓存命中.");
                 }
             }
         } else {
-            log.debug("搜索缓存命中.");
+            log.trace("搜索缓存命中.");
         }
 
         if(Objects.isNull(resultBody)) {

@@ -46,7 +46,7 @@ public final class PixivUgoiraBuilder {
         log.debug("Request Url: {}", request.getURI());
         HttpResponse response = httpClient.execute(request);
         String bodyStr = EntityUtils.toString(response.getEntity());
-        log.debug("JsonBodyStr: {}", bodyStr);
+        log.trace("JsonBodyStr: {}", bodyStr);
         JsonObject resultObject = new Gson().fromJson(bodyStr, JsonObject.class);
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
@@ -173,10 +173,10 @@ public final class PixivUgoiraBuilder {
     private void getUgoiraImageSize() throws IOException {
         log.debug("正在从Pixiv获取动图尺寸...");
         HttpGet request = new HttpGet(PixivURL.getPixivIllustInfoAPI(illustId));
-        log.debug("Request Url: {}", request.getURI());
+        log.trace("Request Url: {}", request.getURI());
         HttpResponse response = httpClient.execute(request);
         String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-        log.debug("ResponseBody: {}", responseBody);
+        log.trace("ResponseBody: {}", responseBody);
         JsonObject resultObject = new Gson().fromJson(responseBody, JsonObject.class);
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();

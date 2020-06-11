@@ -105,8 +105,6 @@ public class BotEventHandler implements EventHandler {
         runnerConfig.addStringParameterParser(new DateParser(new SimpleDateFormat("yyyy-MM-dd")));
         runnerConfig.addStringParameterParser(new PagesQualityParser());
 
-        log.debug("DateParser添加情况: {}", runnerConfig.hasStringParameterParser(Date.class));
-
         processRunner = new ArgumentsRunner(BotCommandProcess.class, runnerConfig);
         adminRunner = new ArgumentsRunner(BotAdminCommandProcess.class, runnerConfig);
 

@@ -151,7 +151,7 @@ public class MiraiMessageSender implements MessageSender {
                 synchronized (imageName) {
                     if(!imageIdCache.exists(imageName) ||
                             Strings.nullToEmpty(code.getParameter("updateCache")) .equalsIgnoreCase("true")) {
-                        log.debug("imageName [{}] 缓存失效或强制更新, 正在更新缓存...", imageName);
+                        log.trace("imageName [{}] 缓存失效或强制更新, 正在更新缓存...", imageName);
                         image = uploadImage0(new File(absolutePath));
                         String cacheExpireAt;
                         long expireTime = 864000000; // 10d
@@ -163,13 +163,13 @@ public class MiraiMessageSender implements MessageSender {
                             }
                         }
                         imageIdCache.update(imageName, image.getImageId(), expireTime);
-                        log.debug("imageName [{}] 缓存更新完成.(有效时间: {})", imageName, expireTime);
+                        log.trace("imageName [{}] 缓存更新完成.(有效时间: {})", imageName, expireTime);
                     } else {
-                        log.debug("ImageName: [{}] 缓存命中.", imageName);
+                        log.trace("ImageName: [{}] 缓存命中.", imageName);
                     }
                 }
             } else {
-                log.debug("ImageName: [{}] 缓存命中.", imageName);
+                log.trace("ImageName: [{}] 缓存命中.", imageName);
             }
 
             if(image == null) {

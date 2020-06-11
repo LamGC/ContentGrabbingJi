@@ -66,7 +66,7 @@ public class ImageCacheHandler implements EventHandler {
                 throw requestException;
             }
 
-            log.debug("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
+            log.trace("正在下载...(Content-Length: {}KB)", response.getEntity().getContentLength() / 1024);
             ByteArrayOutputStream bufferOutputStream = new ByteArrayOutputStream();
             try(FileOutputStream fileOutputStream = new FileOutputStream(storeFile)) {
                 Streams.copy(response.getEntity().getContent(), bufferOutputStream, false);

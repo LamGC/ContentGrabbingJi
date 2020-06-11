@@ -34,6 +34,9 @@
         </Console>
 
         <RollingFile name="rollingFile" fileName="${logsDir}/latest.log" filePattern="${logsDir}/running.%-d{yyyy-MM-dd_HH-mm-ss}.log.gz">
+            <Filters>
+                <ThresholdFilter level="DEBUG" onMatch="ACCEPT" onMismatch="DENY"/>
+            </Filters>
             <PatternLayout charset="${charset}">
                 <MarkerPatternSelector defaultPattern="${standard_pattern}">
                     <PatternMatch key="mirai" pattern="${mirai_pattern}" />
