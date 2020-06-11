@@ -1,10 +1,10 @@
-FROM openjdk:8u252-jre
+FROM openjdk:14
 
+COPY --from=hengyunabc/arthas:latest /opt/arthas /opt/arthas
 ENV jarFileName=ContentGrabbingJi-exec.jar
 ENV CGJ_REDIS_URI="127.0.0.1:6379"
 ENV CGJ_PROXY=""
 RUN mkdir /data/
+CMD [java, "-Dcgj.logsPath=/data/logs", "-jar", "/CGJ.jar", "botMode", "-botDataDir=/data"]
 
 COPY ${jarFileName} /CGJ.jar
-
-CMD ["java", "-Dcgj.logsPath=/data/logs", "-jar", "/CGJ.jar", "botMode", "-botDataDir=/data"]
