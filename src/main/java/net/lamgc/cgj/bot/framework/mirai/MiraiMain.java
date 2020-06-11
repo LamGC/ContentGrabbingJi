@@ -87,6 +87,7 @@ public class MiraiMain implements Closeable {
      * @param message 消息事件对象
      */
     private void executeMessageEvent(MessageEvent message) {
+        log.debug("Mirai Message: {}", message);
         if(message instanceof GroupMessageEvent) {
             GroupMessageEvent GroupMessageEvent = (GroupMessageEvent) message;
             if(BotEventHandler.isMute(GroupMessageEvent.getGroup().getId(), true) == null) {
