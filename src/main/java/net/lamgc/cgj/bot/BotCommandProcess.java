@@ -23,6 +23,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.regex.Pattern;
 
 @SuppressWarnings({"SameParameterValue"})
 public class BotCommandProcess {
@@ -523,6 +524,10 @@ public class BotCommandProcess {
     }
 
     /**
+     * Tag过滤表达式
+     */
+    private final static Pattern tagPattern = Pattern.compile(".*R-*18.*");
+    /**
      * 检查指定作品是否为r18
      * @param illustId 作品Id
      * @param settingProp 配置项
@@ -538,7 +543,7 @@ public class BotCommandProcess {
         boolean rawValue = illustInfo.get("xRestrict").getAsInt() != 0;
         if(!rawValue) {
             for(JsonElement tag : tags) {
-                boolean current = tag.getAsString().matches("R-*18") || tag.getAsString().contains("R18");
+                boolean current = tagPattern.matcher(tag.getAsString()).matches();
                 if (current) {
                     rawValue = true;
                     break;

@@ -38,7 +38,7 @@ public class ImageCacheHandler implements EventHandler {
         }
 
         try {
-            log.info("图片 {} Event正在进行...({})", event.getStoreFile().getName(), Integer.toHexString(event.hashCode()));
+            log.debug("图片 {} Event正在进行...({})", event.getStoreFile().getName(), Integer.toHexString(event.hashCode()));
             File storeFile = event.getStoreFile();
             log.debug("正在缓存图片 {} (Path: {})", storeFile.getName(), storeFile.getAbsolutePath());
             try {
@@ -87,7 +87,7 @@ public class ImageCacheHandler implements EventHandler {
             }
             event.getImageCache().put(URLs.getResourceName(event.getDownloadLink()), storeFile);
         } finally {
-            log.info("图片 {} Event结束({})", event.getStoreFile().getName(), Integer.toHexString(event.hashCode()));
+            log.debug("图片 {} Event结束({})", event.getStoreFile().getName(), Integer.toHexString(event.hashCode()));
             cacheQueue.remove(event);
         }
     }
