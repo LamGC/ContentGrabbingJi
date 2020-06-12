@@ -10,11 +10,11 @@ import java.util.Comparator;
 /**
  * 收藏数比较器
  */
-public class PreLoadDataComparator implements Comparator<JsonElement> {
+public class PreLoadDataAttributeComparator implements Comparator<JsonElement> {
 
     private final PreLoadDataAttribute attribute;
 
-    public PreLoadDataComparator(PreLoadDataAttribute attribute) {
+    public PreLoadDataAttributeComparator(PreLoadDataAttribute attribute) {
         this.attribute = attribute;
     }
 

@@ -10,7 +10,7 @@ import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 import net.lamgc.cgj.bot.cache.JsonRedisCacheStore;
 import net.lamgc.cgj.bot.event.BufferMessageEvent;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttribute;
-import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
+import net.lamgc.cgj.bot.sort.PreLoadDataAttributeComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
@@ -338,7 +338,7 @@ public class BotCommandProcess {
                     .getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data");
             ArrayList<JsonElement> illustsList = new ArrayList<>();
             illustsArray.forEach(illustsList::add);
-            illustsList.sort(new PreLoadDataComparator(PreLoadDataAttribute.LIKE));
+            illustsList.sort(new PreLoadDataAttributeComparator(PreLoadDataAttribute.BOOKMARK));
 
             log.debug("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
             int count = 1;
