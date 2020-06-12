@@ -77,7 +77,13 @@ public class RandomIntervalSendTimer extends TimerTask {
      * @param startNow 现在开始
      * @param loop 是否循环
      */
-    private RandomIntervalSendTimer(long timerId, AutoSender sender, long time, int floatTime, boolean startNow, boolean loop) {
+    private RandomIntervalSendTimer(
+            long timerId,
+            AutoSender sender,
+            long time,
+            int floatTime,
+            boolean startNow,
+            boolean loop) {
         this.timerId = timerId;
         this.sender = sender;
         this.time = time;
@@ -122,7 +128,9 @@ public class RandomIntervalSendTimer extends TimerTask {
         try {
             sender.send();
         } catch (Exception e) {
-            log.error("定时器 {} 执行时发生异常:\n{}", Integer.toHexString(this.hashCode()), Throwables.getStackTraceAsString(e));
+            log.error("定时器 {} 执行时发生异常:\n{}",
+                    Integer.toHexString(this.hashCode()),
+                    Throwables.getStackTraceAsString(e));
         }
         if (this.loop.get()) {
             start();

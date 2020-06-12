@@ -499,7 +499,6 @@ public class PixivDownload {
         } else {
             return false;
         }
-
     }
 
     /**
