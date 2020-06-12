@@ -425,7 +425,7 @@ public final class CacheStoreCentral {
             }
         }
 
-        log.info("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
+        log.debug("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
 
         String requestUrl = searchBuilder.buildURL().intern();
         log.debug("RequestUrl: {}", requestUrl);

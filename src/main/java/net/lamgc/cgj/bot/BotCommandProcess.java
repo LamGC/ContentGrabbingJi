@@ -312,7 +312,7 @@ public class BotCommandProcess {
             @Argument(name = "option", force = false) String contentOption,
             @Argument(name = "p", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
-        log.info("正在执行搜索...");
+        log.debug("正在执行搜索...");
         JsonObject resultBody = CacheStoreCentral.getCentral()
                 .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
 
@@ -338,7 +338,7 @@ public class BotCommandProcess {
             illustsArray.forEach(illustsList::add);
             illustsList.sort(new PreLoadDataComparator(PreLoadDataComparator.Attribute.LIKE));
 
-            log.info("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
+            log.debug("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
             int count = 1;
             for (JsonElement jsonElement : illustsList) {
                 if (count > limit) {
