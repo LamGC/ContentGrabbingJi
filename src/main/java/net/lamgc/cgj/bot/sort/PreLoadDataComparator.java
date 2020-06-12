@@ -12,9 +12,9 @@ import java.util.Comparator;
  */
 public class PreLoadDataComparator implements Comparator<JsonElement> {
 
-    private final Attribute attribute;
+    private final PreLoadDataAttribute attribute;
 
-    public PreLoadDataComparator(Attribute attribute) {
+    public PreLoadDataComparator(PreLoadDataAttribute attribute) {
         this.attribute = attribute;
     }
 
@@ -51,45 +51,5 @@ public class PreLoadDataComparator implements Comparator<JsonElement> {
             return 0;
         }
     }
-
-    public enum Attribute {
-        /**
-         * 按点赞数排序
-         */
-        LIKE("likeCount"),
-
-        /**
-         * 按页面数排序
-         */
-        PAGE("pageCount"),
-
-        /**
-         * 按收藏数排序
-         */
-        BOOKMARK("bookmarkCount"),
-
-        /**
-         * 按评论数排序
-         */
-        COMMENT("commentCount"),
-
-        /**
-         * 不明
-         */
-        RESPONSE("responseCount"),
-
-        /**
-         * 按查看次数排序
-         */
-        VIEW("viewCount"),
-        ;
-
-        public final String attrName;
-
-        Attribute(String attrName) {
-            this.attrName = attrName;
-        }
-    }
-
 
 }

@@ -9,6 +9,7 @@ import net.lamgc.cgj.bot.cache.CacheStore;
 import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 import net.lamgc.cgj.bot.cache.JsonRedisCacheStore;
 import net.lamgc.cgj.bot.event.BufferMessageEvent;
+import net.lamgc.cgj.bot.sort.PreLoadDataAttribute;
 import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
@@ -109,11 +110,11 @@ public class BotCommandProcess {
                     "\n作品标题：" + illustPreLoadData.get("illustTitle").getAsString() +
                     "\n作者(作者Id)：" + illustPreLoadData.get("userName").getAsString() +
                     "(" + illustPreLoadData.get("userId").getAsInt() + ")" +
-                    "\n点赞数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt() +
-                    "\n收藏数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt() +
-                    "\n围观数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt() +
-                    "\n评论数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt() +
-                    "\n页数：" + illustPreLoadData.get(PreLoadDataComparator.Attribute.PAGE.attrName).getAsInt() + "页" +
+                    "\n点赞数：" + illustPreLoadData.get(PreLoadDataAttribute.LIKE.attrName).getAsInt() +
+                    "\n收藏数：" + illustPreLoadData.get(PreLoadDataAttribute.BOOKMARK.attrName).getAsInt() +
+                    "\n围观数：" + illustPreLoadData.get(PreLoadDataAttribute.VIEW.attrName).getAsInt() +
+                    "\n评论数：" + illustPreLoadData.get(PreLoadDataAttribute.COMMENT.attrName).getAsInt() +
+                    "\n页数：" + illustPreLoadData.get(PreLoadDataAttribute.PAGE.attrName).getAsInt() + "页" +
                     "\n作品链接：" + artworksLink(fromGroup, illustId) + "\n" +
                     "---------------- 作品图片 ----------------\n" +
                     CacheStoreCentral.getCentral().getImageById(fromGroup, illustId, PageQuality.REGULAR, 1) + "\n" +
@@ -337,7 +338,7 @@ public class BotCommandProcess {
                     .getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data");
             ArrayList<JsonElement> illustsList = new ArrayList<>();
             illustsArray.forEach(illustsList::add);
-            illustsList.sort(new PreLoadDataComparator(PreLoadDataComparator.Attribute.LIKE));
+            illustsList.sort(new PreLoadDataComparator(PreLoadDataAttribute.LIKE));
 
             log.debug("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
             int count = 1;
@@ -394,13 +395,13 @@ public class BotCommandProcess {
                         .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString())
                         .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt()).append("页")
                         .append("\n\t点赞数：")
-                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.LIKE.attrName).getAsInt())
+                        .append(illustPreLoadData.get(PreLoadDataAttribute.LIKE.attrName).getAsInt())
                         .append("\n\t收藏数：")
-                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.BOOKMARK.attrName).getAsInt())
+                        .append(illustPreLoadData.get(PreLoadDataAttribute.BOOKMARK.attrName).getAsInt())
                         .append("\n\t围观数：")
-                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.VIEW.attrName).getAsInt())
+                        .append(illustPreLoadData.get(PreLoadDataAttribute.VIEW.attrName).getAsInt())
                         .append("\n\t评论数：")
-                        .append(illustPreLoadData.get(PreLoadDataComparator.Attribute.COMMENT.attrName).getAsInt())
+                        .append(illustPreLoadData.get(PreLoadDataAttribute.COMMENT.attrName).getAsInt())
                         .append("\n").append(imageMsg).append("\n");
                 count++;
                 totalCount++;
