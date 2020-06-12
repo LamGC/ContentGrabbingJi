@@ -31,7 +31,7 @@ public class ConsoleMain {
         long groupId = Long.parseLong(lineReader.readLine("会话群组号:"));
         boolean isGroup = false;
         do {
-            String input = lineReader.readLine("App " + qqId + (isGroup ? "@" + groupId : "$private") + " >");
+            String input = lineReader.readLine("App " + qqId + (isGroup ? "@" + groupId : "#private") + " >");
             if(input.equalsIgnoreCase("#exit")) {
                 System.out.println("退出应用...");
                 break;

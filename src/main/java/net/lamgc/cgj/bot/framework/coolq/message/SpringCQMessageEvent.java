@@ -26,13 +26,13 @@ public class SpringCQMessageEvent extends MessageEvent {
         this.cq = Objects.requireNonNull(cq);
         MessageSource source;
         if(messageEvent instanceof CQGroupMessageEvent) {
-            source = MessageSource.Group;
+            source = MessageSource.GROUP;
         } else if (messageEvent instanceof CQDiscussMessageEvent) {
-            source = MessageSource.Discuss;
+            source = MessageSource.DISCUSS;
         } else {
-            source = MessageSource.Private;
+            source = MessageSource.PRIVATE;
         }
-        messageSender = new SpringCQMessageSender(cq, source, source == MessageSource.Private ? getFromQQ() : getFromGroup());
+        messageSender = new SpringCQMessageSender(cq, source, source == MessageSource.PRIVATE ? getFromQQ() : getFromGroup());
     }
 
     @Override

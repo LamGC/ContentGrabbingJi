@@ -28,9 +28,9 @@ public class MiraiMessageEvent extends net.lamgc.cgj.bot.event.MessageEvent {
                 message.getSender().getId(), getMessageBodyWithoutSource(message.getMessage().toString()));
         this.messageObject = Objects.requireNonNull(message);
         if(message instanceof GroupMessageEvent) {
-            messageSender = new MiraiMessageSender(((GroupMessageEvent) message).getGroup(), MessageSource.Group);
+            messageSender = new MiraiMessageSender(((GroupMessageEvent) message).getGroup(), MessageSource.GROUP);
         } else {
-            messageSender = new MiraiMessageSender(message.getSender(), MessageSource.Private);
+            messageSender = new MiraiMessageSender(message.getSender(), MessageSource.PRIVATE);
         }
     }
 
@@ -45,9 +45,9 @@ public class MiraiMessageEvent extends net.lamgc.cgj.bot.event.MessageEvent {
         super(groupId, qqId, getMessageBodyWithoutSource(message.toString()));
         this.messageObject = Objects.requireNonNull(messageObject, "messageObject is null");
         if(groupId != 0) {
-            this.messageSender = new MiraiMessageSender(((GroupMessageEvent) messageObject).getGroup(), MessageSource.Group);
+            this.messageSender = new MiraiMessageSender(((GroupMessageEvent) messageObject).getGroup(), MessageSource.GROUP);
         } else {
-            this.messageSender = new MiraiMessageSender(messageObject.getSender(), MessageSource.Group);
+            this.messageSender = new MiraiMessageSender(messageObject.getSender(), MessageSource.GROUP);
         }
     }
 

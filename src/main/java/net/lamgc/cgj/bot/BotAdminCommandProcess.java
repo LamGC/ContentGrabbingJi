@@ -270,7 +270,7 @@ public class BotAdminCommandProcess {
         }
 
         AutoSender sender = new RandomRankingArtworksSender(
-                MessageSenderBuilder.getMessageSender(MessageSource.Group, id),
+                MessageSenderBuilder.getMessageSender(MessageSource.GROUP, id),
                 id,
                 rankingStart,
                 rankingEnd,

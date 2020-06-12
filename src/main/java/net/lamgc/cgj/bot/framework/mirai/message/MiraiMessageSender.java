@@ -40,7 +40,7 @@ public class MiraiMessageSender implements MessageSender {
      * @throws NoSuchElementException 当在机器人好友列表或群列表里没有这个好友或群的时候抛出
      */
     public MiraiMessageSender(Bot bot, MessageSource source, long id) {
-        this(source == MessageSource.Private ? bot.getFriend(id) : bot.getGroup(id), source);
+        this(source == MessageSource.PRIVATE ? bot.getFriend(id) : bot.getGroup(id), source);
     }
 
     /**

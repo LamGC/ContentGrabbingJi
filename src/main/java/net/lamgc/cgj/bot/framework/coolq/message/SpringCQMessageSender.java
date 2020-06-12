@@ -19,11 +19,11 @@ public class SpringCQMessageSender implements MessageSender {
     @Override
     public int sendMessage(String message) {
         switch (source) {
-            case Private:
+            case PRIVATE:
                 return coolQ.sendPrivateMsg(target, message, false).getData().getMessageId();
-            case Group:
+            case GROUP:
                 return coolQ.sendGroupMsg(target, message, false).getData().getMessageId();
-            case Discuss:
+            case DISCUSS:
                 return coolQ.sendDiscussMsg(target, message, false).getData().getMessageId();
             default:
                 return -1;

@@ -7,17 +7,17 @@ public enum MessageSource {
     /**
      * 私聊消息
      */
-    Private,
+    PRIVATE,
     /**
      * 群组消息
      */
-    Group,
+    GROUP,
     /**
      * 讨论组消息
      */
-    Discuss,
+    DISCUSS,
     /**
      * 未知来源
      */
-    Unknown
+    UNKNOWN
 }
