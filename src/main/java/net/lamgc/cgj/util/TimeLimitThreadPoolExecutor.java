@@ -107,6 +107,7 @@ public class TimeLimitThreadPoolExecutor extends ThreadPoolExecutor {
             while (true) {
                 try {
                     long interval = this.timeoutCheckInterval.get();
+                    //noinspection BusyWait 用于等待超时
                     Thread.sleep(interval);
 
                     // 检查是否存在超时的任务

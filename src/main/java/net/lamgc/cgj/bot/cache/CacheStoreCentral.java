@@ -113,7 +113,7 @@ public final class CacheStoreCentral {
      * @param pageIndex 指定页面索引, 从1开始
      * @return 如果成功, 返回BotCode, 否则返回错误信息.
      */
-    public String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) {
+    public String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) throws InterruptedException {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
         if(pageIndex <= 0) {
             log.warn("指定的页数不能小于或等于0: {}", pageIndex);
@@ -188,7 +188,7 @@ public final class CacheStoreCentral {
                 }
             } catch (InterruptedException e) {
                 log.warn("图片缓存被中断", e);
-                return "(错误：图片获取超时)";
+                throw e;
             } catch (Throwable e) {
                 log.error("图片 {} 获取失败:\n{}", illustId + "p" + pageIndex, Throwables.getStackTraceAsString(e));
                 return "(错误: 图片获取出错)";

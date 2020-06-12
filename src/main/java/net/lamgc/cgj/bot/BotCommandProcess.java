@@ -91,7 +91,8 @@ public class BotCommandProcess {
      */
     @Command(commandName = "info")
     public static String artworkInfo(@Argument(name = "$fromGroup") long fromGroup,
-                                     @Argument(name = "id") int illustId) {
+                                     @Argument(name = "id") int illustId)
+    throws InterruptedException {
         if(illustId <= 0) {
             return "这个作品Id是错误的！";
         }
@@ -142,7 +143,7 @@ public class BotCommandProcess {
             @Argument(force = false, name = "force") boolean force,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
             @Argument(force = false, name = "type", defaultValue = "ALL") String contentType
-    ) {
+    ) throws InterruptedException {
         Date queryDate = queryTime;
         if (queryDate == null) {
             queryDate = new Date();
@@ -311,7 +312,7 @@ public class BotCommandProcess {
             @Argument(name = "ex", force = false) String excludeKeywords,
             @Argument(name = "option", force = false) String contentOption,
             @Argument(name = "p", force = false, defaultValue = "1") int pagesIndex
-    ) throws IOException {
+    ) throws IOException, InterruptedException {
         log.debug("正在执行搜索...");
         JsonObject resultBody = CacheStoreCentral.getCentral()
                 .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
@@ -494,7 +495,7 @@ public class BotCommandProcess {
             @Argument(name = "id") int illustId,
             @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
             @Argument(name = "p", force = false, defaultValue = "1") int pageIndex
-    ) {
+    ) throws InterruptedException {
         return CacheStoreCentral.getCentral().getImageById(fromGroup, illustId, quality, pageIndex);
     }
 

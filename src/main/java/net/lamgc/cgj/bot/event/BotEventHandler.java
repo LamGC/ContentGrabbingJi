@@ -46,9 +46,9 @@ public class BotEventHandler implements EventHandler {
      * 消息事件执行器
      */
     private final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
-            0,
+            180000, // 3min
             Math.max(Runtime.getRuntime().availableProcessors(), 4),
-            Math.max(Math.max(Runtime.getRuntime().availableProcessors() * 2, 4), 32),
+            Math.min(Runtime.getRuntime().availableProcessors() * 2, 32),
             30L,
     TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1536),
@@ -219,8 +219,8 @@ public class BotEventHandler implements EventHandler {
         } catch(DeveloperRunnerException e) {
             Throwable cause = e.getCause();
             if (cause instanceof InterruptedException) {
-                log.error("命令执行超时, 终止执行.");
-                result = "色图姬发现这个命令的处理时间太久了！所以打断了这个命令。";
+                log.error("命令执行超时, 终止执行.", cause);
+                result = "色图姬查阅图库太久，被赶出来了！";
             } else if(cause instanceof NoSuchElementException && cause.getMessage().startsWith("No work found: ")) {
                 String message = cause.getMessage();
                 log.error("指定作品不存在.(Id: {})", message.substring(message.lastIndexOf(": ") + 2));
