@@ -403,7 +403,8 @@ public final class CacheStoreCentral {
         }
         if (contentOption != null) {
             try {
-                searchBuilder.setSearchContentOption(PixivSearchBuilder.SearchContentOption.valueOf(contentOption));
+                searchBuilder.setSearchContentOption(
+                        PixivSearchBuilder.SearchContentOption.valueOf(contentOption.trim().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchContentOption: {}", contentOption);
             }

@@ -141,7 +141,7 @@ public class BotCommandProcess {
             @Argument(force = false, name = "date") Date queryTime,
             @Argument(force = false, name = "force") boolean force,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
-            @Argument(force = false, name = "type", defaultValue = "ILLUST") String contentType
+            @Argument(force = false, name = "type", defaultValue = "ALL") String contentType
     ) {
         Date queryDate = queryTime;
         if (queryDate == null) {
@@ -366,8 +366,17 @@ public class BotCommandProcess {
                         PixivURL.getPixivRefererLink(illustId)
                 );
 
-                String imageMsg = CacheStoreCentral.getCentral()
-                        .getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
+                String imageMsg;
+                try {
+                    imageMsg = CacheStoreCentral.getCentral()
+                            .getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
+                } catch (NoSuchElementException e) {
+                    if(e.getMessage().startsWith("No work found: ")) {
+                        log.warn("作品 {} 不存在, 跳过该作品...", illustId);
+                        continue;
+                    }
+                    throw e;
+                }
                 if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
                     log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
                     continue;
