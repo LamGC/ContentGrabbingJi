@@ -9,7 +9,7 @@ import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.SettingProperties;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.pixiv.PixivDownload;
-import net.lamgc.cgj.pixiv.PixivSearchBuilder;
+import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.encrypt.MessageDigestUtils;
@@ -386,17 +386,17 @@ public final class CacheStoreCentral {
             String includeKeywords,
             String excludeKeywords,
             String contentOption) throws IOException {
-        PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
+        PixivSearchLinkBuilder searchBuilder = new PixivSearchLinkBuilder(Strings.isNullOrEmpty(content) ? "" : content);
         if (type != null) {
             try {
-                searchBuilder.setSearchType(PixivSearchBuilder.SearchType.valueOf(type.toUpperCase()));
+                searchBuilder.setSearchType(PixivSearchLinkBuilder.SearchType.valueOf(type.toUpperCase()));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchType: {}", type);
             }
         }
         if (area != null) {
             try {
-                searchBuilder.setSearchArea(PixivSearchBuilder.SearchArea.valueOf(area));
+                searchBuilder.setSearchArea(PixivSearchLinkBuilder.SearchArea.valueOf(area));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchArea: {}", area);
             }
@@ -404,7 +404,7 @@ public final class CacheStoreCentral {
         if (contentOption != null) {
             try {
                 searchBuilder.setSearchContentOption(
-                        PixivSearchBuilder.SearchContentOption.valueOf(contentOption.trim().toUpperCase()));
+                        PixivSearchLinkBuilder.SearchContentOption.valueOf(contentOption.trim().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchContentOption: {}", contentOption);
             }

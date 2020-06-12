@@ -13,7 +13,7 @@ import net.lamgc.cgj.bot.framework.cli.ConsoleMain;
 import net.lamgc.cgj.bot.framework.coolq.CQConfig;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
-import net.lamgc.cgj.pixiv.PixivSearchBuilder;
+import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.plps.PixivLoginProxyServer;
 import net.lamgc.utils.base.runner.Argument;
@@ -254,24 +254,24 @@ public class Main {
             @Argument(name = "excludeKeywords", force = false) String excludeKeywords,
             @Argument(name = "contentOption", force = false) String contentOption
     ) throws IOException {
-        PixivSearchBuilder searchBuilder = new PixivSearchBuilder(Strings.isNullOrEmpty(content) ? "" : content);
+        PixivSearchLinkBuilder searchBuilder = new PixivSearchLinkBuilder(Strings.isNullOrEmpty(content) ? "" : content);
         if (type != null) {
             try {
-                searchBuilder.setSearchType(PixivSearchBuilder.SearchType.valueOf(type.toUpperCase()));
+                searchBuilder.setSearchType(PixivSearchLinkBuilder.SearchType.valueOf(type.toUpperCase()));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchType: {}", type);
             }
         }
         if(area != null) {
             try {
-                searchBuilder.setSearchArea(PixivSearchBuilder.SearchArea.valueOf(area));
+                searchBuilder.setSearchArea(PixivSearchLinkBuilder.SearchArea.valueOf(area));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchArea: {}", area);
             }
         }
         if(contentOption != null) {
             try {
-                searchBuilder.setSearchContentOption(PixivSearchBuilder.SearchContentOption.valueOf(contentOption));
+                searchBuilder.setSearchContentOption(PixivSearchLinkBuilder.SearchContentOption.valueOf(contentOption));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchContentOption: {}", contentOption);
             }
@@ -310,7 +310,7 @@ public class Main {
 
         JsonObject resultBody = jsonObject.getAsJsonObject("body");
 
-        for(PixivSearchBuilder.SearchArea searchArea : PixivSearchBuilder.SearchArea.values()) {
+        for(PixivSearchLinkBuilder.SearchArea searchArea : PixivSearchLinkBuilder.SearchArea.values()) {
             if(!resultBody.has(searchArea.jsonKey) || resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
                 //log.info("返回数据不包含 {}", searchArea.jsonKey);
                 continue;

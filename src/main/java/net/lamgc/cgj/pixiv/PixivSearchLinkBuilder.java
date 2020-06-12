@@ -16,7 +16,7 @@ import java.util.Objects;
  * @see PixivURL#PIXIV_SEARCH_CONTENT_URL
  */
 @SuppressWarnings("ALL")
-public class PixivSearchBuilder {
+public class PixivSearchLinkBuilder {
 
     private final String content;
 
@@ -42,7 +42,7 @@ public class PixivSearchBuilder {
     private Date startDate = null;
     private Date endDate = null;
 
-    public PixivSearchBuilder(String searchContent) {
+    public PixivSearchLinkBuilder(String searchContent) {
         this.content = Objects.requireNonNull(searchContent);
     }
 
@@ -99,7 +99,7 @@ public class PixivSearchBuilder {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        PixivSearchBuilder that = (PixivSearchBuilder) o;
+        PixivSearchLinkBuilder that = (PixivSearchLinkBuilder) o;
         return page == that.page &&
                 wgt == that.wgt &&
                 hgt == that.hgt &&
@@ -141,7 +141,7 @@ public class PixivSearchBuilder {
 
     @Override
     public String toString() {
-        return "PixivSearchBuilder{" +
+        return "PixivSearchLinkBuilder{" +
                 "content='" + content + '\'' +
                 ", searchArea=" + searchArea +
                 ", searchMode=" + searchMode +
@@ -161,7 +161,7 @@ public class PixivSearchBuilder {
                 '}';
     }
 
-    public PixivSearchBuilder setSearchArea(SearchArea searchArea) {
+    public PixivSearchLinkBuilder setSearchArea(SearchArea searchArea) {
         this.searchArea = Objects.requireNonNull(searchArea);
         return this;
     }
@@ -202,50 +202,50 @@ public class PixivSearchBuilder {
         return searchContent.toString();
     }
 
-    public PixivSearchBuilder setSearchMode(SearchMode searchMode) {
+    public PixivSearchLinkBuilder setSearchMode(SearchMode searchMode) {
         this.searchMode = Objects.requireNonNull(searchMode);
         return this;
     }
 
-    public PixivSearchBuilder setSearchType(SearchType searchType) {
+    public PixivSearchLinkBuilder setSearchType(SearchType searchType) {
         this.searchType = Objects.requireNonNull(searchType);
         return this;
     }
 
-    public PixivSearchBuilder setSearchOrder(SearchOrder searchOrder) {
+    public PixivSearchLinkBuilder setSearchOrder(SearchOrder searchOrder) {
         this.searchOrder = Objects.requireNonNull(searchOrder);
         return this;
     }
 
-    public PixivSearchBuilder setSearchContentOption(SearchContentOption searchContentOption) {
+    public PixivSearchLinkBuilder setSearchContentOption(SearchContentOption searchContentOption) {
         this.searchContentOption = Objects.requireNonNull(searchContentOption);
         return this;
     }
 
-    public PixivSearchBuilder setRatioOption(RatioOption ratioOption) {
+    public PixivSearchLinkBuilder setRatioOption(RatioOption ratioOption) {
         this.ratioOption = Objects.requireNonNull(ratioOption);
         return this;
     }
 
-    public PixivSearchBuilder setDateRange(Date startDate, Date endDate) {
+    public PixivSearchLinkBuilder setDateRange(Date startDate, Date endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
         return this;
     }
 
-    public PixivSearchBuilder setMaxSize(int width, int height) {
+    public PixivSearchLinkBuilder setMaxSize(int width, int height) {
         this.wgt = width;
         this.hgt = height;
         return this;
     }
 
-    public PixivSearchBuilder setMinSize(int width, int height) {
+    public PixivSearchLinkBuilder setMinSize(int width, int height) {
         this.wlt = width;
         this.hlt = height;
         return this;
     }
 
-    public PixivSearchBuilder setPage(int pageIndex) {
+    public PixivSearchLinkBuilder setPage(int pageIndex) {
         if (pageIndex <= 0) {
             throw new IllegalArgumentException("Invalid pageIndex: " + pageIndex);
         }
@@ -253,22 +253,22 @@ public class PixivSearchBuilder {
         return this;
     }
 
-    public PixivSearchBuilder addExcludeKeyword(String keyword) {
+    public PixivSearchLinkBuilder addExcludeKeyword(String keyword) {
         excludeKeywords.add(keyword);
         return this;
     }
 
-    public PixivSearchBuilder removeExcludeKeyword(String keyword) {
+    public PixivSearchLinkBuilder removeExcludeKeyword(String keyword) {
         excludeKeywords.remove(keyword);
         return this;
     }
 
-    public PixivSearchBuilder addIncludeKeyword(String keyword) {
+    public PixivSearchLinkBuilder addIncludeKeyword(String keyword) {
         includeKeywords.add(keyword);
         return this;
     }
 
-    public PixivSearchBuilder removeIncludeKeyword(String keyword) {
+    public PixivSearchLinkBuilder removeIncludeKeyword(String keyword) {
         includeKeywords.remove(keyword);
         return this;
     }

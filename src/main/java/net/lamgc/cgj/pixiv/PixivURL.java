@@ -13,52 +13,52 @@ import java.util.GregorianCalendar;
 public class PixivURL {
 
 
-    public static final String PIXIV_INDEX_URL = "https://www.pixiv.net";
+    public final static String PIXIV_INDEX_URL = "https://www.pixiv.net";
 
     /**
      * P站预登陆url
      */
-    public static final String PIXIV_LOGIN_PAGE_URL = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index";
+    public final static String PIXIV_LOGIN_PAGE_URL = "https://accounts.pixiv.net/login?lang=zh&source=pc&view_type=page&ref=wwwtop_accounts_index";
 
     /**
      * P站登录请求url
      */
-    public static final String PIXIV_LOGIN_URL = "https://accounts.pixiv.net/api/login?lang=zh";
+    public final static String PIXIV_LOGIN_URL = "https://accounts.pixiv.net/api/login?lang=zh";
 
     /**
      * P站搜索请求url
-     * @deprecated 该接口已被替换, 请使用{@link PixivSearchBuilder}构造搜索Url
-     * @see PixivSearchBuilder
+     * @deprecated 该接口已被替换, 请使用{@link PixivSearchLinkBuilder}构造搜索Url
+     * @see PixivSearchLinkBuilder
      */
     @Deprecated
-    private static final String PIXIV_SEARCH_URL = "https://www.pixiv.net/search.php";
+    private final static String PIXIV_SEARCH_URL = "https://www.pixiv.net/search.php";
 
     /**
      * P站搜索用户url
      * 需要替换的参数:
      * {nick} - 用户昵称、部分名称
-     * @deprecated 该接口已被替换, 请使用{@link PixivSearchBuilder}构造搜索Url
-     * @see PixivSearchBuilder
+     * @deprecated 该接口已被替换, 请使用{@link PixivSearchLinkBuilder}构造搜索Url
+     * @see PixivSearchLinkBuilder
      */
     @Deprecated
-    public static final String PIXIV_SEARCH_USER_URL = PIXIV_SEARCH_URL + "?s_mode=s_usr&nick={nick}";
+    public final static String PIXIV_SEARCH_USER_URL = PIXIV_SEARCH_URL + "?s_mode=s_usr&nick={nick}";
 
     /**
      * P站搜索插画url
      * 需要替换的参数:
      * {word} - 插画相关文本
-     * @deprecated 该接口已被替换, 请使用{@link PixivSearchBuilder}构造搜索Url
-     * @see PixivSearchBuilder
+     * @deprecated 该接口已被替换, 请使用{@link PixivSearchLinkBuilder}构造搜索Url
+     * @see PixivSearchLinkBuilder
      */
     @Deprecated
-    public static final String PIXIV_SEARCH_TAG_URL = PIXIV_SEARCH_URL + "?s_mode=s_tag&word={word}";
+    public final static String PIXIV_SEARCH_TAG_URL = PIXIV_SEARCH_URL + "?s_mode=s_tag&word={word}";
 
     /**
      * P站插图下载链接获取url
      * 需要替换的文本:
      * {illustId} - 插画ID
      */
-    public static final String PIXIV_ILLUST_API_URL = "https://www.pixiv.net/ajax/illust/{illustId}/pages";
+    public final static String PIXIV_ILLUST_API_URL = "https://www.pixiv.net/ajax/illust/{illustId}/pages";
 
     /**
      * P站用户插图列表获取API
@@ -67,42 +67,42 @@ public class PixivURL {
      * {userId} - 用户ID
      */
     //{"error":false,"message":"","body":{"illusts":{"74369837":null,"70990542":null,"70608653":null,"69755191":null,"69729450":null,"69729416":null,"69503608":null,"69288766":null,"69083882":null,"69051458":null,"68484200":null,"68216927":null,"68216866":null,"68192333":null,"67915106":null,"67914932":null,"67854803":null,"67854745":null,"67854670":null,"67787211":null,"67772199":null,"67770637":null,"67754861":null,"67754804":null,"67754726":null,"67740486":null,"67740480":null,"67740450":null,"67740434":null,"67726337":null,"67499196":null,"67499163":null,"67499145":null,"67499111":null,"67499085":null,"67499038":null,"67498987":null,"67473178":null,"66271465":null,"63682753":null,"63682697":null,"59385148":null,"59383265":null,"59383240":null,"59383227":null,"59383173":null},"manga":[],"novels":[],"mangaSeries":[],"novelSeries":[],"pickup":[],"bookmarkCount":{"public":{"illust":1,"novel":0},"private":{"illust":0,"novel":0}}}}
-    public static final String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
+    public final static String PIXIV_USER_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
 
     /**
      * 能够同时获取插图信息的用户插图列表获取API
      * 需要替换的文本:
      * {userId} - 用户ID
      */
-    public static final String PIXIV_USER_TOP_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
+    public final static String PIXIV_USER_TOP_ILLUST_LIST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
 
     /**
      * P站单图详情页url
      * 需要替换的文本:
      * {illustId} - 插画ID
      */
-    public static final String PIXIV_ILLUST_MEDIUM_URL = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id={illustId}";
+    public final static String PIXIV_ILLUST_MEDIUM_URL = "https://www.pixiv.net/member_illust.php?mode=medium&illust_id={illustId}";
 
     /**
      * P站多图详情页url
      * 需要替换的文本:
      * {illustId} - 插画ID
      */
-    public static final String PIXIV_ILLUST_MANGA_URL = "https://www.pixiv.net/member_illust.php?mode=manga&illust_id={illustId}";
+    public final static String PIXIV_ILLUST_MANGA_URL = "https://www.pixiv.net/member_illust.php?mode=manga&illust_id={illustId}";
 
     /**
      * P站用户页面url
      * 需要替换的文本:
      * {userId} - 用户ID
      */
-    public static final String PIXIV_USER_URL = "https://www.pixiv.net/member.php?id={userId}";
+    public final static String PIXIV_USER_URL = "https://www.pixiv.net/member.php?id={userId}";
 
     /**
      * P站插图信息获取API
      * 这个API能获取插图基本信息，但不能获取大小
      * 请使用{@link #getPixivIllustInfoAPI(int[])}获取URL
      */
-    private static final String PIXIV_GET_ILLUST_INFO_URL = "https://www.pixiv.net/ajax/illust/recommend/illusts?";
+    private final static String PIXIV_GET_ILLUST_INFO_URL = "https://www.pixiv.net/ajax/illust/recommend/illusts?";
 
     /**
      * P站获取用户所有插图ID的Api
@@ -110,7 +110,15 @@ public class PixivURL {
      * 需要替换的文本:
      * {userId} - 用户ID
      */
-    public static final String PIXIV_GET_USER_ALL_ILLUST_ID_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
+    public final static String PIXIV_GET_USER_ALL_ILLUST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/all";
+
+    /**
+     * P站获取用户推荐插画及用户基本数据
+     * 这个API能获得作者的部分(推荐)作品, 每个作品有详细数据, 还能获取作者主页信息(比如主页说明, 看板图)
+     * 需要替换的文本:
+     * {userId} - 用户ID
+     */
+    public final static String PIXIV_GET_USER_TOP_ILLUST_URL = "https://www.pixiv.net/ajax/user/{userId}/profile/top";
 
     /**
      * P站标签搜索URL
@@ -118,7 +126,7 @@ public class PixivURL {
      * 需要替换的文本:
      * {content} - 大致tag内容
      */
-    public static final String PIXIV_TAG_SEARCH_URL = "https://www.pixiv.net/ajax/search/tags/{content}";
+    public final static String PIXIV_TAG_SEARCH_URL = "https://www.pixiv.net/ajax/search/tags/{content}";
 
     /**
      * 获取动图下载链接和拼接数据.
@@ -129,10 +137,16 @@ public class PixivURL {
     public final static String PIXIV_GET_UGOIRA_META_URL = "https://www.pixiv.net/ajax/illust/{illustId}/ugoira_meta";
 
     /**
+     * 获取自己帐号的部分数据(目前仅能获取: 关注数, 粉丝数和看板图)
+     * 需要登录.
+     */
+    public final static String PIXIV_GET_USER_EXTRA_URL = "https://www.pixiv.net/ajax/user/extra";
+
+    /**
      * 请求时带上需要退出的Cookies
      * 无论成功与否都会返回302重定向到{@linkplain #PIXIV_LOGIN_PAGE_URL 登录页面}
      */
-    public static final String PIXIV_LOGOUT_URL = "https://www.pixiv.net/logout.php";
+    public final static String PIXIV_LOGOUT_URL = "https://www.pixiv.net/logout.php";
 
     /**
      * 构造P站获取插图信息的Api Url
@@ -279,7 +293,7 @@ public class PixivURL {
 
     /**
      * Pixiv搜索接口.<br/>
-     * 要使用该链接请使用{@link PixivSearchBuilder}构造链接.<br/>
+     * 要使用该链接请使用{@link PixivSearchLinkBuilder}构造链接.<br/>
      * 需要替换的参数: <br/>
      * content - 搜索内容
      */

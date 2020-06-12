@@ -12,7 +12,7 @@ import net.lamgc.cgj.bot.event.BufferMessageEvent;
 import net.lamgc.cgj.bot.sort.PreLoadDataComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
-import net.lamgc.cgj.pixiv.PixivSearchBuilder;
+import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
@@ -310,7 +310,7 @@ public class BotCommandProcess {
             @Argument(name = "in", force = false) String includeKeywords,
             @Argument(name = "ex", force = false) String excludeKeywords,
             @Argument(name = "option", force = false) String contentOption,
-            @Argument(name = "page", force = false, defaultValue = "1") int pagesIndex
+            @Argument(name = "p", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException {
         log.info("正在执行搜索...");
         JsonObject resultBody = CacheStoreCentral.getCentral()
@@ -326,7 +326,7 @@ public class BotCommandProcess {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
         int totalCount = 0;
-        for (PixivSearchBuilder.SearchArea searchArea : PixivSearchBuilder.SearchArea.values()) {
+        for (PixivSearchLinkBuilder.SearchArea searchArea : PixivSearchLinkBuilder.SearchArea.values()) {
             if (!resultBody.has(searchArea.jsonKey) ||
                     resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
                 log.debug("返回数据不包含 {}", searchArea.jsonKey);
@@ -493,7 +493,7 @@ public class BotCommandProcess {
             @Argument(name = "$fromGroup") long fromGroup,
             @Argument(name = "id") int illustId,
             @Argument(name = "quality", force = false) PixivDownload.PageQuality quality,
-            @Argument(name = "page", force = false, defaultValue = "1") int pageIndex
+            @Argument(name = "p", force = false, defaultValue = "1") int pageIndex
     ) {
         return CacheStoreCentral.getCentral().getImageById(fromGroup, illustId, quality, pageIndex);
     }
