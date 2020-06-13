@@ -3,6 +3,8 @@ package net.lamgc.cgj.bot.sort;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.cache.CacheStoreCentral;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.Comparator;
@@ -11,6 +13,8 @@ import java.util.Comparator;
  * 收藏数比较器
  */
 public class PreLoadDataAttributeComparator implements Comparator<JsonElement> {
+
+    private final static Logger log = LoggerFactory.getLogger(PreLoadDataAttributeComparator.class);
 
     private final PreLoadDataAttribute attribute;
 
@@ -47,7 +51,7 @@ public class PreLoadDataAttributeComparator implements Comparator<JsonElement> {
                     illustPreLoadData2.get(attribute.attrName).getAsInt(),
                     illustPreLoadData1.get(attribute.attrName).getAsInt());
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("获取预加载数据失败", e);
             return 0;
         }
     }
