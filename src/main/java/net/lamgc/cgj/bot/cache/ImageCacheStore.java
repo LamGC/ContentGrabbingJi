@@ -66,17 +66,17 @@ public final class ImageCacheStore {
             // 置任务状态
             task.taskState.set(TaskState.RUNNING);
 
-            Throwable throwable = null;
+            Future<Throwable> future = imageCacheExecutor.submit(() -> {
+                try {
+                    handler.getImageToCache(cacheObject);
+                } catch (Throwable e) {
+                    return e;
+                }
+                return null;
+            });
+            Throwable throwable;
             try {
-                throwable = imageCacheExecutor.submit(() -> {
-                    try {
-                        handler.getImageToCache(cacheObject);
-                    } catch (Throwable e) {
-                        return e;
-                    }
-                    return null;
-                }).get();
-
+                throwable = future.get();
                 if(throwable == null) {
                     task.taskState.set(TaskState.COMPLETE);
                 } else {
@@ -84,6 +84,12 @@ public final class ImageCacheStore {
                 }
             } catch (ExecutionException e) {
                 log.error("执行图片缓存任务时发生异常", e);
+                task.taskState.set(TaskState.ERROR);
+                return e.getCause();
+            } catch (InterruptedException e) {
+                future.cancel(true);
+                task.taskState.set(TaskState.ERROR);
+                throw e;
             }
             return throwable;
         } finally {
