@@ -51,27 +51,27 @@ abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
     @Override
     public void update(String key, T value, Date expire) {
-        try (Jedis jedis = jedisPool.getResource()) {
+        executeJedisCommand(jedis -> {
             jedis.set(keyPrefix + key, parse(value));
             if(expire != null) {
                 jedis.pexpireAt(keyPrefix + key, expire.getTime());
                 log.debug("已设置Key {} 的过期时间(Expire: {})", key, expire.getTime());
             }
-        }
+        });
     }
 
     @Override
     public T getCache(String key) {
-        try (Jedis jedis = jedisPool.getResource()) {
+        return executeJedisCommand(jedis -> {
             return analysis(jedis.get(keyPrefix + key));
-        }
+        });
     }
 
     @Override
     public boolean exists(String key) {
-        try (Jedis jedis = jedisPool.getResource()) {
+        return executeJedisCommand(jedis -> {
             return jedis.exists(keyPrefix + key);
-        }
+        });
     }
 
     @Override
@@ -81,23 +81,21 @@ abstract class RedisPoolCacheStore<T> implements CacheStore<T> {
 
     @Override
     public boolean clear() {
-        try (Jedis jedis = jedisPool.getResource()) {
+        return executeJedisCommand(jedis -> {
             return jedis.flushDB().equalsIgnoreCase("ok");
-        }
+        });
     }
 
     @Override
     public Set<String> keys() {
-        try (Jedis jedis = jedisPool.getResource()) {
+        return executeJedisCommand(jedis -> {
             return jedis.keys(keyPrefix + "*");
-        }
+        });
     }
 
     @Override
     public boolean remove(String key) {
-        try (Jedis jedis = jedisPool.getResource()) {
-            return jedis.del(keyPrefix + key) == 1;
-        }
+        return executeJedisCommand(jedis -> jedis.del(keyPrefix + key) == 1);
     }
 
     /**
