@@ -125,6 +125,7 @@ public class RandomIntervalSendTimer extends TimerTask {
 
     @Override
     public void run() {
+        log.info("定时器 {} 开始执行...(Sender: {}@{})", this.hashId, sender.getClass().getSimpleName(), sender.hashCode());
         try {
             sender.send();
         } catch (Exception e) {
@@ -132,6 +133,7 @@ public class RandomIntervalSendTimer extends TimerTask {
                     Integer.toHexString(this.hashCode()),
                     Throwables.getStackTraceAsString(e));
         }
+        log.info("定时器 {} 执行结束.", this.hashId);
         if (this.loop.get()) {
             start();
         }
