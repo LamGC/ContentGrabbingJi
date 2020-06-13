@@ -1,7 +1,7 @@
 package net.lamgc.cgj.bot.cache;
 
 import net.lamgc.cgj.bot.boot.BotGlobal;
-import net.lamgc.cgj.bot.cache.exception.HttpRequestException;
+import net.lamgc.cgj.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.event.EventHandler;

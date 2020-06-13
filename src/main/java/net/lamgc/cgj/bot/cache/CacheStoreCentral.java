@@ -8,6 +8,7 @@ import net.lamgc.cgj.bot.BotCode;
 import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.SettingProperties;
 import net.lamgc.cgj.bot.boot.BotGlobal;
+import net.lamgc.cgj.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
@@ -446,7 +447,7 @@ public final class CacheStoreCentral {
 
                     if (jsonObject.get("error").getAsBoolean()) {
                         log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
-                        throw new IOException("Interface Request Error: " + jsonObject.get("message").getAsString());
+                        throw new HttpRequestException(response.getStatusLine(), responseBody);
                     }
 
                     long expire = 7200 * 1000;

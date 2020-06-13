@@ -7,7 +7,7 @@ import com.google.gson.JsonObject;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import net.lamgc.cgj.bot.cache.exception.HttpRequestException;
+import net.lamgc.cgj.exception.HttpRequestException;
 
 import java.util.Hashtable;
 import java.util.Map;

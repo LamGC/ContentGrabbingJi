@@ -7,6 +7,7 @@ import com.squareup.gifencoder.GifEncoder;
 import com.squareup.gifencoder.Image;
 import com.squareup.gifencoder.ImageOptions;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import net.lamgc.cgj.exception.HttpRequestException;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
@@ -51,7 +52,7 @@ public final class PixivUgoiraBuilder {
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
             log.error("获取动图元数据失败!(接口报错: {})", message);
-            throw new IOException(message);
+            throw new HttpRequestException(response.getStatusLine(), bodyStr);
         } else if(!resultObject.has("body")) {
             String message = "接口返回数据不存在body属性, 可能接口发生改变!";
             log.error(message);
@@ -181,7 +182,7 @@ public final class PixivUgoiraBuilder {
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
             log.error("接口返回错误: {}", message);
-            throw new IOException(message);
+            throw new HttpRequestException(response.getStatusLine(), responseBody);
         }
 
         JsonArray illustsArray = resultObject.getAsJsonObject("body").getAsJsonArray("illusts");

@@ -1,4 +1,4 @@
-package net.lamgc.cgj.bot.cache.exception;
+package net.lamgc.cgj.exception;
 
 import java.io.IOException;
 import java.util.Objects;

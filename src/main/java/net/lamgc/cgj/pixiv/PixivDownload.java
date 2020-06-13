@@ -6,6 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
 import io.netty.handler.codec.http.HttpHeaderNames;
+import net.lamgc.cgj.exception.HttpRequestException;
 import org.apache.http.Header;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpRequest;
@@ -326,7 +327,7 @@ public class PixivDownload {
             String responseBody = EntityUtils.toString(response.getEntity());
             log.trace("ResponseBody: {}", responseBody);
             if(response.getStatusLine().getStatusCode() != 200) {
-                throw new IOException("Http Response Error: '" + response.getStatusLine() + "', ResponseBody: '" + responseBody + '\'');
+                throw new HttpRequestException(response.getStatusLine(), responseBody);
             }
 
             JsonObject resultObject = gson.fromJson(responseBody, JsonObject.class);
@@ -353,7 +354,7 @@ public class PixivDownload {
         HttpResponse response = httpClient.execute(request);
 
         if(response.getStatusLine().getStatusCode() != 200) {
-            throw new IOException("Http响应码非200: " + response.getStatusLine());
+            throw new HttpRequestException(response);
         }
 
         Document document = Jsoup.parse(EntityUtils.toString(response.getEntity()));
@@ -401,7 +402,7 @@ public class PixivDownload {
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
             log.warn("作品页面接口请求错误, 错误信息: {}", message);
-            throw new IOException(message);
+            throw new HttpRequestException(response);
         }
 
         JsonArray linkArray = resultObject.getAsJsonArray("body");
@@ -554,7 +555,7 @@ public class PixivDownload {
         JsonObject responseObj = new Gson().fromJson(responseStr, JsonObject.class);
 
         if(responseObj.get("error").getAsBoolean()) {
-            throw new IOException(responseObj.get("message").getAsString());
+            throw new HttpRequestException(response.getStatusLine(), responseStr);
         }
 
         JsonArray illustsArray = responseObj.getAsJsonObject("body").getAsJsonArray("illusts");
