@@ -27,7 +27,7 @@ public final class BotGlobal {
 
     public static BotGlobal getGlobal() {
         if(instance == null) {
-            throw new IllegalStateException("");
+            throw new IllegalStateException("BotGlobal has not been initialized");
         }
         return instance;
     }
