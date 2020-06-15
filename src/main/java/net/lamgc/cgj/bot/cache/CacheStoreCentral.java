@@ -12,6 +12,8 @@ import net.lamgc.cgj.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.util.Locker;
+import net.lamgc.cgj.util.LockerMap;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.encrypt.MessageDigestUtils;
 import net.lz1998.cq.utils.CQCode;
@@ -50,6 +52,8 @@ public final class CacheStoreCentral {
 
         central = new CacheStoreCentral();
     }
+
+    private final LockerMap<String> lockerMap = new LockerMap<>();
 
     private CacheStoreCentral() {}
 
@@ -228,14 +232,20 @@ public final class CacheStoreCentral {
      */
     public JsonObject getIllustInfo(int illustId, boolean flushCache)
             throws IOException, NoSuchElementException {
-        String illustIdStr = buildSyncKey(Integer.toString(illustId));
+        Locker<String> locker = buildSyncKey(Integer.toString(illustId));
+        String illustIdStr = locker.getKey();
         JsonObject illustInfoObj = null;
         if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-            synchronized (illustIdStr) {
-                if (!illustInfoCache.exists(illustIdStr) || flushCache) {
-                    illustInfoObj = BotGlobal.getGlobal().getPixivDownload().getIllustInfoByIllustId(illustId);
-                    illustInfoCache.update(illustIdStr, illustInfoObj, null);
+            try {
+                locker.lock();
+                synchronized (locker) {
+                    if (!illustInfoCache.exists(illustIdStr) || flushCache) {
+                        illustInfoObj = BotGlobal.getGlobal().getPixivDownload().getIllustInfoByIllustId(illustId);
+                        illustInfoCache.update(illustIdStr, illustInfoObj, null);
+                    }
                 }
+            } finally {
+                locker.unlock();
             }
         }
 
@@ -255,31 +265,37 @@ public final class CacheStoreCentral {
      * @throws IOException 当Http请求处理发生异常时抛出
      */
     public JsonObject getIllustPreLoadData(int illustId, boolean flushCache) throws IOException {
-        String illustIdStr = buildSyncKey(Integer.toString(illustId));
+        Locker<String> locker = buildSyncKey(Integer.toString(illustId));
+        String illustIdStr = locker.getKey();
         JsonObject result = null;
         if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-            synchronized (illustIdStr) {
-                if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
-                    log.trace("IllustId {} 缓存失效, 正在更新...", illustId);
-                    JsonObject preLoadDataObj = BotGlobal.getGlobal().getPixivDownload()
-                            .getIllustPreLoadDataById(illustId)
-                            .getAsJsonObject("illust")
-                            .getAsJsonObject(Integer.toString(illustId));
+            try {
+                locker.lock();
+                synchronized (locker) {
+                    if (!illustPreLoadDataCache.exists(illustIdStr) || flushCache) {
+                        log.trace("IllustId {} 缓存失效, 正在更新...", illustId);
+                        JsonObject preLoadDataObj = BotGlobal.getGlobal().getPixivDownload()
+                                .getIllustPreLoadDataById(illustId)
+                                .getAsJsonObject("illust")
+                                .getAsJsonObject(Integer.toString(illustId));
 
-                    long expire = 7200 * 1000;
-                    String propValue = SettingProperties.
-                            getProperty(SettingProperties.GLOBAL, "cache.illustPreLoadData.expire", "7200000");
-                    log.debug("PreLoadData有效时间设定: {}", propValue);
-                    try {
-                        expire = Long.parseLong(propValue);
-                    } catch (Exception e) {
-                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
+                        long expire = 7200 * 1000;
+                        String propValue = SettingProperties.
+                                getProperty(SettingProperties.GLOBAL, "cache.illustPreLoadData.expire", "7200000");
+                        log.debug("PreLoadData有效时间设定: {}", propValue);
+                        try {
+                            expire = Long.parseLong(propValue);
+                        } catch (Exception e) {
+                            log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
+                        }
+
+                        result = preLoadDataObj;
+                        illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, expire);
+                        log.trace("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
                     }
-
-                    result = preLoadDataObj;
-                    illustPreLoadDataCache.update(illustIdStr, preLoadDataObj, expire);
-                    log.trace("作品Id {} preLoadData缓存已更新(有效时间: {})", illustId, expire);
                 }
+            } finally {
+                locker.unlock();
             }
         }
 
@@ -292,17 +308,24 @@ public final class CacheStoreCentral {
 
     public List<String> getIllustPages(int illustId, PixivDownload.PageQuality quality, boolean flushCache)
             throws IOException {
-        String pagesSign = buildSyncKey(Integer.toString(illustId), ".", quality.name());
+        Locker<String> locker
+                = buildSyncKey(Integer.toString(illustId), ".", quality.name());
+        String pagesSign = locker.getKey();
         List<String> result = null;
         if (!pagesCache.exists(pagesSign) || flushCache) {
-            synchronized (pagesSign) {
-                if (!pagesCache.exists(pagesSign) || flushCache) {
-                    List<String> linkList = PixivDownload
-                            .getIllustAllPageDownload(BotGlobal.getGlobal().getPixivDownload().getHttpClient(),
-                                    BotGlobal.getGlobal().getPixivDownload().getCookieStore(), illustId, quality);
-                    result = linkList;
-                    pagesCache.update(pagesSign, linkList, null);
+            try {
+                locker.lock();
+                synchronized (locker) {
+                    if (!pagesCache.exists(pagesSign) || flushCache) {
+                        List<String> linkList = PixivDownload
+                                .getIllustAllPageDownload(BotGlobal.getGlobal().getPixivDownload().getHttpClient(),
+                                        BotGlobal.getGlobal().getPixivDownload().getCookieStore(), illustId, quality);
+                        result = linkList;
+                        pagesCache.update(pagesSign, linkList, null);
+                    }
                 }
+            } finally {
+                locker.unlock();
             }
         }
 
@@ -342,23 +365,30 @@ public final class CacheStoreCentral {
         }
 
         String date = new SimpleDateFormat("yyyyMMdd").format(queryDate);
-        String requestSign = buildSyncKey(contentType.name(), ".", mode.name(), ".", date);
+        Locker<String> locker
+                = buildSyncKey(contentType.name(), ".", mode.name(), ".", date);
+        String requestSign = locker.getKey();
         List<JsonObject> result = null;
         if(!rankingCache.exists(requestSign) || flushCache) {
-            synchronized(requestSign) {
-                if(!rankingCache.exists(requestSign) || flushCache) {
-                    log.trace("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
-                    List<JsonObject> rankingResult = BotGlobal.getGlobal().getPixivDownload()
-                            .getRanking(contentType, mode, queryDate, 1, 500);
-                    long expireTime = 0;
-                    if(rankingResult.size() == 0) {
-                        expireTime = 5400000 + expireTimeFloatRandom.nextInt(1800000);
-                        log.warn("数据获取失败, 将设置浮动有效时间以准备下次更新. (ExpireTime: {}ms)", expireTime);
+            try {
+                locker.lock();
+                synchronized (locker) {
+                    if (!rankingCache.exists(requestSign) || flushCache) {
+                        log.trace("Ranking缓存失效, 正在更新...(RequestSign: {})", requestSign);
+                        List<JsonObject> rankingResult = BotGlobal.getGlobal().getPixivDownload()
+                                .getRanking(contentType, mode, queryDate, 1, 500);
+                        long expireTime = 0;
+                        if (rankingResult.size() == 0) {
+                            expireTime = 5400000 + expireTimeFloatRandom.nextInt(1800000);
+                            log.warn("数据获取失败, 将设置浮动有效时间以准备下次更新. (ExpireTime: {}ms)", expireTime);
+                        }
+                        result = new ArrayList<>(rankingResult).subList(start - 1, start + range - 1);
+                        rankingCache.update(requestSign, rankingResult, expireTime);
+                        log.trace("Ranking缓存更新完成.(RequestSign: {})", requestSign);
                     }
-                    result = new ArrayList<>(rankingResult).subList(start - 1, start + range - 1);
-                    rankingCache.update(requestSign, rankingResult, expireTime);
-                    log.trace("Ranking缓存更新完成.(RequestSign: {})", requestSign);
                 }
+            } finally {
+                locker.unlock();
             }
         }
 
@@ -428,42 +458,49 @@ public final class CacheStoreCentral {
 
         log.debug("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
 
-        String requestUrl = searchBuilder.buildURL().intern();
+        Locker<String> locker
+                = buildSyncKey(searchBuilder.buildURL());
+        String requestUrl = locker.getKey();
         log.debug("RequestUrl: {}", requestUrl);
         JsonObject resultBody = null;
         if(!searchBodyCache.exists(requestUrl)) {
-            synchronized (requestUrl) {
-                if (!searchBodyCache.exists(requestUrl)) {
-                    log.trace("searchBody缓存失效, 正在更新...");
-                    JsonObject jsonObject;
-                    HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().
-                            createHttpGetRequest(requestUrl);
-                    HttpResponse response = BotGlobal.getGlobal().getPixivDownload().
-                            getHttpClient().execute(httpGetRequest);
+            try {
+                locker.lock();
+                synchronized (locker) {
+                    if (!searchBodyCache.exists(requestUrl)) {
+                        log.trace("searchBody缓存失效, 正在更新...");
+                        JsonObject jsonObject;
+                        HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().
+                                createHttpGetRequest(requestUrl);
+                        HttpResponse response = BotGlobal.getGlobal().getPixivDownload().
+                                getHttpClient().execute(httpGetRequest);
 
-                    String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
-                    log.trace("ResponseBody: {}", responseBody);
-                    jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
+                        String responseBody = EntityUtils.toString(response.getEntity(), StandardCharsets.UTF_8);
+                        log.trace("ResponseBody: {}", responseBody);
+                        jsonObject = BotGlobal.getGlobal().getGson().fromJson(responseBody, JsonObject.class);
 
-                    if (jsonObject.get("error").getAsBoolean()) {
-                        log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
-                        throw new HttpRequestException(response.getStatusLine(), responseBody);
+                        if (jsonObject.get("error").getAsBoolean()) {
+                            log.error("接口请求错误, 错误信息: {}", jsonObject.get("message").getAsString());
+                            throw new HttpRequestException(response.getStatusLine(), responseBody);
+                        }
+
+                        long expire = 7200 * 1000;
+                        String propValue = SettingProperties
+                                .getProperty(SettingProperties.GLOBAL, "cache.searchBody.expire", "7200000");
+                        try {
+                            expire = Long.parseLong(propValue);
+                        } catch (Exception e) {
+                            log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
+                        }
+                        resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
+                        searchBodyCache.update(requestUrl, jsonObject, expire);
+                        log.trace("searchBody缓存已更新(有效时间: {})", expire);
+                    } else {
+                        log.trace("搜索缓存命中.");
                     }
-
-                    long expire = 7200 * 1000;
-                    String propValue = SettingProperties
-                            .getProperty(SettingProperties.GLOBAL, "cache.searchBody.expire", "7200000");
-                    try {
-                        expire = Long.parseLong(propValue);
-                    } catch (Exception e) {
-                        log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
-                    }
-                    resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
-                    searchBodyCache.update(requestUrl, jsonObject, expire);
-                    log.trace("searchBody缓存已更新(有效时间: {})", expire);
-                } else {
-                    log.trace("搜索缓存命中.");
                 }
+            } finally {
+                locker.unlock();
             }
         } else {
             log.trace("搜索缓存命中.");
@@ -494,12 +531,12 @@ public final class CacheStoreCentral {
      * @param keys String对象
      * @return 合并后, 如果常量池存在合并后的结果, 则返回常量池中的对象, 否则存入常量池后返回.
      */
-    private static String buildSyncKey(String... keys) {
+    private Locker<String> buildSyncKey(String... keys) {
         StringBuilder sb = new StringBuilder();
         for (String string : keys) {
             sb.append(string);
         }
-        return sb.toString().intern();
+        return lockerMap.createLocker(sb.toString(), true);
     }
 
     /**
