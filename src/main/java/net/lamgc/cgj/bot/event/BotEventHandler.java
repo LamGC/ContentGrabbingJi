@@ -46,11 +46,11 @@ public class BotEventHandler implements EventHandler {
      * 消息事件执行器
      */
     private final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
-            180000, // 3min
+            180000, // 3minThr
             Math.max(Runtime.getRuntime().availableProcessors(), 4),
-            Math.min(Runtime.getRuntime().availableProcessors() * 2, 32),
+            Math.min(Math.max(Runtime.getRuntime().availableProcessors(), 4), 32),
             30L,
-    TimeUnit.SECONDS,
+            TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1536),
             new ThreadFactoryBuilder()
                     .setNameFormat("CommandProcess-%d")
