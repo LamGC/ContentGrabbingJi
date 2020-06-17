@@ -63,6 +63,13 @@ public final class CacheStoreCentral {
             new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
                     "imageChecksum", BotGlobal.getGlobal().getGson());
 
+    /*
+     * 注意：
+     *      在启用了远端缓存的情况下, 不允许滥用本地缓存
+     *      只有在处理命令中需要短时间大量存取的缓存项才能进行本地缓存(例如PreLoadData需要在排序中大量获取);
+     *      如果没有短时间大量存取的需要, 切勿使用本地缓存
+     */
+
     /**
      * 作品信息缓存 - 不过期
      */
@@ -71,13 +78,13 @@ public final class CacheStoreCentral {
                     "illustInfo", BotGlobal.getGlobal().getGson());
 
     /**
-     * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期1 ± 0.25
+     * 作品信息预加载数据 - 有效期 2 小时, 本地缓存有效期 0.5 ± 0.25 小时
      */
     private final CacheStore<JsonElement> illustPreLoadDataCache =
             CacheStoreUtils.hashLocalHotDataStore(
                     new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
                             "illustPreLoadData", BotGlobal.getGlobal().getGson()),
-                    3600000, 900000);
+                    1800000, 900000);
     /**
      * 搜索内容缓存, 有效期 2 小时
      */
