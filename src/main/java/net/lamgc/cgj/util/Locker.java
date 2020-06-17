@@ -1,13 +1,8 @@
 package net.lamgc.cgj.util;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.util.concurrent.atomic.AtomicInteger;
 
 public final class Locker<K> {
-
-    private final static Logger log = LoggerFactory.getLogger(Locker.class);
 
     private final LockerMap<K> fromMap;
 
@@ -67,9 +62,4 @@ public final class Locker<K> {
                 '}';
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        super.finalize();
-        log.trace("{} 已销毁.", this.toString());
-    }
 }

@@ -505,45 +505,7 @@ public class PixivDownload {
     /**
      * 获取作品信息
      * @param illustId 作品ID
-     * @return 成功获取返回JsonObject, 失败返回null, <br/>
-     *      Json示例: <br/>
-     *      <pre>
-     *          {
-     *         "illustId": "79584670",
-     *         "illustTitle": "このヤンキーはウブすぎる",
-     *         "id": "79584670",
-     *         "title": "このヤンキーはウブすぎる",
-     *         "illustType": 1,
-     *         "xRestrict": 0,
-     *         "restrict": 0,
-     *         "sl": 2,
-     *         "url": "https://i.pximg.net/c/360x360_70/img-master/img/2020/02/19/00/38/23/79584670_p0_square1200.jpg",
-     *         "description": "",
-     *         "tags": [
-     *           "漫画",
-     *           "オリジナル",
-     *           "創作",
-     *           "創作男女",
-     *           "コロさん、ポリさん此方です!",
-     *           "恋の予感",
-     *           "あまずっぺー",
-     *           "交換日記",
-     *           "続編希望!!",
-     *           "オリジナル10000users入り"
-     *         ],
-     *         "userId": "4778293",
-     *         "userName": "隈浪さえ",
-     *         "width": 3288,
-     *         "height": 4564,
-     *         "pageCount": 4,
-     *         "isBookmarkable": true,
-     *         "bookmarkData": null,
-     *         "alt": "#オリジナル このヤンキーはウブすぎる - 隈浪さえ的漫画",
-     *         "isAdContainer": false,
-     *         "profileImageUrl": "https://i.pximg.net/user-profile/img/2019/12/04/18/56/19/16639046_fea29ce38ea89b0cb2313b40b3a72f9a_50.jpg",
-     *         "type": "illust"
-     *       }
-     *      </pre>
+     * @return 成功获取返回JsonObject, 失败返回null.
      * @throws IOException 当请求发生异常, 或接口返回错误信息时抛出.
      * @throws NoSuchElementException 当该作品不存在时抛出异常
      */
