@@ -69,11 +69,15 @@ public class BotEventHandler implements EventHandler {
             return;
         }
 
+        executor.setEnableEventResend(true);
         executor.setEventUncaughtExceptionHandler(new EventUncaughtExceptionHandler() {
             private final Logger log = LoggerFactory.getLogger(this.getClass());
             @Override
             public void exceptionHandler(Thread executeThread, EventHandler handler, Method handlerMethod, EventObject event, Throwable cause) {
-                log.error("发生未捕获异常:\nThread:{}, EventHandler: {}, HandlerMethod: {}, EventObject: {}\n{}",
+                log.error("EventExecutor@{} 发生未捕获异常:\n\t" +
+                                "Thread:{}\n\tEventHandler: {}\n\tHandlerMethod: {}\n\tEventObject: {}\n" +
+                        "------------------ Stack Trace ------------------\n{}",
+                        executor.hashCode(),
                         executeThread.getName(),
                         handler.toString(),
                         handlerMethod.getName(),
@@ -128,6 +132,7 @@ public class BotEventHandler implements EventHandler {
     /**
      * 投递消息事件
      * @param event 事件对象
+     * @param sync 是否同步执行事件
      */
     @NotAccepted
     public static void executeMessageEvent(MessageEvent event, boolean sync) throws InterruptedException {
@@ -234,9 +239,12 @@ public class BotEventHandler implements EventHandler {
         if(!Objects.isNull(result) && result instanceof String && !isMute(event.getFromGroup())) {
             try {
                 int sendResult = event.sendMessage((String) result);
-                if(sendResult < 0) {
+                if (sendResult < 0) {
                     log.warn("消息发送失败, Sender {} 返回错误代码: {}", event.getClass().getName(), sendResult);
                 }
+            } catch(InterruptedException e) {
+                log.info("事件在发送消息时超时, 重新投递该事件.(Event: {})", event);
+                EventExecutor.resendCurrentEvent();
             } catch (Exception e) {
                 log.error("发送消息时发生异常", e);
             }
@@ -258,6 +266,11 @@ public class BotEventHandler implements EventHandler {
         return !message.startsWith(COMMAND_PREFIX) && !message.startsWith(ADMIN_COMMAND_PREFIX);
     }
 
+    /**
+     * 查询某群组中Bot是否被禁言
+     * @param groupId 待查询的群组号
+     * @return 如果被禁言, 返回true, 如果未被禁言或禁言情况未知, 返回false
+     */
     private static boolean isMute(long groupId) {
         Boolean mute = isMute(groupId, false);
         return mute != null && mute;
