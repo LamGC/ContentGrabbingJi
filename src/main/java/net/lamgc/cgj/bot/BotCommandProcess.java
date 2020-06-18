@@ -8,7 +8,7 @@ import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.cache.CacheStore;
 import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 import net.lamgc.cgj.bot.cache.JsonRedisCacheStore;
-import net.lamgc.cgj.bot.event.BufferMessageEvent;
+import net.lamgc.cgj.bot.event.BufferedMessageSender;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttribute;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttributeComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
@@ -282,12 +282,12 @@ public class BotCommandProcess {
             return "参数无效, 请查看帮助信息";
         }
 
-        BufferMessageEvent event = new BufferMessageEvent();
+        BufferedMessageSender bufferedSender = new BufferedMessageSender();
         RandomRankingArtworksSender artworksSender = 
-            new RandomRankingArtworksSender(event, fromGroup, 1, 200, mode, type,
+            new RandomRankingArtworksSender(bufferedSender, fromGroup, 1, 200, mode, type,
                     PageQuality.ORIGINAL);
         artworksSender.send();
-        return event.getBufferMessage();
+        return bufferedSender.getBufferContent();
     }
 
     /**
