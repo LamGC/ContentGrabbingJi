@@ -10,8 +10,9 @@ import java.util.GregorianCalendar;
  * 目前已整理的一些Pixiv接口列表
  */
 @SuppressWarnings("unused")
-public class PixivURL {
+public final class PixivURL {
 
+    private PixivURL() {}
 
     public final static String PIXIV_INDEX_URL = "https://www.pixiv.net";
 
