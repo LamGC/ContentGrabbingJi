@@ -316,7 +316,7 @@ public class BotCommandProcess {
     ) throws IOException, InterruptedException {
         log.debug("正在执行搜索...");
         JsonObject resultBody = CacheStoreCentral.getCentral()
-                .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption);
+                .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption, pagesIndex);
 
         StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
         log.debug("正在处理信息...");

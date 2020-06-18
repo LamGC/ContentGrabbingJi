@@ -423,7 +423,9 @@ public final class CacheStoreCentral {
             String area,
             String includeKeywords,
             String excludeKeywords,
-            String contentOption) throws IOException {
+            String contentOption,
+            int pageIndex
+    ) throws IOException {
         PixivSearchLinkBuilder searchBuilder = new PixivSearchLinkBuilder(Strings.isNullOrEmpty(content) ? "" : content);
         if (type != null) {
             try {
@@ -461,6 +463,10 @@ public final class CacheStoreCentral {
                 searchBuilder.addExcludeKeyword(keyword.trim());
                 log.trace("已添加排除关键字: {}", keyword);
             }
+        }
+
+        if(pageIndex > 0) {
+            searchBuilder.setPage(pageIndex);
         }
 
         log.debug("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
