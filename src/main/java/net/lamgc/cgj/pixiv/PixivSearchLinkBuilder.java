@@ -15,7 +15,7 @@ import java.util.Objects;
  * @author LamGC
  * @see PixivURL#PIXIV_SEARCH_CONTENT_URL
  */
-@SuppressWarnings("ALL")
+@SuppressWarnings("unused")
 public class PixivSearchLinkBuilder {
 
     private final String content;
@@ -26,8 +26,8 @@ public class PixivSearchLinkBuilder {
     private SearchOrder searchOrder = SearchOrder.DATE_D;
     private SearchContentOption searchContentOption = SearchContentOption.ALL;
 
-    private HashSet<String> includeKeywords = new HashSet<>(0);
-    private HashSet<String> excludeKeywords = new HashSet<>(0);
+    private final HashSet<String> includeKeywords = new HashSet<>(0);
+    private final HashSet<String> excludeKeywords = new HashSet<>(0);
 
     private int page = 1;
 
@@ -164,14 +164,6 @@ public class PixivSearchLinkBuilder {
     public PixivSearchLinkBuilder setSearchArea(SearchArea searchArea) {
         this.searchArea = Objects.requireNonNull(searchArea);
         return this;
-    }
-
-    /**
-     * 获取搜索区域
-     * @return 返回搜索区域对象
-     */
-    public SearchArea getSearchArea() {
-        return searchArea;
     }
 
     /**
