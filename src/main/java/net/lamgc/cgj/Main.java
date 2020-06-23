@@ -1,7 +1,5 @@
 package net.lamgc.cgj;
 
-import com.github.monkeywie.proxyee.proxy.ProxyConfig;
-import com.github.monkeywie.proxyee.proxy.ProxyType;
 import com.google.common.base.Strings;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
@@ -15,10 +13,10 @@ import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
-import net.lamgc.plps.PixivLoginProxyServer;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.ArgumentsRunner;
 import net.lamgc.utils.base.runner.Command;
+import net.lamgc.utils.encrypt.MessageDigestUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.CookieStore;
@@ -52,6 +50,14 @@ public class Main {
     private static HttpHost proxy;
 
     public static void main(String[] args) throws IOException, ClassNotFoundException {
+        if(args.length != 0 && args[0].equalsIgnoreCase("buildpassword")) {
+            ArgumentsRunner.run(Main.class, args);
+        } else {
+            standardStart(args);
+        }
+    }
+
+    private static void standardStart(String[] args) throws IOException, ClassNotFoundException {
         log.info("ContentGrabbingJi 正在启动...");
         log.debug("Args: {}, LogsPath: {}", Arrays.toString(args), System.getProperty("cgj.logsPath"));
         log.debug("运行目录: {}", System.getProperty("user.dir"));
@@ -62,16 +68,9 @@ public class Main {
         proxy = BotGlobal.getGlobal().getProxy();
         File cookieStoreFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "cookies.store");
         if(!cookieStoreFile.exists()) {
-            log.warn("未找到cookies.store文件, 是否启动PixivLoginProxyServer? (yes/no)");
-            try(Scanner scanner = new Scanner(System.in)) {
-                if(scanner.nextLine().trim().equalsIgnoreCase("yes")) {
-                    startPixivLoginProxyServer();
-                } else {
-                    System.exit(1);
-                    return;
-                }
-            }
-            
+            log.warn("未找到cookies.store文件, 请检查数据存放目录下是否存在'cookies.store'文件！");
+            System.exit(1);
+            return;
         }
         ObjectInputStream ois = new ObjectInputStream(new FileInputStream(cookieStoreFile));
         cookieStore = (CookieStore) ois.readObject();
@@ -83,6 +82,13 @@ public class Main {
 
         ArgumentsRunner.run(Main.class, args);
         System.exit(0);
+    }
+
+    @Command
+    public static void buildPassword(@Argument(name = "password") String password) {
+        System.out.println("Password: " +
+                Base64.getEncoder().encodeToString(MessageDigestUtils.encrypt(password.getBytes(),
+                MessageDigestUtils.Algorithm.MD5)));
     }
 
     @Command
@@ -347,57 +353,6 @@ public class Main {
     @Command(defaultCommand = true)
     public static void testRun() {
         log.info("这里啥都没有哟w");
-    }
-
-    private static void saveCookieStoreToFile() throws IOException {
-        log.info("正在保存CookieStore...");
-        File outputFile = new File(BotGlobal.getGlobal().getDataStoreDir(), "cookies.store");
-        if(!outputFile.exists() && !outputFile.createNewFile()){
-            log.error("保存CookieStore失败.");
-            return;
-        }
-        ObjectOutputStream stream = new ObjectOutputStream(new FileOutputStream(outputFile));
-        stream.writeObject(cookieStore);
-        stream.flush();
-        stream.close();
-        log.info("CookieStore保存成功.");
-    }
-
-    private static void startPixivLoginProxyServer(){
-        ProxyConfig proxyConfig = null;
-        if(proxy != null) {
-            proxyConfig = new ProxyConfig(ProxyType.HTTP, proxy.getHostName(), proxy.getPort());
-        }
-        PixivLoginProxyServer proxyServer = new PixivLoginProxyServer(proxyConfig);
-        Thread proxyServerStartThread = new Thread(() -> {
-            log.info("启动代理服务器...");
-            proxyServer.start(1006);
-            log.info("代理服务器已关闭.");
-        });
-        proxyServerStartThread.setName("LoginProxyServerThread");
-        proxyServerStartThread.start();
-        //System.console().readLine();
-        
-        log.info("登录完成后, 使用\"done\"命令结束登录过程.");
-        try(Scanner scanner = new Scanner(System.in)) {
-            while(true) {
-                if (scanner.nextLine().equalsIgnoreCase("done")) {
-                    log.info("关闭PLPS服务器...");
-                    proxyServer.close();
-                    cookieStore = proxyServer.getCookieStore();
-                    try {
-                        log.info("正在保存CookieStore...");
-                        saveCookieStoreToFile();
-                        log.info("CookieStore保存完成.");
-                    } catch (IOException e) {
-                        log.error("CookieStore保存时发生异常, 本次CookieStore仅可在本次运行使用.", e);
-                    }
-                    break;
-                } else {
-                    log.warn("要结束登录过程, 请使用\"done\"命令.");
-                }
-            }
-        }
     }
 
     private static File getStoreDir() {
