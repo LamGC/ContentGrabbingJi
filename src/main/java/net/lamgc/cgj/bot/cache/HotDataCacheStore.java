@@ -75,6 +75,9 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
             log.trace("Current缓存库更新完成.");
             result = parentResult;
         } else {
+            // 更新该Key的过期时间
+            current.update(key, result,
+                    expireTime + (expireFloatRange <= 0 ? 0 : random.nextInt(expireFloatRange)));
             log.trace("Current缓存库缓存命中.");
         }
         return result;
@@ -138,10 +141,14 @@ public class HotDataCacheStore<T> implements CacheStore<T>, Cleanable {
      * <p>该方法仅清理Current缓存库, 不会对上游缓存库造成影响.</p>
      */
     @Override
-    public void clean() {
-        for(String key : this.current.keys()) {
-            if(current.exists(key)) {
-                current.remove(key);
+    public void clean() throws Exception {
+        if(current instanceof Cleanable) {
+            ((Cleanable) current).clean();
+        } else {
+            for(String key : this.current.keys()) {
+                if (!current.exists(key)) {
+                    current.remove(key);
+                }
             }
         }
     }

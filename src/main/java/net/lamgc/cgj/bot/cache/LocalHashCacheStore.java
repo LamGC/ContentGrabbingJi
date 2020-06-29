@@ -2,10 +2,7 @@ package net.lamgc.cgj.bot.cache;
 
 import org.jetbrains.annotations.NotNull;
 
-import java.util.Date;
-import java.util.Hashtable;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -151,11 +148,14 @@ public class LocalHashCacheStore<T> implements CacheStore<T>, Cleanable {
     @Override
     public void clean() {
         Date currentDate = new Date();
+        Set<String> expireKeySet = new HashSet<>();
         cache.forEach((key, value) -> {
             if(value.isExpire(currentDate)) {
-                cache.remove(key);
+                expireKeySet.add(key);
             }
         });
+
+        expireKeySet.forEach(cache::remove);
     }
 
     public static class CacheObject<T> implements Comparable<CacheObject<T>> {

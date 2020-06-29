@@ -18,7 +18,7 @@ public class AutoCleanTimer extends TimerTask {
     private final static Logger log = LoggerFactory.getLogger(AutoCleanTimer.class);
 
     static {
-        cleanTimer.schedule(new AutoCleanTimer(), 100L);
+        cleanTimer.schedule(new AutoCleanTimer(), 100L, 100L);
     }
 
     /**
