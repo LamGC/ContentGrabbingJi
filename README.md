@@ -79,7 +79,8 @@
 # 增加群组作品推送
 # 如果增加了original参数, 则图片为原图发送
 # 如果不指定group参数, 则群组为命令发送所在群组
-.cgjadmin addPushGroup [-group 指定群组号] [-minTime 最小] [-floatTime 随机时间范围] [-rankingStart 排行榜起始排名] [-rankingStop 排行榜结束排名] [-mode 排行榜模式] [-type 排行榜类型] [-original]
+.cgjadmin addPushGroup [-group 指定群组号] [-minTime 最小] [-floatTime 随机时间范围] [-rankingStart 排行榜起始排名] 
+                       [-rankingStop 排行榜结束排名] [-mode 排行榜模式] [-type 排行榜类型] [-original]
 
 # 删除群组推送功能
 # 如果不指定group参数, 则群组为命令发送所在群组
