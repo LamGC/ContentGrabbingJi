@@ -83,9 +83,7 @@ public final class CacheStoreCentral {
     private final CacheStore<JsonElement> illustPreLoadDataCache =
             CacheStoreUtils.hashLocalHotDataStore(
                     new JsonRedisCacheStore(BotGlobal.getGlobal().getRedisServer(),
-                            "illustPreLoadData", BotGlobal.getGlobal().getGson()),
-                    // 600000, 120000);
-                    60000, 1);
+                            "illustPreLoadData", BotGlobal.getGlobal().getGson()), 600000, 120000);
     /**
      * 搜索内容缓存, 有效期 2 小时
      */
