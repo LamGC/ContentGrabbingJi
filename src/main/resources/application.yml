@@ -1,0 +1,12 @@
+server:
+  port: 8081
+
+spring:
+  cq:
+    plugin-list:
+      - net.lamgc.cgj.bot.framework.coolq.CQPluginMain
+    event:
+      corePoolSize: 8
+      maxPoolSize: 16
+      keepAliveTime: 25000
+      workQueueSize: 1024

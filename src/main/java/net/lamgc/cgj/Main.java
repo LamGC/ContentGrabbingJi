@@ -8,7 +8,6 @@ import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.framework.cli.ConsoleMain;
-import net.lamgc.cgj.bot.framework.coolq.CQConfig;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
@@ -106,7 +105,6 @@ public class Main {
     @Command
     public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
         log.info("酷Q机器人根目录: {}", BotGlobal.getGlobal().getDataStoreDir().getPath());
-        CQConfig.init();
         Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
         Matcher matcher = pattern.matcher(Strings.nullToEmpty(argsStr));
         ArrayList<String> argsList = new ArrayList<>();
