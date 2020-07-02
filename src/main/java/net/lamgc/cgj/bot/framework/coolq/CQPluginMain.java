@@ -3,6 +3,7 @@ package net.lamgc.cgj.bot.framework.coolq;
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.coolq.message.SpringCQMessageEvent;
+import net.lamgc.cgj.bot.framework.coolq.message.SpringCQMessageSenderFactory;
 import net.lamgc.utils.event.EventHandler;
 import net.lz1998.cq.event.message.CQDiscussMessageEvent;
 import net.lz1998.cq.event.message.CQGroupMessageEvent;
@@ -46,6 +47,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
      * @return 是否拦截消息
      */
     private static int processMessage(CoolQ cq, CQMessageEvent event) {
+        SpringCQMessageSenderFactory.setCoolQ(cq);
         if(BotEventHandler.mismatch(event.getMessage())) {
             return MESSAGE_IGNORE;
         }
