@@ -46,9 +46,10 @@ public final class FrameworkManager {
         try {
             framework.init(frameworkResources);
             framework.run();
-            frameworkResources.getFrameworkThreadGroup().interrupt();
         } catch(Throwable e) {
             frameworkResources.getLogger().error("框架未捕获异常, 导致异常退出.", e);
+        } finally {
+            frameworkResources.getFrameworkThreadGroup().interrupt();
         }
     }
 

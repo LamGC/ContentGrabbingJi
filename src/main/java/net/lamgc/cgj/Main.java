@@ -7,6 +7,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.boot.BotGlobal;
+import net.lamgc.cgj.bot.framework.FrameworkManager;
 import net.lamgc.cgj.bot.framework.cli.ConsoleMain;
 import net.lamgc.cgj.bot.framework.coolq.CQConfig;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
@@ -93,14 +94,12 @@ public class Main {
 
     @Command
     public static void botMode(@Argument(name = "args", force = false) String argsStr) {
-        MiraiMain main = new MiraiMain();
-        main.init();
-        main.close();
+        FrameworkManager.registerFramework(new MiraiMain());
     }
 
     @Command
-    public static void consoleMode() throws IOException {
-        ConsoleMain.start();
+    public static void consoleMode() {
+        FrameworkManager.registerFramework(new ConsoleMain());
     }
 
     @Command

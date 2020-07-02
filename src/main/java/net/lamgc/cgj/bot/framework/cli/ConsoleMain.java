@@ -2,6 +2,8 @@ package net.lamgc.cgj.bot.framework.cli;
 
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.framework.Framework;
+import net.lamgc.cgj.bot.framework.FrameworkManager;
 import net.lamgc.cgj.bot.framework.cli.message.ConsoleMessageEvent;
 import net.lamgc.cgj.bot.framework.cli.message.ConsoleMessageSenderFactory;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
@@ -12,13 +14,18 @@ import org.jline.terminal.TerminalBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.IOException;
+import java.util.concurrent.atomic.AtomicBoolean;
 
-public class ConsoleMain {
+public class ConsoleMain implements Framework {
 
     private final static Logger log = LoggerFactory.getLogger(ConsoleMain.class);
+    private final AtomicBoolean quitState = new AtomicBoolean();
 
-    public static void start() throws IOException {
+    @Override
+    public void init(FrameworkManager.FrameworkResources resources) { }
+
+    @Override
+    public void run() throws Exception {
         MessageSenderBuilder.setCurrentMessageSenderFactory(new ConsoleMessageSenderFactory());
         ApplicationBoot.initialBot();
         LineReader lineReader = LineReaderBuilder.builder()
@@ -45,7 +52,17 @@ public class ConsoleMain {
             } catch (InterruptedException e) {
                 log.error("执行时发生中断", e);
             }
-        } while(true);
+        } while(!quitState.get());
     }
 
+    @Override
+    public void close() {
+        quitState.set(true);
+        Thread.currentThread().getThreadGroup().interrupt();
+    }
+
+    @Override
+    public String getName() {
+        return this.toString();
+    }
 }

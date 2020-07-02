@@ -3,6 +3,8 @@ package net.lamgc.cgj.bot.framework.mirai;
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.event.BotEventHandler;
+import net.lamgc.cgj.bot.framework.Framework;
+import net.lamgc.cgj.bot.framework.FrameworkManager;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageEvent;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageSenderFactory;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
@@ -24,7 +26,7 @@ import java.io.*;
 import java.util.Base64;
 import java.util.Properties;
 
-public class MiraiMain implements Closeable {
+public class MiraiMain implements Framework {
 
     private final Logger log = LoggerFactory.getLogger(MiraiMain.class);
 
@@ -32,7 +34,8 @@ public class MiraiMain implements Closeable {
 
     private final static Properties botProperties = new Properties();
 
-    public void init() {
+    @Override
+    public void init(FrameworkManager.FrameworkResources resources) {
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         try {
             Class.forName(BotEventHandler.class.getName());
@@ -69,6 +72,7 @@ public class MiraiMain implements Closeable {
 
         bot = BotFactoryJvm.newBot(Long.parseLong(botProperties.getProperty("bot.qq", "0")),
                 Base64.getDecoder().decode(botProperties.getProperty("bot.password", "")), configuration);
+        // TODO: 看看能不能单独订阅某个Bot?
         Events.subscribeAlways(GroupMessageEvent.class, this::executeMessageEvent);
         Events.subscribeAlways(FriendMessageEvent.class, this::executeMessageEvent);
         Events.subscribeAlways(TempMessageEvent.class, this::executeMessageEvent);
@@ -79,6 +83,12 @@ public class MiraiMain implements Closeable {
         bot.login();
         MessageSenderBuilder.setCurrentMessageSenderFactory(new MiraiMessageSenderFactory(bot));
         ApplicationBoot.initialBot();
+        bot.join();
+    }
+
+    @Override
+    public void run() {
+        bot.login();
         bot.join();
     }
 
@@ -101,6 +111,7 @@ public class MiraiMain implements Closeable {
     /**
      * 关闭机器人
      */
+    @Override
     public synchronized void close() {
         if(bot == null) {
             return;

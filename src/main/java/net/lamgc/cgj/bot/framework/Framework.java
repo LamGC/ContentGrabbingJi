@@ -12,11 +12,21 @@ public interface Framework {
 
     /**
      * 框架运行方法
-     * @throws Exception
+     * @throws Exception 当框架抛出异常时, 将会终止框架的所有活动.
      */
     void run() throws Exception;
 
+    /**
+     * 关闭框架
+     * @throws Exception 即使该方法抛出异常, {@link FrameworkManager}依然会尝试向框架所属的线程发起中断, 以试图清除框架资源.
+     */
     void close() throws Exception;
 
-    String getName();
+    /**
+     * 获取框架标识名
+     * @return 返回标识名
+     */
+    default String getName() {
+        return this.toString();
+    }
 }
