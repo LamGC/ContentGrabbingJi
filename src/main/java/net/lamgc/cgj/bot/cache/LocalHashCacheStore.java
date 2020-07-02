@@ -158,7 +158,7 @@ public class LocalHashCacheStore<T> implements CacheStore<T>, Cleanable {
         expireKeySet.forEach(cache::remove);
     }
 
-    public static class CacheObject<T> implements Comparable<CacheObject<T>> {
+    private static class CacheObject<T> implements Comparable<CacheObject<T>> {
 
         private final AtomicReference<T> value;
         private final AtomicReference<Date> expire;
