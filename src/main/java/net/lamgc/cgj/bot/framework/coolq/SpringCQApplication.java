@@ -1,11 +1,11 @@
 package net.lamgc.cgj.bot.framework.coolq;
 
 import com.google.common.base.Strings;
-import net.lamgc.cgj.Main;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -16,6 +16,7 @@ import java.util.ArrayList;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@SpringBootApplication
 public class SpringCQApplication {
 
     private final static Logger log = LoggerFactory.getLogger(SpringCQApplication.class);
@@ -32,7 +33,7 @@ public class SpringCQApplication {
         }
         String[] args = new String[argsList.size()];
         argsList.toArray(args);
-        ConfigurableApplicationContext context = SpringApplication.run(Main.class, args);
+        ConfigurableApplicationContext context = SpringApplication.run(SpringCQApplication.class, args);
         registerShutdownHook(context);
         try {
             synchronized (quitLock) {
