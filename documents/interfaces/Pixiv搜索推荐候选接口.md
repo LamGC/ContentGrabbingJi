@@ -7,9 +7,11 @@
 GET https://www.pixiv.net/rpc/cps.php?
 ```
 
-- 是否需要登录: `是`
+- 是否需要登录: `否`
 - 是否为Pixiv标准接口返回格式: `否`
-- 是否需要Referer请求头: `否`
+- 是否需要Referer请求头: `是`
+
+> 补充: Referer请求头只要是Pixiv的就可以了.
 
 ### 参数 ###
 Url参数:
