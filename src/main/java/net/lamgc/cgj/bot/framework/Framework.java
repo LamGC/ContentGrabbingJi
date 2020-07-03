@@ -27,6 +27,6 @@ public interface Framework {
      * @return 返回标识名
      */
     default String getName() {
-        return this.toString();
+        return this.getClass().getSimpleName() + "@" + Integer.toHexString(this.hashCode());
     }
 }

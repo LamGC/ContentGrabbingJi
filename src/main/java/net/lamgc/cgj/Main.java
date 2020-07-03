@@ -26,7 +26,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
@@ -34,8 +33,6 @@ import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -104,7 +101,7 @@ public class Main {
 
     @Command
     public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
-        new SpringCQApplication().start(argsStr);
+        FrameworkManager.registerFramework(new SpringCQApplication());
     }
 
     @Command
