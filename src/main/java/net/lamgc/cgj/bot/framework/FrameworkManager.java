@@ -4,7 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public final class FrameworkManager {
 
@@ -27,6 +29,10 @@ public final class FrameworkManager {
 
         frameworkThread.start();
         return frameworkThread;
+    }
+
+    public static Set<Framework> frameworkSet() {
+        return new HashSet<>(resourcesMap.keySet());
     }
 
     public static void shutdownAllFramework() {
