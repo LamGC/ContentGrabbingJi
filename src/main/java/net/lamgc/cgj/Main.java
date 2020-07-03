@@ -26,7 +26,6 @@ import org.apache.http.util.EntityUtils;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -36,7 +35,6 @@ import java.util.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-@SpringBootApplication
 public class Main {
 
     private final static Logger log = LoggerFactory.getLogger(Main.class);
@@ -91,17 +89,29 @@ public class Main {
 
     @Command
     public static void botMode(@Argument(name = "args", force = false) String argsStr) {
-        FrameworkManager.registerFramework(new MiraiMain());
+        try {
+            FrameworkManager.registerFramework(new MiraiMain()).join();
+        } catch (InterruptedException ignored) {
+
+        }
     }
 
     @Command
     public static void consoleMode() {
-        FrameworkManager.registerFramework(new ConsoleMain());
+        try {
+            FrameworkManager.registerFramework(new ConsoleMain()).join();
+        } catch (InterruptedException ignored) {
+
+        }
     }
 
     @Command
     public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
-        FrameworkManager.registerFramework(new SpringCQApplication());
+        try {
+            FrameworkManager.registerFramework(new SpringCQApplication()).join();
+        } catch (InterruptedException ignored) {
+
+        }
     }
 
     @Command

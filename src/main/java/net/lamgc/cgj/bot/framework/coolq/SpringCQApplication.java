@@ -1,17 +1,18 @@
 package net.lamgc.cgj.bot.framework.coolq;
 
-import net.lamgc.cgj.Main;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.framework.Framework;
 import net.lamgc.cgj.bot.framework.FrameworkManager;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.event.ApplicationFailedEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextStoppedEvent;
 
+@SpringBootApplication
 public class SpringCQApplication implements Framework {
 
     private Logger log;
@@ -25,7 +26,7 @@ public class SpringCQApplication implements Framework {
 
     public void run() {
         log.info("酷Q机器人根目录: {}", BotGlobal.getGlobal().getDataStoreDir().getPath());
-        ConfigurableApplicationContext context = SpringApplication.run(Main.class);
+        ConfigurableApplicationContext context = SpringApplication.run(SpringCQApplication.class);
         registerShutdownHook(context);
         try {
             synchronized (quitLock) {

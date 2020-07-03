@@ -19,26 +19,30 @@ public final class FrameworkManager {
                 .addShutdownHook(new Thread(FrameworkManager::shutdownAllFramework, "FrameworkManager-Shutdown"));
     }
 
-    public static void registerFramework(Framework framework) {
+    public static Thread registerFramework(Framework framework) {
         FrameworkResources resources = new FrameworkResources(framework);
         resourcesMap.put(framework, resources);
-        new Thread(resources.getFrameworkThreadGroup(),
-                () -> FrameworkManager.runFramework(framework), "FrameworkThread-" + framework.getName()).start();
+        Thread frameworkThread = new Thread(resources.getFrameworkThreadGroup(),
+                () -> FrameworkManager.runFramework(framework), "FrameworkThread-" + framework.getName());
+
+        frameworkThread.start();
+        return frameworkThread;
     }
 
     public static void shutdownAllFramework() {
         for (Framework framework : resourcesMap.keySet()) {
-            Logger frameworkLogger = resourcesMap.get(framework).getLogger();
+            FrameworkResources frameworkResources = resourcesMap.get(framework);
+            Logger frameworkLogger = frameworkResources.getLogger();
             try {
                 frameworkLogger.info("正在关闭框架...");
                 framework.close();
                 frameworkLogger.info("框架已关闭.");
+                frameworkResources.getFrameworkThreadGroup().interrupt();
                 resourcesMap.remove(framework);
             } catch(Throwable e) {
                 frameworkLogger.error("退出框架时发生异常", e);
             }
         }
-        frameworkRootGroup.interrupt();
     }
 
     private static void runFramework(Framework framework) {
