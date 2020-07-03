@@ -3,6 +3,7 @@ package net.lamgc.cgj.bot.framework.coolq;
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.coolq.message.SpringCQMessageEvent;
+import net.lamgc.cgj.bot.framework.coolq.message.SpringCQMessageSenderFactory;
 import net.lamgc.utils.event.EventHandler;
 import net.lz1998.cq.event.message.CQDiscussMessageEvent;
 import net.lz1998.cq.event.message.CQGroupMessageEvent;
@@ -17,8 +18,6 @@ import org.springframework.stereotype.Component;
 public class CQPluginMain extends CQPlugin implements EventHandler {
 
     public CQPluginMain() {
-        // TODO(LamGC, 2020.04.21): SpringCQ无法适配MessageSenderBuilder
-        // MessageSenderBuilder.setCurrentMessageSenderFactory(new SpringCQMessageSenderFactory());
         ApplicationBoot.initialBot();
         LoggerFactory.getLogger(CQPluginMain.class)
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
@@ -46,6 +45,7 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
      * @return 是否拦截消息
      */
     private static int processMessage(CoolQ cq, CQMessageEvent event) {
+        SpringCQMessageSenderFactory.setCoolQ(cq);
         if(BotEventHandler.mismatch(event.getMessage())) {
             return MESSAGE_IGNORE;
         }

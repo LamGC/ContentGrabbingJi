@@ -8,7 +8,7 @@ import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.framework.cli.ConsoleMain;
-import net.lamgc.cgj.bot.framework.coolq.CQConfig;
+import net.lamgc.cgj.bot.framework.coolq.SpringCQApplication;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
@@ -25,20 +25,15 @@ import org.apache.http.util.EntityUtils;
 import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-@SpringBootApplication
 public class Main {
 
     private final static Logger log = LoggerFactory.getLogger(Main.class);
@@ -105,17 +100,7 @@ public class Main {
 
     @Command
     public static void pluginMode(@Argument(name = "args", force = false) String argsStr) {
-        log.info("酷Q机器人根目录: {}", BotGlobal.getGlobal().getDataStoreDir().getPath());
-        CQConfig.init();
-        Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
-        Matcher matcher = pattern.matcher(Strings.nullToEmpty(argsStr));
-        ArrayList<String> argsList = new ArrayList<>();
-        while (matcher.find()) {
-            argsList.add(matcher.group());
-        }
-        String[] args = new String[argsList.size()];
-        argsList.toArray(args);
-        SpringApplication.run(Main.class, args);
+        new SpringCQApplication().start(argsStr);
     }
 
     @Command
