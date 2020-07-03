@@ -14,11 +14,15 @@ import net.lz1998.cq.robot.CoolQ;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.atomic.AtomicBoolean;
+
 @Component
 public class CQPluginMain extends CQPlugin implements EventHandler {
 
+    private final static AtomicBoolean initialState = new AtomicBoolean();
+
     public CQPluginMain() {
-        ApplicationBoot.initialBot();
+
         LoggerFactory.getLogger(CQPluginMain.class)
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
     }
@@ -46,6 +50,12 @@ public class CQPluginMain extends CQPlugin implements EventHandler {
      */
     private static int processMessage(CoolQ cq, CQMessageEvent event) {
         SpringCQMessageSenderFactory.setCoolQ(cq);
+        synchronized (initialState) {
+            if(!initialState.get()) {
+                ApplicationBoot.initialBot();
+                initialState.set(true);
+            }
+        }
         if(BotEventHandler.mismatch(event.getMessage())) {
             return MESSAGE_IGNORE;
         }
