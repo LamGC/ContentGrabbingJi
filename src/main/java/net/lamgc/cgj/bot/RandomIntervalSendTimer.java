@@ -4,7 +4,6 @@ import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.lang.reflect.Field;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -23,7 +22,7 @@ public class RandomIntervalSendTimer extends TimerTask {
     private final long time;
     private final int floatTime;
     private final AtomicBoolean loop = new AtomicBoolean();
-    private final AtomicBoolean start = new AtomicBoolean();
+    private final AtomicBoolean running = new AtomicBoolean();
     private final String hashId = Integer.toHexString(this.hashCode());
 
 
@@ -88,7 +87,6 @@ public class RandomIntervalSendTimer extends TimerTask {
         this.sender = sender;
         this.time = time;
         this.floatTime = floatTime;
-        timerMap.put(timerId, this);
         if(startNow) {
             start(loop);
         }
@@ -108,19 +106,16 @@ public class RandomIntervalSendTimer extends TimerTask {
         Date nextDate = new Date();
         nextDate.setTime(nextDate.getTime() + nextDelay);
         log.info("定时器 {} 下一延迟: {}ms ({})", hashId, nextDelay, nextDate);
-        if(start.get()) {
-            try {
-                Field state = this.getClass().getSuperclass().getDeclaredField("state");
-                state.setAccessible(true);
-                state.setInt(this, 0);
-                state.setAccessible(false);
-            } catch (NoSuchFieldException | IllegalAccessException e) {
-                e.printStackTrace();
-                return;
-            }
+        if(running.get()) {
+            reset();
+            return;
         }
-        start.set(true);
+        running.set(true);
         timer.schedule(this, nextDelay);
+    }
+
+    public void reset() {
+        timerMap.put(timerId, (RandomIntervalSendTimer) clone());
     }
 
     @Override
@@ -145,7 +140,7 @@ public class RandomIntervalSendTimer extends TimerTask {
      */
     @Override
     public boolean cancel() {
-        start.set(false);
+        running.set(false);
         loop.set(false);
         return super.cancel();
     }
@@ -158,4 +153,18 @@ public class RandomIntervalSendTimer extends TimerTask {
         timerMap.remove(this.timerId);
     }
 
+    /**
+     * 克隆一个参数完全一样的TimerTask对象.
+     * @return 返回对象不同, 参数相同的TimerTask对象.
+     */
+    @Override
+    @SuppressWarnings("MethodDoesntCallSuperMethod")
+    public Object clone() {
+        RandomIntervalSendTimer newTimerTask = new RandomIntervalSendTimer(
+                this.timerId, this.sender,
+                time, floatTime,
+                running.get(), loop.get());
+        this.destroy();
+        return newTimerTask;
+    }
 }
