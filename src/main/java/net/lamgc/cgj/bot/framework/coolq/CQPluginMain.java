@@ -17,12 +17,12 @@ import org.springframework.stereotype.Component;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 @Component
+@SuppressWarnings("unused")
 public class CQPluginMain extends CQPlugin implements EventHandler {
 
     private final static AtomicBoolean initialState = new AtomicBoolean();
 
     public CQPluginMain() {
-
         LoggerFactory.getLogger(CQPluginMain.class)
                 .info("BotEventHandler.COMMAND_PREFIX = {}", BotEventHandler.COMMAND_PREFIX);
     }
