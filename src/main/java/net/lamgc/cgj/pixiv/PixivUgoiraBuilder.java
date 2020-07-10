@@ -1,5 +1,6 @@
 package net.lamgc.cgj.pixiv;
 
+import com.google.common.io.ByteStreams;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -12,7 +13,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.util.EntityUtils;
-import org.apache.tomcat.util.http.fileupload.util.Streams;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -127,14 +127,13 @@ public final class PixivUgoiraBuilder {
         HashMap<String, InputStream> frameMap = new HashMap<>(frames.size());
         while((entry = zipInputStream.getNextEntry()) != null) {
             log.trace("ZipEntry {} 正在接收...", entry);
-            Streams.copy(zipInputStream, cacheOutputStream, false);
+            ByteStreams.copy(zipInputStream, cacheOutputStream);
             frameMap.put(entry.getName(), new ByteArrayInputStream(cacheOutputStream.toByteArray()));
             log.trace("ZipEntry {} 已接收完成.", entry);
             cacheOutputStream.reset();
         }
 
-
-        InputStream firstFrameInput = frameMap.get("000000.jpg");
+        InputStream firstFrameInput = frameMap.get(frames.get(0).getAsJsonObject().get("file").getAsString());
         BufferedImage firstFrame = ImageIO.read(firstFrameInput);
         firstFrameInput.reset();
         if(width != firstFrame.getWidth() || height != firstFrame.getHeight()) {
