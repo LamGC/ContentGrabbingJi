@@ -1,6 +1,6 @@
 ---
-name: Bug Report
-about: Use this template to feedback bugs.
+name: Bug 反馈
+about: 使用这个模板反馈应用问题。
 title: ''
 labels: bug
 assignees: ''
