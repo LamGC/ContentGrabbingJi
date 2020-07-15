@@ -195,6 +195,16 @@ public final class PixivURL {
     public final static String PIXIV_USER_COLLECTION_PAGE = "https://www.pixiv.net/bookmark.php?rest=show&p={pageIndex}";
 
     /**
+     * 搜索推荐接口.
+     * <p>可返回与搜索内容相关的标签信息, 以优化搜索效果.</p>
+     * 需要替换的文本:
+     * <ul>
+     *     <li>{content} - 搜索内容</li>
+     * </ul>
+     */
+    public final static String PIXIV_SEARCH_RECOMMENDS = "https://www.pixiv.net/rpc/cps.php?keywork={content}";
+
+    /**
      * 获取排名榜
      * @param mode 查询类型, 详细信息看{@link RankingMode}, 如本参数为null, 则为每天
      * @param contentType 排名榜类型, 如为null则为综合

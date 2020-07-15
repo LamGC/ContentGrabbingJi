@@ -11,12 +11,17 @@ import net.lamgc.cgj.bot.cache.JsonRedisCacheStore;
 import net.lamgc.cgj.bot.event.BufferedMessageSender;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttribute;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttributeComparator;
+import net.lamgc.cgj.bot.util.PixivUtils;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -315,6 +320,16 @@ public class BotCommandProcess {
             @Argument(name = "p", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException, InterruptedException {
         log.debug("正在执行搜索...");
+        PixivSearchLinkBuilder linkBuilder = PixivUtils.buildSearchLinkBuilder(content, type, area, includeKeywords,
+                excludeKeywords, contentOption, pagesIndex);
+        int recommendKeywordCount = 0;
+        try {
+            recommendKeywordCount = Integer.parseInt(SettingProperties.getProperties(fromGroup)
+                    .getProperty("search.recommendKeywordCount", "0"));
+        } catch(NumberFormatException e) {
+            log.warn("配置项 search.recommendKeywordCount 的值无效");
+        }
+        addRecommendKeywords(linkBuilder, recommendKeywordCount);
         JsonObject resultBody = CacheStoreCentral.getCentral()
                 .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption, pagesIndex);
 
@@ -523,6 +538,43 @@ public class BotCommandProcess {
         reportJson.addProperty("reason", reason);
         reportStore.update(String.valueOf(illustId), reportJson, 0);
         return "色图姬收到了你的报告，将屏蔽该作品并对作品违规情况进行核实，感谢你的反馈！";
+    }
+
+    /**
+     * 根据Pixiv搜索推荐列表补充关键词.
+     * <p>该操作可能会优化搜索效果.</p>
+     * @param searchLinkBuilder PixivSearchLinkBuilder对象
+     * @param includeKeywordsCount 需要添加的关键词数量
+     * @throws IOException 当获取推荐列表发生异常时抛出.
+     */
+    private static void addRecommendKeywords(PixivSearchLinkBuilder searchLinkBuilder, int includeKeywordsCount)
+            throws IOException {
+        if(includeKeywordsCount <= 0) {
+            return;
+        }
+        HttpGet request = BotGlobal.getGlobal().getPixivDownload()
+                .createHttpGetRequest(PixivURL.PIXIV_SEARCH_RECOMMENDS
+                    .replace("{content}", searchLinkBuilder.getContent()));
+        request.addHeader(HttpHeaders.REFERER, "https://www.pixiv.net/");
+
+        HttpResponse response = BotGlobal.getGlobal().getPixivDownload().getHttpClient().execute(request);
+        String responseBody = EntityUtils.toString(response.getEntity());
+        if(response.getStatusLine().getStatusCode() != 200) {
+            throw new IOException("Interface request failure: " + response.getStatusLine() +
+                    ", response body: '" + responseBody + "'");
+        }
+
+        JsonObject resultObject = BotGlobal.getGlobal().getGson()
+                .fromJson(responseBody, JsonObject.class);
+        if(!resultObject.has("candidates")) {
+            return;
+        }
+
+        JsonArray recommendsArr = resultObject.getAsJsonArray("candidates");
+        for (int count = 0; count < includeKeywordsCount && count < recommendsArr.size(); count++) {
+            searchLinkBuilder.addIncludeKeyword(
+                    recommendsArr.get(count).getAsJsonObject().get("tag_name").getAsString());
+        }
     }
 
     /**

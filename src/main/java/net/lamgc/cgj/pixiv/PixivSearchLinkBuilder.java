@@ -161,6 +161,10 @@ public class PixivSearchLinkBuilder {
                 '}';
     }
 
+    public String getContent() {
+        return content;
+    }
+
     public PixivSearchLinkBuilder setSearchArea(SearchArea searchArea) {
         this.searchArea = Objects.requireNonNull(searchArea);
         return this;

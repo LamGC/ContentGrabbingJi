@@ -8,6 +8,7 @@ import net.lamgc.cgj.bot.BotCode;
 import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.SettingProperties;
 import net.lamgc.cgj.bot.boot.BotGlobal;
+import net.lamgc.cgj.bot.util.PixivUtils;
 import net.lamgc.cgj.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
@@ -405,73 +406,11 @@ public final class CacheStoreCentral {
         return PixivDownload.getRanking(result, start - 1, range);
     }
 
-    /**
-     * 获取搜索结果
-     * @param content 搜索内容
-     * @param type 类型
-     * @param area 范围
-     * @param includeKeywords 包含关键词
-     * @param excludeKeywords 排除关键词
-     * @param contentOption 内容类型
-     * @return 返回完整搜索结果
-     * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
-     */
-    public JsonObject getSearchBody(
-            String content,
-            String type,
-            String area,
-            String includeKeywords,
-            String excludeKeywords,
-            String contentOption,
-            int pageIndex
-    ) throws IOException {
-        PixivSearchLinkBuilder searchBuilder = new PixivSearchLinkBuilder(Strings.isNullOrEmpty(content) ? "" : content);
-        if (type != null) {
-            try {
-                searchBuilder.setSearchType(PixivSearchLinkBuilder.SearchType.valueOf(type.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchType: {}", type);
-            }
-        }
-        if (area != null) {
-            try {
-                searchBuilder.setSearchArea(PixivSearchLinkBuilder.SearchArea.valueOf(area));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchArea: {}", area);
-            }
-        }
-        if (contentOption != null) {
-            try {
-                searchBuilder.setSearchContentOption(
-                        PixivSearchLinkBuilder.SearchContentOption.valueOf(contentOption.trim().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchContentOption: {}", contentOption);
-            }
-        }
-
-        if (!Strings.isNullOrEmpty(includeKeywords)) {
-            for (String keyword : includeKeywords.split(";")) {
-                searchBuilder.removeExcludeKeyword(keyword.trim());
-                searchBuilder.addIncludeKeyword(keyword.trim());
-                log.trace("已添加关键字: {}", keyword);
-            }
-        }
-        if (!Strings.isNullOrEmpty(excludeKeywords)) {
-            for (String keyword : excludeKeywords.split(";")) {
-                searchBuilder.removeIncludeKeyword(keyword.trim());
-                searchBuilder.addExcludeKeyword(keyword.trim());
-                log.trace("已添加排除关键字: {}", keyword);
-            }
-        }
-
-        if(pageIndex > 0) {
-            searchBuilder.setPage(pageIndex);
-        }
-
-        log.debug("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
+    public JsonObject getSearchBody(PixivSearchLinkBuilder searchLinkBuilder) throws IOException {
+        log.debug("正在搜索作品, 条件: {}", searchLinkBuilder.getSearchCondition());
 
         Locker<String> locker
-                = buildSyncKey(searchBuilder.buildURL());
+                = buildSyncKey(searchLinkBuilder.buildURL());
         String requestUrl = locker.getKey();
         log.debug("RequestUrl: {}", requestUrl);
         JsonObject resultBody = null;
@@ -522,6 +461,31 @@ public final class CacheStoreCentral {
             resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
         }
         return resultBody;
+    }
+
+
+    /**
+     * 获取搜索结果
+     * @param content 搜索内容
+     * @param type 类型
+     * @param area 范围
+     * @param includeKeywords 包含关键词
+     * @param excludeKeywords 排除关键词
+     * @param contentOption 内容类型
+     * @return 返回完整搜索结果
+     * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
+     */
+    public JsonObject getSearchBody(
+            String content,
+            String type,
+            String area,
+            String includeKeywords,
+            String excludeKeywords,
+            String contentOption,
+            int pageIndex
+    ) throws IOException {
+        return getSearchBody(PixivUtils.buildSearchLinkBuilder(content, type, area, includeKeywords,
+                excludeKeywords, contentOption, pageIndex));
     }
 
     protected ImageChecksum getImageChecksum(int illustId, int pageIndex) {
