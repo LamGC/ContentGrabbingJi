@@ -1,12 +1,9 @@
 package net.lamgc.cgj.bot.framework;
 
 import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.regex.Pattern;
 
 public final class FrameworkManager {
 
@@ -22,13 +19,21 @@ public final class FrameworkManager {
     }
 
     public static Thread registerFramework(Framework framework) {
+        checkFramework(framework);
         FrameworkResources resources = new FrameworkResources(framework);
         resourcesMap.put(framework, resources);
         Thread frameworkThread = new Thread(resources.getFrameworkThreadGroup(),
-                () -> FrameworkManager.runFramework(framework), "FrameworkThread-" + framework.getName());
+                () -> FrameworkManager.runFramework(framework), "FrameworkThread-" + framework.getIdentify());
 
         frameworkThread.start();
         return frameworkThread;
+    }
+
+    private static final Pattern FRAMEWORK_NAME_CHECK_PATTERN = Pattern.compile("^[A-Za-z0-9_\\-$]+$");
+    private static void checkFramework(Framework framework) {
+        if(!FRAMEWORK_NAME_CHECK_PATTERN.matcher(framework.getFrameworkName()).matches()) {
+            throw new IllegalStateException("Invalid Framework Name: " + framework.getFrameworkName());
+        }
     }
 
     public static Set<Framework> frameworkSet() {
@@ -51,6 +56,10 @@ public final class FrameworkManager {
         }
     }
 
+    static ThreadGroup getFrameworkRootGroup() {
+        return frameworkRootGroup;
+    }
+
     private static void runFramework(Framework framework) {
         FrameworkResources frameworkResources = resourcesMap.get(framework);
         try {
@@ -60,26 +69,6 @@ public final class FrameworkManager {
             frameworkResources.getLogger().error("框架未捕获异常, 导致异常退出.", e);
         } finally {
             frameworkResources.getFrameworkThreadGroup().interrupt();
-        }
-    }
-
-    public static class FrameworkResources {
-
-        private final ThreadGroup frameworkThreadGroup;
-
-        private final Logger logger;
-
-        public FrameworkResources(Framework framework) {
-            frameworkThreadGroup = new ThreadGroup(frameworkRootGroup, "Framework-" + framework.getName());
-            logger = LoggerFactory.getLogger("Framework-" + framework.getName());
-        }
-
-        ThreadGroup getFrameworkThreadGroup() {
-            return frameworkThreadGroup;
-        }
-
-        public Logger getLogger() {
-            return logger;
         }
     }
 

@@ -4,6 +4,7 @@ import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.Framework;
 import net.lamgc.cgj.bot.framework.FrameworkManager;
+import net.lamgc.cgj.bot.framework.FrameworkResources;
 import net.lamgc.cgj.bot.framework.cli.message.ConsoleMessageEvent;
 import net.lamgc.cgj.bot.framework.cli.message.ConsoleMessageSenderFactory;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
@@ -22,7 +23,7 @@ public class ConsoleMain implements Framework {
     private final AtomicBoolean quitState = new AtomicBoolean();
 
     @Override
-    public void init(FrameworkManager.FrameworkResources resources) { }
+    public void init(FrameworkResources resources) { }
 
     @Override
     public void run() throws Exception {
@@ -62,7 +63,12 @@ public class ConsoleMain implements Framework {
     }
 
     @Override
-    public String getName() {
+    public String getIdentify() {
         return this.toString();
+    }
+
+    @Override
+    public String getFrameworkName() {
+        return "console";
     }
 }

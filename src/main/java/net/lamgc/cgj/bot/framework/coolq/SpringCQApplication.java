@@ -2,7 +2,7 @@ package net.lamgc.cgj.bot.framework.coolq;
 
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.framework.Framework;
-import net.lamgc.cgj.bot.framework.FrameworkManager;
+import net.lamgc.cgj.bot.framework.FrameworkResources;
 import org.slf4j.Logger;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -20,7 +20,7 @@ public class SpringCQApplication implements Framework {
     private final Object quitLock = new Object();
 
     @Override
-    public void init(FrameworkManager.FrameworkResources resources) {
+    public void init(FrameworkResources resources) {
         this.log = resources.getLogger();
     }
 
@@ -54,6 +54,11 @@ public class SpringCQApplication implements Framework {
         synchronized (quitLock) {
             quitLock.notify();
         }
+    }
+
+    @Override
+    public String getFrameworkName() {
+        return "SpringCoolQ";
     }
 
 }

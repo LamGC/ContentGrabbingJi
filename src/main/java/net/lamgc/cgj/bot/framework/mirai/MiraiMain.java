@@ -4,7 +4,7 @@ import net.lamgc.cgj.bot.boot.ApplicationBoot;
 import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.framework.Framework;
-import net.lamgc.cgj.bot.framework.FrameworkManager;
+import net.lamgc.cgj.bot.framework.FrameworkResources;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageEvent;
 import net.lamgc.cgj.bot.framework.mirai.message.MiraiMessageSenderFactory;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
@@ -35,7 +35,7 @@ public class MiraiMain implements Framework {
     private final static Properties botProperties = new Properties();
 
     @Override
-    public void init(FrameworkManager.FrameworkResources resources) {
+    public void init(FrameworkResources resources) {
         Runtime.getRuntime().addShutdownHook(new Thread(this::close));
         try {
             Class.forName(BotEventHandler.class.getName());
@@ -120,6 +120,11 @@ public class MiraiMain implements Framework {
         bot.close(null);
         bot = null;
         log.warn("机器人已关闭.");
+    }
+
+    @Override
+    public String getFrameworkName() {
+        return "MiraiQQ";
     }
 
 }
