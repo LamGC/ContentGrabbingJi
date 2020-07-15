@@ -5,6 +5,7 @@ ENV jarFileName=ContentGrabbingJi-exec.jar
 ENV CGJ_REDIS_URI="127.0.0.1:6379"
 ENV CGJ_PROXY=""
 RUN mkdir /data/
-CMD [java, "-Dcgj.logsPath=/data/logs", "-jar", "/CGJ.jar", "botMode", "-botDataDir=/data"]
+ENTRYPOINT ["/usr/java/openjdk-14/bin/java", "-Duser.timezone=GMT+8"]
+CMD ["-Dcgj.logsPath=/data/logs", "-jar", "/CGJ.jar", "botMode", "-botDataDir=/data"]
 
 COPY ${jarFileName} /CGJ.jar

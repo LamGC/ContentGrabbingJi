@@ -26,7 +26,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -40,15 +39,13 @@ public class BotEventHandler implements EventHandler {
 
     private final static Logger log = LoggerFactory.getLogger(BotEventHandler.class);
 
-    private final static Map<Long, AtomicBoolean> muteStateMap = new Hashtable<>();
-
     /**
      * 消息事件执行器
      */
     private final static EventExecutor executor = new EventExecutor(new TimeLimitThreadPoolExecutor(
-            180000, // 3minThr
-            Math.max(Runtime.getRuntime().availableProcessors(), 4),
-            Math.min(Math.max(Runtime.getRuntime().availableProcessors(), 4), 32),
+            180000, // 3min limit
+            Math.max(Runtime.getRuntime().availableProcessors(), 4), // 4 ~ processors
+            Math.min(Math.max(Runtime.getRuntime().availableProcessors() * 2, 8), 32),// (8 ~ processors * 2) ~ 32
             30L,
             TimeUnit.SECONDS,
             new LinkedBlockingQueue<>(1536),
@@ -167,9 +164,6 @@ public class BotEventHandler implements EventHandler {
         log.debug(event.toString());
         if(mismatch(msg)) {
             return;
-        } else if(isMute(event.getFromGroup())) {
-            log.debug("机器人已被禁言, 忽略请求.");
-            return;
         }
 
         Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
@@ -236,7 +230,7 @@ public class BotEventHandler implements EventHandler {
             }
         }
         long processTime = System.currentTimeMillis() - time;
-        if(!Objects.isNull(result) && result instanceof String && !isMute(event.getFromGroup())) {
+        if(!Objects.isNull(result) && result instanceof String) {
             try {
                 int sendResult = event.sendMessage((String) result);
                 if (sendResult < 0) {
@@ -248,8 +242,6 @@ public class BotEventHandler implements EventHandler {
             } catch (Exception e) {
                 log.error("发送消息时发生异常", e);
             }
-        } else if(isMute(event.getFromGroup())) {
-            log.warn("命令反馈时机器人已被禁言, 跳过反馈.");
         }
         long totalTime = System.currentTimeMillis() - time;
         log.info("命令反馈完成.(事件耗时: {}ms, P: {}%({}ms), R: {}%({}ms))", totalTime,
@@ -264,47 +256,6 @@ public class BotEventHandler implements EventHandler {
      */
     public static boolean mismatch(String message) {
         return !message.startsWith(COMMAND_PREFIX) && !message.startsWith(ADMIN_COMMAND_PREFIX);
-    }
-
-    /**
-     * 查询某群组中Bot是否被禁言
-     * @param groupId 待查询的群组号
-     * @return 如果被禁言, 返回true, 如果未被禁言或禁言情况未知, 返回false
-     */
-    private static boolean isMute(long groupId) {
-        Boolean mute = isMute(groupId, false);
-        return mute != null && mute;
-    }
-
-    /**
-     * 查询某群是否被禁言.
-     * @param groupId 群组Id
-     * @param rawValue 是否返回原始值(当没有该群状态, 且本参数为true时, 将返回null)
-     * @return 返回状态值, 如无该群禁言记录且rawValue = true, 则返回null
-     */
-    public static Boolean isMute(long groupId, boolean rawValue) {
-        if(groupId <= 0) {
-            return false;
-        }
-        AtomicBoolean state = muteStateMap.get(groupId);
-        if(state == null && rawValue) {
-            return null;
-        }
-        return state != null && state.get();
-    }
-
-    /**
-     * 设置机器人禁言状态.
-     * <p>设置该项可防止因机器人在禁言期间反馈请求导致被封号.</p>
-     * @param mute 如果被禁言, 传入true
-     */
-    public static void setMuteState(long groupId, boolean mute) {
-        if(!muteStateMap.containsKey(groupId)) {
-            muteStateMap.put(groupId, new AtomicBoolean(mute));
-        } else {
-            muteStateMap.get(groupId).set(mute);
-        }
-        log.warn("群组 {} 机器人禁言状态已变更: {}", groupId, mute ? "已禁言" : "已解除");
     }
 
 }

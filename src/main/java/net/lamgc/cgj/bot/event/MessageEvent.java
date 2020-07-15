@@ -57,7 +57,7 @@ public abstract class MessageEvent implements EventObject, MessageSender {
 
     @Override
     public String toString() {
-        return this.getClass().getSimpleName() + "@" + this.hashCode() + "{" +
+        return this.getClass().getSimpleName() + "@" + Integer.toHexString(this.hashCode()) + "{" +
                 "fromGroup=" + getFromGroup() +
                 ", fromQQ=" + getFromQQ() +
                 ", message='" + getMessage() + '\'' +

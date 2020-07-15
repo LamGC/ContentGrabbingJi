@@ -1,26 +1,35 @@
 ---
-name: Bug Report
-about: Use this template to feedback bugs.
+name: Bug 反馈
+about: 使用这个模板反馈应用问题。
 title: ''
 labels: bug
 assignees: ''
 
 ---
 
-## Environmental information ##
-OS(e.g: Windows 10 1909): 
-Java(e.g: Oracle Jdk 8.242): 
-Issue version(versionTag or commitId): 
+## 环境信息 ##
+系统(例如: Windows 10 1909): ``
+Java版本(例如: Oracle Jdk 8.242): ``
+<!-- 如果直接使用发布版，那么就填写发布版版本号（v开头） -->
+<!-- 如果你通过编译运行的方式运行开发版，请你填写运行所使用的Commit Id -->
+发生问题所在的版本: ``
 
-## Problem description ##
-// Describe the problem in as much detail as possible here  
+## 问题描述 ##
+<!-- 尽可能的清晰描述问题的信息 -->
 
-## Expected behavior ##
-// What will this function do under normal circumstances?  
+## 预期行为 ##
+<!-- 你觉得正常情况下应该会发生什么？ -->
 
-## Actual behavior ##
-// But what does this feature actually look like?  
+## 实际行为 ##
+<!-- 实际上这个功能做了什么？ -->
 
-## Recurrence steps ##
-// What can we do to recreate this situation?  
+## 复现步骤 ##
+<!-- 将复现步骤详细的写出，如果是偶发问题，可以写已知的，触发几率高的方法 -->
 1.
+
+## 相关信息 ##
+### 日志  ###
+<!-- 如果日志涉及了问题，请务必将日志一同提交，这对排查问题非常有用 -->
+```
+
+```

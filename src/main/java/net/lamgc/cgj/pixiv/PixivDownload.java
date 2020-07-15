@@ -402,7 +402,7 @@ public class PixivDownload {
         if(resultObject.get("error").getAsBoolean()) {
             String message = resultObject.get("message").getAsString();
             log.warn("作品页面接口请求错误, 错误信息: {}", message);
-            throw new HttpRequestException(response);
+            throw new HttpRequestException(response.getStatusLine(), resultObject.toString());
         }
 
         JsonArray linkArray = resultObject.getAsJsonArray("body");
