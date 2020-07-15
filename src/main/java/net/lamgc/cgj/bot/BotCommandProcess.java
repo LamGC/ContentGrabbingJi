@@ -143,8 +143,13 @@ public class BotCommandProcess {
             @Argument(force = false, name = "date") Date queryTime,
             @Argument(force = false, name = "force") boolean force,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
-            @Argument(force = false, name = "type", defaultValue = "ALL") String contentType
+            @Argument(force = false, name = "type", defaultValue = "ALL") String contentType,
+            @Argument(force = false, name = "p", defaultValue = "1") int pageIndex
     ) throws InterruptedException {
+        if(pageIndex <= 0) {
+            return "色图姬找不到指定页数的排行榜!";
+        }
+
         Date queryDate = queryTime;
         if (queryDate == null) {
             queryDate = new Date();
@@ -212,8 +217,10 @@ public class BotCommandProcess {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
+            int startsIndex = itemLimit * pageIndex - (itemLimit - 1);
             List<JsonObject> rankingInfoList = CacheStoreCentral.getCentral()
-                    .getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
+                    .getRankingInfoByCache(type, mode, queryDate,
+                            Math.max(1, startsIndex), Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
             }

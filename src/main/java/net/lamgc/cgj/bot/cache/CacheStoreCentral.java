@@ -402,7 +402,7 @@ public final class CacheStoreCentral {
             result = rankingCache.getCache(requestSign, start - 1, range);
             log.trace("RequestSign [{}] 缓存命中.", requestSign);
         }
-        return PixivDownload.getRanking(result, start - 1, range);
+        return result;
     }
 
     /**

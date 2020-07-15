@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
 import io.netty.handler.codec.http.HttpHeaderNames;
 import net.lamgc.cgj.exception.HttpRequestException;
 import org.apache.http.Header;
@@ -32,7 +31,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiConsumer;
 
-@SuppressWarnings("ALL")
 public class PixivDownload {
 
     private final static Logger log = LoggerFactory.getLogger(PixivDownload.class);
@@ -250,43 +248,6 @@ public class PixivDownload {
     }
 
     /**
-     * 从JsonArray获取数据
-     * @param rankingList JsonArray对象
-     * @param rankStart 开始索引, 从0开始
-     * @param range 范围
-     * @return 返回List对象
-     */
-    public static List<JsonObject> getRanking(List<JsonObject> rankingList, int rankStart, int range) {
-        log.debug("正在读取JsonArray...(rankStart: {}, range: {})", rankStart, range);
-        ArrayList<JsonObject> results = new ArrayList<>(rankingList.size());
-        for (int rankIndex = rankStart; rankIndex < rankStart + range; rankIndex++) {
-            JsonElement jsonElement = rankingList.get(rankIndex - rankStart);
-            JsonObject rankInfo = jsonElement.getAsJsonObject();
-            int rank = rankInfo.get("rank").getAsInt();
-            int illustId = rankInfo.get("illust_id").getAsInt();
-            int authorId = rankInfo.get("user_id").getAsInt();
-            String authorName = rankInfo.get("user_name").getAsString();
-            String title = rankInfo.get("title").getAsString();
-            log.trace("Array-当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range, range, illustId, authorId, authorName, title);
-            results.add(rankInfo);
-        }
-        log.debug("JsonArray读取完成.");
-        return results;
-    }
-
-    /**
-     * 从JsonArray获取数据
-     * @param rankingArray JsonArray对象
-     * @param rankStart 开始索引, 从0开始
-     * @param range 范围
-     * @return 返回List对象
-     */
-    public static List<JsonObject> getRanking(JsonArray rankingArray, int rankStart, int range) {
-        List<JsonObject> list = new Gson().fromJson(rankingArray, new TypeToken<List<JsonObject>>(){}.getType());
-        return getRanking(list, rankStart, range);
-    }
-
-    /**
      * 获取排行榜.
      * <p>注意: 如果范围实际上没超出, 但返回排行榜不足, 会导致与实际请求的数量不符, 需要检查</p>
      * @param contentType 排行榜类型
@@ -421,6 +382,7 @@ public class PixivDownload {
     /**
      * 插图质量
      */
+    @SuppressWarnings("unused")
     public enum PageQuality{
         /**
          * 原图画质
