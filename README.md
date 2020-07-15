@@ -54,11 +54,14 @@
 你应该注意到了，在部署过程中，你需要设置一个管理员QQ的配置，色图姬支持通过命令来管理色图姬的运行。  
 目前支持的管理员命令：
 ```bash
-# 清除缓存
+# 清除缓存(慎用)
+# 该操作将会清除Redis服务器内的所有数据, 以及色图姬下载到本地的所有图片缓存.
 .cgjadmin cleanCache
 
 # 设置配置项
 # 如果不使用group参数, 则设置全局配置
+# 注意: 配置项设置后需要使用`.cgjadmin saveProperties`才会保存到文件中, 
+# 如不保存, 则仅能在本次运行中生效(或使用`.cgjadmin loadProperties`重新加载后失效).
 .cgjadmin setProperty <-key 配置项名> <-value 配置项新值> [-group 指定群组]
 
 # 查询配置项
@@ -79,7 +82,8 @@
 # 增加群组作品推送
 # 如果增加了original参数, 则图片为原图发送
 # 如果不指定group参数, 则群组为命令发送所在群组
-.cgjadmin addPushGroup [-group 指定群组号] [-minTime 最小] [-floatTime 随机时间范围] [-rankingStart 排行榜起始排名] 
+# 最长发送时间 = 最短发送时间 + 随机时间范围
+.cgjadmin addPushGroup [-group 指定群组号] [-minTime 最短发送时间] [-floatTime 随机时间范围] [-rankingStart 排行榜起始排名] 
                        [-rankingStop 排行榜结束排名] [-mode 排行榜模式] [-type 排行榜类型] [-original]
 
 # 删除群组推送功能
