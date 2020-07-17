@@ -1,20 +1,19 @@
 # ContentGrabbingJi - 色图姬 #
-一个以高性能、高效率为目标，多平台/框架支持、持续维护的Pixiv聊天机器人  
-
+一个以高性能、高效率为目标，多平台/框架支持、持续维护的 Pixiv 聊天机器人；  
 色图姬存在的目的最初是作为**爬虫 + 机器人**的形式开发，在开发过程中逐渐以多聊天平台，高效率为目标进行。
 
 ## 安装 ##
-### 通过Jar文件部署 ###
-1. 从项目的[版本页面](https://github.com/LamGC/ContentGrabbingJi/releases)下载最新版色图姬主程序jar文件
-2. 准备一个目录, 用于存放运行数据(这里以`./runData`为例子).
-3. 将通过PixivLoginProxyServer获得的Pixiv登录会话文件放置在目录中(`./runData/cookies.store`).
-4. 使用命令`java -jar <CGJ.jar> buildPassword -password "QQ机器人账号的密码"`构造一个登录用的密码.
-5. 在数据目录创建一个配置文件`bot.properties`, 并添加如下内容:
+### 通过 Jar 文件部署 ###
+1. 从项目的[版本页面](https://github.com/LamGC/ContentGrabbingJi/releases)下载最新版色图姬主程序 jar 文件。
+2. 准备一个目录，用于存放运行数据（这里以 `./runData` 为例子）。
+3. 将通过 PixivLoginProxyServer 获得的 Pixiv 登录会话文件放置在目录中（`./runData/cookies.store`）。
+4. 使用命令 `java -jar <CGJ.jar> buildPassword -password "QQ机器人账号的密码"` 构造一个登录用的密码。
+5. 在数据目录创建一个配置文件 `bot.properties`，并添加如下内容：
     ```properties
     bot.qq=<机器人QQ账号>
     bot.password=<通过buildPassword获得的密码>
     ```
-6. 在数据目录创建新文件夹`setting`, 并创建一个全局配置文件`global.properties`, 然后设置如下内容:
+6. 在数据目录创建新文件夹 `setting`，并创建一个全局配置文件 `global.properties`，然后设置如下内容：
     ```properties
     # 该配置为全局配置文件, 当群组没有特定配置时, 将使用全局配置.
     # 管理员QQ (必填)
@@ -30,12 +29,14 @@
     # 搜索结果长度. 该选项请适当调整, 设置过长可能导致超出聊天平台的最长消息长度, 导致发送失败!
     search.itemCountLimit=8
     ```
-7. 配置完成后, 准备一台Redis服务端, 用于缓存数据.
-8. Redis服务器准备好后, 使用命令启动色图姬：`java -jar <CGJ.jar> botMode -botDataDir <数据目录> -redisAddress <Redis服务器地址> [-proxy 代理服务器地址]`
+    （管理员 QQ 的作用/用法将在下面详细说明。）
+7. 配置完成后，准备一台 Redis 服务端，用于缓存数据。
+8. Redis 服务器准备好后，使用命令启动色图姬：  
+    `java -jar <CGJ.jar> botMode -botDataDir <数据目录> -redisAddress <Redis服务器地址> [-proxy 代理服务器地址]`
 9. 完成！好好享受！
 
-### 通过Docker部署 ###
-使用Docker将可以更好的管理色图姬所使用的资源，和管理色图姬的运行。
+### 通过 Docker 部署 ###
+使用 Docker 将可以更好的管理色图姬所使用的资源，和管理色图姬的运行。
 (正在完善中...)
 
 ## 使用 ##
@@ -51,7 +52,7 @@
 如果色图姬无法识别你的命令，那么它会发送一次帮助信息给你。
 
 ### 管理员用户 ###
-你应该注意到了，在部署过程中，你需要设置一个管理员QQ的配置，色图姬支持通过命令来管理色图姬的运行。  
+你应该注意到了，在部署过程中，你需要设置一个管理员 QQ 的配置，色图姬支持通过命令来管理色图姬的运行。  
 目前支持的管理员命令：
 ```bash
 # 清除缓存(慎用)
@@ -106,13 +107,13 @@
 ```
 
 ## 贡献 ##
-向色图姬贡献不一定需要编程知识，向色图姬项目提出意见，反馈问题同样会为色图姬项目提供很大的帮助！  
-如果你在使用色图姬的过程中，遇到了Bug，可以通过色图姬项目的**Issues**使用[Bug反馈模板](https://github.com/LamGC/ContentGrabbingJi/issues/new?assignees=&labels=bug&template=Bug_Report.md&title=)向色图姬提供Bug信息。  
-如果是为色图姬提供一些新功能想法，或者对色图姬有什么意见，则可以直接通过Issues发起讨论。
+**向色图姬贡献不一定需要编程知识，向色图姬项目提出意见，反馈问题同样会为色图姬项目提供很大的帮助！**  
+如果你在使用色图姬的过程中，遇到了 Bug，可以通过色图姬项目的 **Issues** 使用[ Bug 反馈模板](https://github.com/LamGC/ContentGrabbingJi/issues/new?assignees=&labels=bug&template=Bug_Report.md&title=)向色图姬提供 Bug 信息。  
+如果是为色图姬提供一些新功能想法，或者对色图姬有什么意见，则可以使用[功能/意见提议模板](https://github.com/LamGC/ContentGrabbingJi/issues/new?assignees=&labels=function%2C+question&template=Feature_Report.md&title=)反馈你的想法！
 
-如果你会Java开发，又想为色图姬提供一些新功能，可以通过Fork仓库的方法，实现后发起PR，合并到色图姬项目中！  
+如果你会 Java 开发，又想为色图姬提供一些新功能，可以通过 Fork 仓库的方法，实现后发起 PR，合并到色图姬项目中！  
 向色图姬贡献代码，需要遵循一些贡献事项，如果你的代码不符合这些事项，PR有可能会被关闭！  
-> 注意：色图姬的初衷并没有任何恶意的意图，如果尝试向色图姬提供恶意功能或代码，PR将会被拒绝、关闭。
+> 注意：色图姬的初衷并没有任何恶意的意图，如果尝试向色图姬提供恶意功能或代码，PR 将会被拒绝、关闭。
 
 ## LICENSE ##
 本项目基于 `GNU Affero General Public License 3.0` 开源许可协议开源，  
