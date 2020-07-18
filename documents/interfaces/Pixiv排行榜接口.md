@@ -41,16 +41,15 @@ GET https://www.pixiv.net/ranking.php
    :-:    |:-:| :-:  | :-:  | :-:
 daily     |`√`|`√`|`√`|`√`
 weekly    |`√`|`√`|`√`|`√`
-monthly   |`√`|`√`|×|`√`
-rookie    |`√`|`√`|×|`√`
-original  |`√`|×|×|×
-male      |`√`|×|×|×
-female    |`√`|×|×|×
+monthly   |`√`|`√`| × |`√`
+rookie    |`√`|`√`| × |`√`
+original  |`√`| × | × | ×
+male      |`√`| × | × | ×
+female    |`√`| × | × | ×
 daily_r18 |`√`|`√`|`√`|`√`
 weekly_r18|`√`|`√`|`√`|`√`
-male_r18  |`√`|×|×|×
-female_r18|`√`|×|×|×
-
+male_r18  |`√`| × | × | ×
+female_r18|`√`| × | × | ×
 
 ### 返回数据 ###
 #### 数据示例 ####

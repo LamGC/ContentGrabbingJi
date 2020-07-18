@@ -16,14 +16,17 @@ GET https://www.pixiv.net/ajax/search/{Type}/{Content}?{Param...}
 ### 参数 ###
 #### Url参数 ####
 - `Type`: 内容类型
-    - illustrations(插画)
-    - top(推荐)
-    - manga(漫画)
-    - novels(小说)
+    - `artworks` - 所有类型
+    - `top` - 推荐
+    - `illustrations` - 插画
+    - `manga` - 漫画
+    - `novels` - 小说
+    - `tags` - 查询标签信息
 - `Content`: 搜索内容
 
 #### GET参数 ####
 ##### 必填 #####
+> 注意：除 `tags` 类型外，其他内容类型都需要以下参数。
 - `word`: 与搜索内容一致 (经测试似乎可以省略)
 - `s_mode`: 匹配模式
     - `s_tag`: 标签，部分一致
@@ -82,7 +85,8 @@ GET https://www.pixiv.net/ajax/search/{Type}/{Content}?{Param...}
                         "風景",
                         "空",
                         "草",
-                        "雲"],
+                        "雲"
+                    ],
                     "userId":"31507675",
                     "userName":"昏omeme",
                     "width":1600,
@@ -155,7 +159,8 @@ GET https://www.pixiv.net/ajax/search/{Type}/{Content}?{Param...}
                         "女の子",
                         "カラス",
                         "风景",
-                        "線路"],
+                        "線路"
+                    ],
                     "userId":"1069005",
                     "userName":"へちま",
                     "width":2000,
@@ -310,24 +315,10 @@ GET https://www.pixiv.net/ajax/search/{Type}/{Content}?{Param...}
     }
 }
 ```
+> 注意：根据 Url 参数中 `Type` 的不同，返回数据的属性也会出现差异，  
+  详见字段说明下的【请求 Url 中的 Type 与返回数据中属性的关系】表格
+
 #### 字段说明 ####
-- `novel`: (`Object`) 小说搜索结果
-    - `data`: (`Object`) 搜索结果(仅当前页数)
-        - (待补充)
-    - `total`: (`number`) 搜索结果总量
-- `popular`: (`Object`) 受欢迎的搜索结果
-- `relatedTags`: (`string[]`) 与搜索结果相关的标签
-- `tagTranslation`: (`Object`) 相关标签的翻译信息
-    - `{Attr: 标签名}`: 标签名为属性名
-        - `语言名(例如 中文是 zh)`: (`string`) 标签翻译名
-- `zoneConfig`: (`Object`) 猜测是广告相关信息?
-- `extraData`: (`Object`) 扩展信息
-    - `meta`: (`Object`) 网页元数据
-        - `title`: (`string`) 网页标题
-        - `description`: 搜索结果说明内容
-        - `descriptionHeader`: (`string`) 说明内容的Html代码
-        - `alternateLanguages`: (`Object`) 不明链接?
-            - `{语言名}`: 对应语言的链接
 - `illustManga`: (`Object`) 漫画和插画的搜索结果
     - `total`: (`number`) 搜索结果总量
     - `data`: (`Object[]`) 搜索结果(仅当前页数)
@@ -362,4 +353,45 @@ GET https://www.pixiv.net/ajax/search/{Type}/{Content}?{Param...}
         - `createDate`: (`string`) 作品创建时间(或者是完成时间?)
         - `updateDate`: (`string`) 作品上传时间
         - `profileImageUrl`: (`string`) 作者用户头像图片链接
-        
+    - `bookmarkRanges`: (`Object[]`) 收藏数范围(推测是用于按收藏数搜索而使用)
+        - `min`: (`number`) 最小收藏数, 值为 `null` 则无限制
+        - `max`: (`number`) 最大收藏数, 值为 `null` 则无限制
+- `illust`: (`Object`) 插画作品搜索结果
+    - **与`illustManga`结构相同**
+- `manga`: (`Object`) 漫画作品搜索结果
+    - **与`illustManga`结构相同**
+- `novel`: (`Object`) 小说搜索结果
+    - **与`illustManga`结构相同**
+- `popular`: (`Object`) 受欢迎的搜索结果
+    - `recent`: (`Object[]`) 近期推荐
+        - **与`illustManga.data.{element}`结构相同**
+    - `permanent`: (`Object[]`) 旧作品推荐
+        - **与`illustManga.data.{element}`结构相同**
+- `relatedTags`: (`string[]`) 与搜索结果相关的原始标签名
+- `tagTranslation`: (`Object`) 相关标签的翻译信息
+    - `{Attr: 标签名}`: 标签名为属性名, 对应 `relatedTags` 中的原始标签名
+        - `语言名(例如 中文是 zh)`: (`string`) 标签翻译名
+- `zoneConfig`: (`Object`) 猜测是广告相关信息?
+- `extraData`: (`Object`) 扩展信息
+    - `meta`: (`Object`) 网页元数据
+        - `title`: (`string`) 网页标题
+        - `description`: 搜索结果说明内容
+        - `descriptionHeader`: (`string`) 说明内容的Html代码
+        - `alternateLanguages`: (`Object`) 不明链接?
+            - `{语言名}`: 对应语言的链接
+
+##### 请求 Url 中的 Type 与返回数据中属性的关系 #####
+> 表中数据可能有错误，如发现问题，可在发起 Issue 并附上不在该表中情况（例如）的请求信息和返回数据，经确认后将会更新文档。  
+
+类型|illustManga|illust|manga|novel
+:--|:-:|:-:|:-:|:-:
+`artworks`     |√|×|×|×
+`top`          |√|×|×|?
+`illustrations`|×|√|×|×
+`manga`        |×|×|√|×
+`novels`       |×|×|×|√
+
+符号解释:  
+- `√`: 该属性一定存在
+- `?`: 该属性可能存在
+- `×`: 该属性不存在
