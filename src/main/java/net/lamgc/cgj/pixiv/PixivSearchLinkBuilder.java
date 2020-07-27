@@ -15,7 +15,7 @@ import java.util.Objects;
  * @author LamGC
  * @see PixivURL#PIXIV_SEARCH_CONTENT_URL
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class PixivSearchLinkBuilder {
 
     private final String content;
@@ -296,12 +296,17 @@ public class PixivSearchLinkBuilder {
          */
         NOVELS("novel");
 
+        /**
+         * 可用的Json属性名
+         * @deprecated 该属性信息以移至 {@link PixivSearchAttribute}
+         * @see PixivSearchAttribute
+         */
+        @Deprecated
         public final String jsonKey;
 
         SearchArea(String jsonKey) {
             this.jsonKey = jsonKey;
         }
-
 
     }
 
