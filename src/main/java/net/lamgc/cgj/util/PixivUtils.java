@@ -38,14 +38,14 @@ public final class PixivUtils {
         PixivSearchLinkBuilder searchBuilder = new PixivSearchLinkBuilder(Strings.isNullOrEmpty(content) ? "" : content);
         if (type != null) {
             try {
-                searchBuilder.setSearchType(PixivSearchLinkBuilder.SearchType.valueOf(type.toUpperCase()));
+                searchBuilder.setSearchType(PixivSearchLinkBuilder.SearchType.valueOf(type.trim().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchType: {}", type);
             }
         }
         if (area != null) {
             try {
-                searchBuilder.setSearchArea(PixivSearchLinkBuilder.SearchArea.valueOf(area));
+                searchBuilder.setSearchArea(PixivSearchLinkBuilder.SearchArea.valueOf(area.trim().toUpperCase()));
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的SearchArea: {}", area);
             }
