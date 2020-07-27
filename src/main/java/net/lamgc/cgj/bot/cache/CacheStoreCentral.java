@@ -14,6 +14,7 @@ import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.Locker;
 import net.lamgc.cgj.util.LockerMap;
+import net.lamgc.cgj.util.PixivUtils;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.encrypt.MessageDigestUtils;
 import net.lz1998.cq.utils.CQCode;
@@ -425,61 +426,29 @@ public final class CacheStoreCentral {
             String contentOption,
             int pageIndex
     ) throws IOException {
-        PixivSearchLinkBuilder searchBuilder = new PixivSearchLinkBuilder(Strings.isNullOrEmpty(content) ? "" : content);
-        if (type != null) {
-            try {
-                searchBuilder.setSearchType(PixivSearchLinkBuilder.SearchType.valueOf(type.toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchType: {}", type);
-            }
-        }
-        if (area != null) {
-            try {
-                searchBuilder.setSearchArea(PixivSearchLinkBuilder.SearchArea.valueOf(area));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchArea: {}", area);
-            }
-        }
-        if (contentOption != null) {
-            try {
-                searchBuilder.setSearchContentOption(
-                        PixivSearchLinkBuilder.SearchContentOption.valueOf(contentOption.trim().toUpperCase()));
-            } catch (IllegalArgumentException e) {
-                log.warn("不支持的SearchContentOption: {}", contentOption);
-            }
-        }
+        return getSearchBody(PixivUtils.buildSearchLinkBuilderFromString(content, type, area,
+                includeKeywords, excludeKeywords, contentOption, pageIndex));
+    }
 
-        if (!Strings.isNullOrEmpty(includeKeywords)) {
-            for (String keyword : includeKeywords.split(";")) {
-                searchBuilder.removeExcludeKeyword(keyword.trim());
-                searchBuilder.addIncludeKeyword(keyword.trim());
-                log.trace("已添加关键字: {}", keyword);
-            }
-        }
-        if (!Strings.isNullOrEmpty(excludeKeywords)) {
-            for (String keyword : excludeKeywords.split(";")) {
-                searchBuilder.removeIncludeKeyword(keyword.trim());
-                searchBuilder.addExcludeKeyword(keyword.trim());
-                log.trace("已添加排除关键字: {}", keyword);
-            }
-        }
-
-        if(pageIndex > 0) {
-            searchBuilder.setPage(pageIndex);
-        }
-
+    /**
+     * 获取搜索结果
+     * @param searchBuilder 需要执行搜索的搜索链接构造器
+     * @return 返回完整搜索结果
+     * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
+     */
+    public JsonObject getSearchBody(PixivSearchLinkBuilder searchBuilder) throws IOException {
         log.debug("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
-
+        String requestUrl = searchBuilder.buildURL();
+        String searchIdentify = requestUrl.substring(requestUrl.lastIndexOf("/", requestUrl.lastIndexOf("/") - 1) + 1);
         Locker<String> locker
-                = buildSyncKey(searchBuilder.buildURL());
-        String requestUrl = locker.getKey();
+                = buildSyncKey(searchIdentify);
         log.debug("RequestUrl: {}", requestUrl);
         JsonObject resultBody = null;
-        if(!searchBodyCache.exists(requestUrl)) {
+        if(!searchBodyCache.exists(searchIdentify)) {
             try {
                 locker.lock();
                 synchronized (locker) {
-                    if (!searchBodyCache.exists(requestUrl)) {
+                    if (!searchBodyCache.exists(searchIdentify)) {
                         log.trace("searchBody缓存失效, 正在更新...");
                         JsonObject jsonObject;
                         HttpGet httpGetRequest = BotGlobal.getGlobal().getPixivDownload().
@@ -504,8 +473,8 @@ public final class CacheStoreCentral {
                         } catch (Exception e) {
                             log.warn("全局配置项 \"{}\" 值非法, 已使用默认值: {}", propValue, expire);
                         }
-                        resultBody = jsonObject.getAsJsonObject().getAsJsonObject("body");
-                        searchBodyCache.update(requestUrl, jsonObject, expire);
+                        resultBody = jsonObject;
+                        searchBodyCache.update(searchIdentify, jsonObject, expire);
                         log.trace("searchBody缓存已更新(有效时间: {})", expire);
                     } else {
                         log.trace("搜索缓存命中.");
@@ -519,9 +488,9 @@ public final class CacheStoreCentral {
         }
 
         if(Objects.isNull(resultBody)) {
-            resultBody = searchBodyCache.getCache(requestUrl).getAsJsonObject().getAsJsonObject("body");
+            resultBody = searchBodyCache.getCache(searchIdentify).getAsJsonObject();
         }
-        return resultBody;
+        return resultBody.getAsJsonObject("body");
     }
 
     protected ImageChecksum getImageChecksum(int illustId, int pageIndex) {
