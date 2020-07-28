@@ -8,6 +8,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
 /**
  * Pixiv搜索URL构造器
@@ -15,7 +16,7 @@ import java.util.Objects;
  * @author LamGC
  * @see PixivURL#PIXIV_SEARCH_CONTENT_URL
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class PixivSearchLinkBuilder {
 
     private final String content;
@@ -26,8 +27,8 @@ public class PixivSearchLinkBuilder {
     private SearchOrder searchOrder = SearchOrder.DATE_D;
     private SearchContentOption searchContentOption = SearchContentOption.ALL;
 
-    private final HashSet<String> includeKeywords = new HashSet<>(0);
-    private final HashSet<String> excludeKeywords = new HashSet<>(0);
+    private final Set<String> includeKeywords = new HashSet<>(0);
+    private final Set<String> excludeKeywords = new HashSet<>(0);
 
     private int page = 1;
 
@@ -161,9 +162,17 @@ public class PixivSearchLinkBuilder {
                 '}';
     }
 
+    public String getContent() {
+        return content;
+    }
+
     public PixivSearchLinkBuilder setSearchArea(SearchArea searchArea) {
         this.searchArea = Objects.requireNonNull(searchArea);
         return this;
+    }
+
+    public SearchArea getSearchArea() {
+        return searchArea;
     }
 
     /**
@@ -199,9 +208,17 @@ public class PixivSearchLinkBuilder {
         return this;
     }
 
+    public SearchMode getSearchMode() {
+        return searchMode;
+    }
+
     public PixivSearchLinkBuilder setSearchType(SearchType searchType) {
         this.searchType = Objects.requireNonNull(searchType);
         return this;
+    }
+
+    public SearchType getSearchType() {
+        return searchType;
     }
 
     public PixivSearchLinkBuilder setSearchOrder(SearchOrder searchOrder) {
@@ -209,9 +226,17 @@ public class PixivSearchLinkBuilder {
         return this;
     }
 
+    public SearchOrder getSearchOrder() {
+        return searchOrder;
+    }
+
     public PixivSearchLinkBuilder setSearchContentOption(SearchContentOption searchContentOption) {
         this.searchContentOption = Objects.requireNonNull(searchContentOption);
         return this;
+    }
+
+    public SearchContentOption getSearchContentOption() {
+        return searchContentOption;
     }
 
     public PixivSearchLinkBuilder setRatioOption(RatioOption ratioOption) {
@@ -219,10 +244,22 @@ public class PixivSearchLinkBuilder {
         return this;
     }
 
+    public RatioOption getRatioOption() {
+        return ratioOption;
+    }
+
     public PixivSearchLinkBuilder setDateRange(Date startDate, Date endDate) {
         this.startDate = startDate;
         this.endDate = endDate;
         return this;
+    }
+
+    public Date getStartDate() {
+        return startDate;
+    }
+
+    public Date getEndDate() {
+        return endDate;
     }
 
     public PixivSearchLinkBuilder setMaxSize(int width, int height) {
@@ -245,6 +282,10 @@ public class PixivSearchLinkBuilder {
         return this;
     }
 
+    public int getPage() {
+        return page;
+    }
+
     public PixivSearchLinkBuilder addExcludeKeyword(String keyword) {
         excludeKeywords.add(keyword);
         return this;
@@ -263,6 +304,14 @@ public class PixivSearchLinkBuilder {
     public PixivSearchLinkBuilder removeIncludeKeyword(String keyword) {
         includeKeywords.remove(keyword);
         return this;
+    }
+
+    public Set<String> getIncludeKeywords() {
+        return new HashSet<>(includeKeywords);
+    }
+
+    public Set<String> getExcludeKeywords() {
+        return new HashSet<>(excludeKeywords);
     }
 
     /**
@@ -296,12 +345,17 @@ public class PixivSearchLinkBuilder {
          */
         NOVELS("novel");
 
+        /**
+         * 可用的Json属性名
+         * @deprecated 该属性信息以移至 {@link PixivSearchAttribute}
+         * @see PixivSearchAttribute
+         */
+        @Deprecated
         public final String jsonKey;
 
         SearchArea(String jsonKey) {
             this.jsonKey = jsonKey;
         }
-
 
     }
 
@@ -400,6 +454,5 @@ public class PixivSearchLinkBuilder {
         }
 
     }
-
 
 }

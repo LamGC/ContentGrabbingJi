@@ -13,8 +13,10 @@ import net.lamgc.cgj.bot.sort.PreLoadDataAttribute;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttributeComparator;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
+import net.lamgc.cgj.pixiv.PixivSearchAttribute;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.util.PixivUtils;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
 import org.slf4j.Logger;
@@ -39,6 +41,8 @@ public class BotCommandProcess {
                     "report", BotGlobal.getGlobal().getGson());
 
     private final static RankingUpdateTimer updateTimer = new RankingUpdateTimer();
+
+    private final static int SEARCH_PAGE_MAX_ITEM = 60;
 
     public static void initialize() {
         log.info("正在初始化...");
@@ -143,8 +147,13 @@ public class BotCommandProcess {
             @Argument(force = false, name = "date") Date queryTime,
             @Argument(force = false, name = "force") boolean force,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
-            @Argument(force = false, name = "type", defaultValue = "ALL") String contentType
+            @Argument(force = false, name = "type", defaultValue = "ALL") String contentType,
+            @Argument(force = false, name = "p", defaultValue = "1") int pageIndex
     ) throws InterruptedException {
+        if(pageIndex <= 0) {
+            return "色图姬找不到指定页数的排行榜!";
+        }
+
         Date queryDate = queryTime;
         if (queryDate == null) {
             queryDate = new Date();
@@ -212,8 +221,10 @@ public class BotCommandProcess {
                 log.warn("配置项 {} 的参数值格式有误!", imageLimitPropertyKey);
             }
 
+            int startsIndex = itemLimit * pageIndex - (itemLimit - 1);
             List<JsonObject> rankingInfoList = CacheStoreCentral.getCentral()
-                    .getRankingInfoByCache(type, mode, queryDate, 1, Math.max(0, itemLimit), false);
+                    .getRankingInfoByCache(type, mode, queryDate,
+                            Math.max(1, startsIndex), Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
             }
@@ -314,12 +325,9 @@ public class BotCommandProcess {
             @Argument(name = "option", force = false) String contentOption,
             @Argument(name = "p", force = false, defaultValue = "1") int pagesIndex
     ) throws IOException, InterruptedException {
+        PixivSearchLinkBuilder searchLinkBuilder = PixivUtils.buildSearchLinkBuilderFromString(content, type, area,
+                        includeKeywords, excludeKeywords, contentOption, pagesIndex);
         log.debug("正在执行搜索...");
-        JsonObject resultBody = CacheStoreCentral.getCentral()
-                .getSearchBody(content, type, area, includeKeywords, excludeKeywords, contentOption, pagesIndex);
-
-        StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
-        log.debug("正在处理信息...");
         int limit = 8;
         try {
             limit = Integer.parseInt(SettingProperties.
@@ -327,93 +335,110 @@ public class BotCommandProcess {
         } catch (Exception e) {
             log.warn("参数转换异常!将使用默认值(" + limit + ")", e);
         }
+
         int totalCount = 0;
-        for (PixivSearchLinkBuilder.SearchArea searchArea : PixivSearchLinkBuilder.SearchArea.values()) {
-            if (!resultBody.has(searchArea.jsonKey) ||
-                    resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
-                log.debug("返回数据不包含 {}", searchArea.jsonKey);
-                continue;
-            }
-            JsonArray illustsArray = resultBody
-                    .getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data");
-            ArrayList<JsonElement> illustsList = new ArrayList<>();
-            illustsArray.forEach(illustsList::add);
-            illustsList.sort(new PreLoadDataAttributeComparator(PreLoadDataAttribute.BOOKMARK));
+        StringBuilder result = new StringBuilder("内容 " + content + " 的搜索结果：\n");
+        List<JsonObject> artworkList = getSearchResult(searchLinkBuilder, fromGroup, limit, pagesIndex);
+        artworkList.sort(new PreLoadDataAttributeComparator(PreLoadDataAttribute.LIKE));
+        int startIndex = limit * pagesIndex - limit + 1;
+        int pageStartIndex = startIndex % SEARCH_PAGE_MAX_ITEM;
+        for(int index = pageStartIndex; totalCount < limit && index < artworkList.size(); index++) {
+            int illustId = artworkList.get(index - 1).get("illustId").getAsInt();
+            // 预加载数据有更多信息可以提供
+            JsonObject artworkPreLoadData = CacheStoreCentral.getCentral()
+                    .getIllustPreLoadData(illustId, false);
 
-            log.debug("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
-            int count = 1;
-            for (JsonElement jsonElement : illustsList) {
-                if (count > limit) {
-                    break;
-                }
-                JsonObject illustObj = jsonElement.getAsJsonObject();
-                if (!illustObj.has("illustId")) {
-                    continue;
-                }
-                int illustId = illustObj.get("illustId").getAsInt();
-                StringBuilder builder = new StringBuilder("[");
-                illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
-                builder.replace(builder.length() - 2, builder.length(), "]");
-                log.debug("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t" +
-                                "作品标题: {}, \n\t作品Tags: {}, \n\t页数: {}页, \n\t作品链接: {}",
-                        searchArea.name(),
-                        count,
-                        illustsList.size(),
-                        illustId,
-                        illustObj.get("userName").getAsString(),
-                        illustObj.get("userId").getAsInt(),
-                        illustObj.get("illustTitle").getAsString(),
-                        builder,
-                        illustObj.get("pageCount").getAsInt(),
-                        PixivURL.getPixivRefererLink(illustId)
-                );
-
-                String imageMsg;
-                try {
-                    imageMsg = CacheStoreCentral.getCentral()
-                            .getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1);
-                } catch (NoSuchElementException e) {
-                    if(e.getMessage().startsWith("No work found: ")) {
-                        log.warn("作品 {} 不存在, 跳过该作品...", illustId);
-                        continue;
-                    }
-                    throw e;
-                }
-                if (isNoSafe(illustId, SettingProperties.getProperties(fromGroup), false)) {
-                    log.warn("作品Id {} 为R-18作品, 跳过.", illustId);
-                    continue;
-                } else if(isReported(illustId)) {
-                    log.warn("作品Id {} 被报告, 正在等待审核, 跳过该作品.", illustId);
-                    continue;
-                }
-
-                JsonObject illustPreLoadData = CacheStoreCentral.getCentral()
-                        .getIllustPreLoadData(illustId, false);
-                result.append(searchArea.name()).append(" (").append(count).append(" / ")
-                        .append(limit).append(")\n\t作品id: ").append(illustId)
-                        .append(", \n\t作者名: ").append(illustObj.get("userName").getAsString())
-                        .append("\n\t作品标题: ").append(illustObj.get("illustTitle").getAsString())
-                        .append("\n\t作品页数: ").append(illustObj.get("pageCount").getAsInt()).append("页")
-                        .append("\n\t点赞数：")
-                        .append(illustPreLoadData.get(PreLoadDataAttribute.LIKE.attrName).getAsInt())
-                        .append("\n\t收藏数：")
-                        .append(illustPreLoadData.get(PreLoadDataAttribute.BOOKMARK.attrName).getAsInt())
-                        .append("\n\t围观数：")
-                        .append(illustPreLoadData.get(PreLoadDataAttribute.VIEW.attrName).getAsInt())
-                        .append("\n\t评论数：")
-                        .append(illustPreLoadData.get(PreLoadDataAttribute.COMMENT.attrName).getAsInt())
-                        .append("\n").append(imageMsg).append("\n");
-                count++;
-                totalCount++;
-            }
-            if (count > limit) {
-                break;
-            }
+            // 构造消息内容
+            result.append(startIndex++).append(". （").append(artworkPreLoadData.get("illustId").getAsInt()).append("） ")
+                    .append(artworkPreLoadData.get("illustTitle").getAsString());
+            result.append("\n\t").append("作者：").append(artworkPreLoadData.get("userName").getAsString());
+            result.append("\n\t").append("作品页数：").append(artworkPreLoadData.get("pageCount").getAsInt()).append(" 页");
+            result.append("\n\t").append("点赞数：")
+                    .append(artworkPreLoadData.get(PreLoadDataAttribute.LIKE.attrName).getAsInt()).append(" 页");
+            result.append("\n\t").append("收藏数：")
+                    .append(artworkPreLoadData.get(PreLoadDataAttribute.BOOKMARK.attrName).getAsInt()).append(" 页");
+            result.append("\n\t").append("围观数：")
+                    .append(artworkPreLoadData.get(PreLoadDataAttribute.VIEW.attrName).getAsInt()).append(" 页");
+            result.append("\n\t").append("评论数：")
+                    .append(artworkPreLoadData.get(PreLoadDataAttribute.COMMENT.attrName).getAsInt()).append(" 页");
+            result.append(CacheStoreCentral.getCentral()
+                    .getImageById(fromGroup, illustId, PageQuality.REGULAR, 1)).append("\n");
+            totalCount++;
         }
+
         return totalCount <= 0 ?
                 "搜索完成，未找到相关作品。" :
                 Strings.nullToEmpty(result.toString()) + "预览图片并非原图，使用“.cgj image -id 作品id”获取原图\n" +
                 "如有不当作品，可使用\".cgj report -id 作品id\"向色图姬反馈。";
+    }
+
+    /**
+     * 获取 length 涉及的多个页的搜索结果.
+     * 例如:
+     *  pageMaxItem = 60;
+     *  length = 150;
+     *  page = 3;
+     * 那么:
+     *  endItemIndex = length * page = 450;
+     *  startItemIndex = endItemIndex - length + 1 = 301;
+     *  startPageIndex = ceil(startItemIndex / pageMaxItem) = 6;
+     *  pageRange = ceil((endItemIndex - length + 1) / pageMaxItem) = 3;
+     *  endPageIndex = startPageIndex - pageRange - 1 = 8;
+     * 该方法将会取搜索结果的 6 ~ 8 页结果并返回;
+     * @param searchLinkBuilder 已构造好除 Page 参数外其他参数的 {@link PixivSearchLinkBuilder}
+     * @param length 所需结果的范围
+     * @param page 所需结果的页数
+     * @return 返回包含范围的涉及页面所有搜索结果.
+     * @throws IOException 如获取发生异常则抛出.
+     */
+    private static List<JsonObject> getSearchResult(PixivSearchLinkBuilder searchLinkBuilder, long groupId, int length, int page) throws IOException {
+        List<JsonObject> artworkList = new ArrayList<>(length);
+
+        int endsItemIndex = length * page;
+        int startsItemIndex = endsItemIndex - length + 1;
+        int startPageIndex = (int) Math.ceil(startsItemIndex / (double) SEARCH_PAGE_MAX_ITEM);
+        int pageRange = (int) Math.ceil((endsItemIndex - startsItemIndex) / (double) SEARCH_PAGE_MAX_ITEM);
+        PixivSearchAttribute areaAttribute = PixivSearchAttribute.valueOf(searchLinkBuilder.getSearchArea().toString());
+        Properties properties = SettingProperties.getProperties(groupId);
+        int expectedQuantity = pageRange * SEARCH_PAGE_MAX_ITEM;
+        for(int pageIndex = startPageIndex;
+            pageIndex <= startPageIndex + pageRange - 1 || artworkList.size() < length || artworkList.size() < expectedQuantity;
+            pageIndex++) {
+            searchLinkBuilder.setPage(pageIndex);
+            JsonObject searchBody = CacheStoreCentral.getCentral().getSearchBody(searchLinkBuilder);
+            for(String areaAttributeName : areaAttribute.attributeNames) {
+                JsonObject areaResult = searchBody.getAsJsonObject(areaAttributeName);
+                if(areaResult == null || !areaResult.has("data")) {
+                    log.debug("作品类型属性 {} 无搜索结果, 跳过...", areaAttributeName);
+                    continue;
+                }
+
+                JsonArray areaArray = areaResult.getAsJsonArray("data");
+                for(JsonElement element : areaArray) {
+                    JsonObject artworkInfo = element.getAsJsonObject();
+                    if(!artworkInfo.has("illustId")) {
+                        log.warn("发现未含有illustId的JsonObject: '{}'", artworkInfo.toString());
+                        continue;
+                    }
+                    final int illustId = artworkInfo.get("illustId").getAsInt();
+                    if(isNoSafe(illustId, properties, false)) {
+                        log.warn("作品 {} 为R18作品, 跳过.", illustId);
+                        continue;
+                    } else if(isReported(illustId)) {
+                        log.warn("作品 {} 被报告, 跳过.", illustId);
+                        continue;
+                    }
+                    artworkList.add(artworkInfo);
+                }
+            }
+        }
+
+        // 去重
+        Set<JsonObject> hashSet = new HashSet<>(artworkList.size());
+        hashSet.addAll(artworkList);
+        artworkList.clear();
+        artworkList.addAll(hashSet);
+        return artworkList;
     }
 
     /**
