@@ -401,9 +401,6 @@ public class BotCommandProcess {
         PixivSearchAttribute areaAttribute = PixivSearchAttribute.valueOf(searchLinkBuilder.getSearchArea().toString());
         Properties properties = SettingProperties.getProperties(groupId);
         int expectedQuantity = pageRange * SEARCH_PAGE_MAX_ITEM;
-        // 一个可能不算最好的去重方法?我已经对Pixiv搜索结果完全重复的情况感到无语了 :(
-        Set<Integer> artworkIdSet = new HashSet<>();
-        int addItemCount = 0;
         for(int pageIndex = startPageIndex;
             pageIndex <= startPageIndex + pageRange - 1 || artworkList.size() < length || artworkList.size() < expectedQuantity;
             pageIndex++) {
@@ -431,22 +428,16 @@ public class BotCommandProcess {
                         log.warn("作品 {} 被报告, 跳过.", illustId);
                         continue;
                     }
-                    if(artworkIdSet.contains(illustId)) {
-                        continue;
-                    }
-
-                    artworkIdSet.add(illustId);
                     artworkList.add(artworkInfo);
-                    addItemCount++;
                 }
             }
-            if(addItemCount == 0) {
-                log.warn("已无法获取更多作品, 停止搜索.");
-                break;
-            }
-            addItemCount = 0;
         }
 
+        // 去重
+        Set<JsonObject> hashSet = new HashSet<>(artworkList.size());
+        hashSet.addAll(artworkList);
+        artworkList.clear();
+        artworkList.addAll(hashSet);
         return artworkList;
     }
 
