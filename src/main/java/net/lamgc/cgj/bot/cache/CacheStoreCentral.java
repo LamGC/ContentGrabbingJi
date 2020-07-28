@@ -14,7 +14,6 @@ import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
 import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.Locker;
 import net.lamgc.cgj.util.LockerMap;
-import net.lamgc.cgj.util.PixivUtils;
 import net.lamgc.cgj.util.URLs;
 import net.lamgc.utils.encrypt.MessageDigestUtils;
 import net.lz1998.cq.utils.CQCode;
@@ -404,30 +403,6 @@ public final class CacheStoreCentral {
             log.trace("RequestSign [{}] 缓存命中.", requestSign);
         }
         return result;
-    }
-
-    /**
-     * 获取搜索结果
-     * @param content 搜索内容
-     * @param type 类型
-     * @param area 范围
-     * @param includeKeywords 包含关键词
-     * @param excludeKeywords 排除关键词
-     * @param contentOption 内容类型
-     * @return 返回完整搜索结果
-     * @throws IOException 当请求发生异常, 或接口返回异常信息时抛出.
-     */
-    public JsonObject getSearchBody(
-            String content,
-            String type,
-            String area,
-            String includeKeywords,
-            String excludeKeywords,
-            String contentOption,
-            int pageIndex
-    ) throws IOException {
-        return getSearchBody(PixivUtils.buildSearchLinkBuilderFromString(content, type, area,
-                includeKeywords, excludeKeywords, contentOption, pageIndex));
     }
 
     /**
