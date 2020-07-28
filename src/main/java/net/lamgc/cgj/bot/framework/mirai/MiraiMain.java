@@ -92,11 +92,14 @@ public class MiraiMain implements Closeable {
     private void executeMessageEvent(MessageEvent message) {
         log.debug("Mirai Message: {}", message);
         if(message instanceof GroupMessageEvent) {
-            GroupMessageEvent GroupMessageEvent = (GroupMessageEvent) message;
-            Boolean muteState = muteManager.isMute(GroupMessageEvent.getGroup().getId(), true);
+            GroupMessageEvent groupMessageEvent = (GroupMessageEvent) message;
+            Boolean muteState = muteManager.isMute(groupMessageEvent.getGroup().getId(), true);
             if(muteState == null) {
-                muteManager.setMuteState(GroupMessageEvent.getGroup().getId(),
-                        ((GroupMessageEvent) message).getGroup().getBotMuteRemaining() != 0);
+                boolean mute = groupMessageEvent.getGroup().getBotMuteRemaining() != 0;
+                muteManager.setMuteState(groupMessageEvent.getGroup().getId(), mute);
+                if(mute) {
+                    return;
+                }
             } else if(muteState) {
                 return;
             }
