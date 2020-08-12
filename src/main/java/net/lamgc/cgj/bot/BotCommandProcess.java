@@ -11,11 +11,8 @@ import net.lamgc.cgj.bot.cache.JsonRedisCacheStore;
 import net.lamgc.cgj.bot.event.BufferedMessageSender;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttribute;
 import net.lamgc.cgj.bot.sort.PreLoadDataAttributeComparator;
-import net.lamgc.cgj.pixiv.PixivDownload;
+import net.lamgc.cgj.pixiv.*;
 import net.lamgc.cgj.pixiv.PixivDownload.PageQuality;
-import net.lamgc.cgj.pixiv.PixivSearchAttribute;
-import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
-import net.lamgc.cgj.pixiv.PixivURL;
 import net.lamgc.cgj.util.PixivUtils;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
@@ -146,8 +143,8 @@ public class BotCommandProcess {
             @Argument(name = "$fromGroup") long fromGroup,
             @Argument(force = false, name = "date") Date queryTime,
             @Argument(force = false, name = "force") boolean force,
-            @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
-            @Argument(force = false, name = "type", defaultValue = "ALL") String contentType,
+            @Argument(force = false, name = "mode", defaultValue = "DAILY") RankingMode contentMode,
+            @Argument(force = false, name = "type", defaultValue = "ALL") RankingContentType contentType,
             @Argument(force = false, name = "p", defaultValue = "1") int pageIndex
     ) throws InterruptedException {
         if(pageIndex <= 0) {
@@ -173,33 +170,13 @@ public class BotCommandProcess {
             }
         }
 
-        PixivURL.RankingMode mode;
-        try {
-            String rankingModeValue = contentMode.toUpperCase();
-            mode = PixivURL.RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ?
-                    rankingModeValue : "MODE_" + rankingModeValue);
-        } catch (IllegalArgumentException e) {
-            log.warn("无效的RankingMode值: {}", contentMode);
-            return "参数无效, 请查看帮助信息";
-        }
-
-        PixivURL.RankingContentType type;
-        try {
-            String contentTypeValue = contentType.toUpperCase();
-            type = PixivURL.RankingContentType.valueOf(
-                    contentTypeValue.startsWith("TYPE_") ? contentTypeValue : "TYPE_" + contentTypeValue);
-        } catch (IllegalArgumentException e) {
-            log.warn("无效的RankingContentType值: {}", contentType);
-            return "参数无效, 请查看帮助信息";
-        }
-
-        if(!type.isSupportedMode(mode)) {
+        if(!contentType.isSupportedMode(contentMode)) {
             log.warn("RankingContentType不支持指定的RankingMode.(ContentType: {}, RankingMode: {})",
-                    type.name(), mode.name());
+                    contentType.name(), contentMode.name());
             return "不支持的内容类型或模式!";
         }
 
-        StringBuilder resultBuilder = new StringBuilder(mode.name() + " - 以下是 ")
+        StringBuilder resultBuilder = new StringBuilder(contentMode.name() + " - 以下是 ")
                 .append(new SimpleDateFormat("yyyy-MM-dd").format(queryDate)).append(" 的Pixiv插画排名榜前十名：\n");
         try {
             int index = 0;
@@ -223,7 +200,7 @@ public class BotCommandProcess {
 
             int startsIndex = itemLimit * pageIndex - (itemLimit - 1);
             List<JsonObject> rankingInfoList = CacheStoreCentral.getCentral()
-                    .getRankingInfoByCache(type, mode, queryDate,
+                    .getRankingInfoByCache(contentType, contentMode, queryDate,
                             Math.max(1, startsIndex), Math.max(0, itemLimit), false);
             if(rankingInfoList.isEmpty()) {
                 return "无法查询排行榜，可能排行榜尚未更新。";
@@ -243,7 +220,7 @@ public class BotCommandProcess {
                 if (index <= imageLimit) {
                     resultBuilder
                             .append(CacheStoreCentral.getCentral()
-                                    .getImageById(fromGroup, illustId, PixivDownload.PageQuality.REGULAR, 1))
+                                    .getImageById(fromGroup, illustId, PageQuality.REGULAR, 1))
                             .append("\n");
                 }
             }
@@ -273,20 +250,20 @@ public class BotCommandProcess {
             @Argument(name = "$fromGroup") long fromGroup,
             @Argument(force = false, name = "mode", defaultValue = "DAILY") String contentMode,
             @Argument(force = false, name = "type", defaultValue = "ILLUST") String contentType) {
-        PixivURL.RankingMode mode;
+        RankingMode mode;
         try {
             String rankingModeValue = contentMode.toUpperCase();
-            mode = PixivURL.RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ?
+            mode = RankingMode.valueOf(rankingModeValue.startsWith("MODE_") ?
                     rankingModeValue : "MODE_" + rankingModeValue);
         } catch (IllegalArgumentException e) {
             log.warn("无效的RankingMode值: {}", contentMode);
             return "参数无效, 请查看帮助信息";
         }
 
-        PixivURL.RankingContentType type;
+        RankingContentType type;
         try {
             String contentTypeValue = contentType.toUpperCase();
-            type = PixivURL.RankingContentType.valueOf(
+            type = RankingContentType.valueOf(
                     contentTypeValue.startsWith("TYPE_") ? contentTypeValue : "TYPE_" + contentTypeValue);
         } catch (IllegalArgumentException e) {
             log.warn("无效的RankingContentType值: {}", contentType);

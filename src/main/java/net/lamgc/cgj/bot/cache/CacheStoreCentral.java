@@ -11,7 +11,8 @@ import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.exception.HttpRequestException;
 import net.lamgc.cgj.pixiv.PixivDownload;
 import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
-import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.pixiv.RankingContentType;
+import net.lamgc.cgj.pixiv.RankingMode;
 import net.lamgc.cgj.util.Locker;
 import net.lamgc.cgj.util.LockerMap;
 import net.lamgc.cgj.util.URLs;
@@ -124,7 +125,8 @@ public final class CacheStoreCentral {
      * @param pageIndex 指定页面索引, 从1开始
      * @return 如果成功, 返回BotCode, 否则返回错误信息.
      */
-    public String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex) throws InterruptedException {
+    public String getImageById(long fromGroup, int illustId, PixivDownload.PageQuality quality, int pageIndex)
+            throws InterruptedException {
         log.debug("IllustId: {}, Quality: {}, PageIndex: {}", illustId, quality.name(), pageIndex);
         if(pageIndex <= 0) {
             log.warn("指定的页数不能小于或等于0: {}", pageIndex);
@@ -354,9 +356,9 @@ public final class CacheStoreCentral {
      * @return 成功返回有值List, 失败且无异常返回空
      * @throws IOException 获取异常时抛出
      */
-    public List<JsonObject> getRankingInfoByCache(PixivURL.RankingContentType contentType,
-                                                         PixivURL.RankingMode mode,
-                                                         Date queryDate, int start, int range, boolean flushCache)
+    public List<JsonObject> getRankingInfoByCache(RankingContentType contentType,
+                                                  RankingMode mode,
+                                                  Date queryDate, int start, int range, boolean flushCache)
             throws IOException {
         if(!contentType.isSupportedMode(mode)) {
             log.warn("试图获取不支持的排行榜类型已拒绝.(ContentType: {}, RankingMode: {})", contentType.name(), mode.name());
@@ -414,9 +416,10 @@ public final class CacheStoreCentral {
     public JsonObject getSearchBody(PixivSearchLinkBuilder searchBuilder) throws IOException {
         log.debug("正在搜索作品, 条件: {}", searchBuilder.getSearchCondition());
         String requestUrl = searchBuilder.buildURL();
-        String searchIdentify = requestUrl.substring(requestUrl.lastIndexOf("/", requestUrl.lastIndexOf("/") - 1) + 1);
-        Locker<String> locker
-                = buildSyncKey(searchIdentify);
+        String searchIdentify =
+                requestUrl.substring(requestUrl.lastIndexOf("/", requestUrl.lastIndexOf("/") - 1) + 1);
+        Locker<String> locker =
+                buildSyncKey(searchIdentify);
         log.debug("RequestUrl: {}", requestUrl);
         JsonObject resultBody = null;
         if(!searchBodyCache.exists(searchIdentify)) {

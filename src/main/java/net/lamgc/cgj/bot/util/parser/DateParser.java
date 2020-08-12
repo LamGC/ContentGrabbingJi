@@ -1,4 +1,4 @@
-package net.lamgc.cgj.util;
+package net.lamgc.cgj.bot.util.parser;
 
 import net.lamgc.utils.base.runner.StringParameterParser;
 

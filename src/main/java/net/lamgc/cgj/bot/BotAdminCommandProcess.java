@@ -9,7 +9,8 @@ import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.message.MessageSenderBuilder;
 import net.lamgc.cgj.bot.message.MessageSource;
 import net.lamgc.cgj.pixiv.PixivDownload;
-import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.pixiv.RankingContentType;
+import net.lamgc.cgj.pixiv.RankingMode;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.Command;
 import org.slf4j.Logger;
@@ -118,16 +119,16 @@ public class BotAdminCommandProcess {
             return "排行榜范围选取错误！";
         }
 
-        PixivURL.RankingContentType type;
-        PixivURL.RankingMode mode;
+        RankingContentType type;
+        RankingMode mode;
         try {
-            type = PixivURL.RankingContentType.valueOf("TYPE_" + rankingContentType.toUpperCase());
+            type = RankingContentType.valueOf("TYPE_" + rankingContentType.toUpperCase());
         } catch(IllegalArgumentException e) {
             return "无效的排行榜类型参数！";
         }
 
         try {
-            mode = PixivURL.RankingMode.valueOf("MODE_" + rankingMode.toUpperCase());
+            mode = RankingMode.valueOf("MODE_" + rankingMode.toUpperCase());
         } catch(IllegalArgumentException e) {
             return "无效的排行榜模式参数！";
         }
@@ -225,10 +226,13 @@ public class BotAdminCommandProcess {
         } catch(NoSuchElementException ignored) {
         }
 
-        int rankingStart = setting.has(RANKING_SETTING_RANKING_START) ? setting.get(RANKING_SETTING_RANKING_START).getAsInt() : 1;
-        int rankingEnd = setting.has(RANKING_SETTING_RANKING_END) ? setting.get(RANKING_SETTING_RANKING_END).getAsInt() : 150;
-        PixivURL.RankingMode rankingMode = PixivURL.RankingMode.MODE_DAILY;
-        PixivURL.RankingContentType rankingContentType = PixivURL.RankingContentType.TYPE_ILLUST;
+        int rankingStart = setting.has(RANKING_SETTING_RANKING_START) ?
+                setting.get(RANKING_SETTING_RANKING_START).getAsInt() : 1;
+        int rankingEnd = setting.has(RANKING_SETTING_RANKING_END) ?
+                setting.get(RANKING_SETTING_RANKING_END).getAsInt() : 150;
+
+        RankingMode rankingMode = RankingMode.MODE_DAILY;
+        RankingContentType rankingContentType = RankingContentType.TYPE_ILLUST;
         PixivDownload.PageQuality pageQuality = PixivDownload.PageQuality.REGULAR;
 
         if(rankingStart <= 0 || rankingStart > 500) {
@@ -246,7 +250,7 @@ public class BotAdminCommandProcess {
         if(setting.has(RANKING_SETTING_RANKING_MODE)) {
             String value = setting.get(RANKING_SETTING_RANKING_MODE).getAsString().trim().toUpperCase();
             try {
-                rankingMode = PixivURL.RankingMode.valueOf(value.startsWith("MODE_") ? value : "MODE_" + value);
+                rankingMode = RankingMode.valueOf(value.startsWith("MODE_") ? value : "MODE_" + value);
             } catch(IllegalArgumentException e) {
                 log.warn("群组ID [{}] - 无效的RankingMode设定值, 将重置为默认值: {}", id, value);
             }
@@ -254,7 +258,7 @@ public class BotAdminCommandProcess {
         if(setting.has(RANKING_SETTING_RANKING_CONTENT_TYPE)) {
             String value = setting.get(RANKING_SETTING_RANKING_CONTENT_TYPE).getAsString().trim().toUpperCase();
             try {
-                rankingContentType = PixivURL.RankingContentType.valueOf(value.startsWith("TYPE_") ? value : "TYPE_" + value);
+                rankingContentType = RankingContentType.valueOf(value.startsWith("TYPE_") ? value : "TYPE_" + value);
             } catch(IllegalArgumentException e) {
                 log.warn("群组ID [{}] - 无效的RankingContentType设定值: {}", id, value);
             }
@@ -293,7 +297,10 @@ public class BotAdminCommandProcess {
      * @throws NoSuchElementException 当这个群号没有定时器的时候抛出异常
      */
     @Command
-    public static String removePushGroup(@Argument(name = "$fromGroup") long fromGroup, @Argument(name = "group", force = false) long id) {
+    public static String removePushGroup(
+            @Argument(name = "$fromGroup") long fromGroup,
+            @Argument(name = "group", force = false) long id
+    ) {
         long group = id <= 0 ? fromGroup : id;
         RandomIntervalSendTimer.getTimerById(group).destroy();
         pushInfoMap.remove(group);
@@ -324,7 +331,8 @@ public class BotAdminCommandProcess {
             log.debug("{} - Report: {}", illustIdStr, report);
             String reason = report.get("reason").isJsonNull() ? "" : report.get("reason").getAsString();
             msgBuilder.append(count).append(". 作品Id: ").append(illustIdStr)
-                    .append("(").append(dateFormat.format(new Date(report.get("reportTime").getAsLong()))).append(")：\n")
+                    .append("(").append(
+                            dateFormat.format(new Date(report.get("reportTime").getAsLong()))).append(")：\n")
                     .append("报告者QQ：").append(report.get("fromQQ").getAsLong()).append("\n")
                     .append("报告所在群：").append(report.get("fromGroup").getAsLong()).append("\n")
                     .append("报告原因：\n").append(reason).append("\n");

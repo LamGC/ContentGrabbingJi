@@ -56,10 +56,10 @@ public class PixivDownload {
         this.cookieStore = cookieStore;
         HttpClientBuilder builder = HttpClientBuilder.create();
         builder.setDefaultCookieStore(cookieStore);
-        // UA: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36
         ArrayList<Header> defaultHeaders = new ArrayList<>(2);
         defaultHeaders.add(new BasicHeader("User-Agent",
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36"));
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) " +
+                        "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/80.0.3987.122 Safari/537.36"));
         builder.setDefaultHeaders(defaultHeaders);
         builder.setProxy(proxy);
         httpClient = builder.build();
@@ -84,7 +84,8 @@ public class PixivDownload {
         Document document;
         ArrayList<String> linkList = new ArrayList<>();
         do {
-            request = new HttpGet(PixivURL.PIXIV_USER_COLLECTION_PAGE.replace("{pageIndex}", Integer.toString(++pageIndex)));
+            request = new HttpGet(PixivURL.PIXIV_USER_COLLECTION_PAGE
+                    .replace("{pageIndex}", Integer.toString(++pageIndex)));
             setCookieInRequest(request, cookieStore);
             log.debug("Request Link: " + request.getURI().toString());
             HttpResponse response = httpClient.execute(request);
@@ -99,10 +100,13 @@ public class PixivDownload {
 
             Gson gson = new Gson();
             for (String href : hrefList) {
-                HttpGet linkApiRequest = createHttpGetRequest(PixivURL.PIXIV_ILLUST_API_URL.replace("{illustId}", href.substring(href.lastIndexOf("/") + 1)));
+                HttpGet linkApiRequest = createHttpGetRequest(PixivURL.PIXIV_ILLUST_API_URL
+                        .replace("{illustId}", href.substring(href.lastIndexOf("/") + 1)));
                 log.debug(linkApiRequest.getURI().toString());
                 HttpResponse httpResponse = httpClient.execute(linkApiRequest);
-                JsonObject linkResult = gson.fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+                JsonObject linkResult =
+                        gson.fromJson(EntityUtils.toString(httpResponse.getEntity()), JsonObject.class);
+
                 if(linkResult.get("error").getAsBoolean()) {
                     log.error("接口返回错误信息: {}", linkResult.get("message").getAsString());
                     continue;
@@ -111,7 +115,10 @@ public class PixivDownload {
                 JsonArray linkArray = linkResult.get("body").getAsJsonArray();
                 for (int i = 0; i < linkArray.size(); i++) {
                     JsonObject linkObject = linkArray.get(i).getAsJsonObject().get("urls").getAsJsonObject();
-                    linkList.add(linkObject.get((quality == null ? PageQuality.ORIGINAL : quality).toString().toLowerCase()).getAsString());
+                    linkList.add(
+                            linkObject.get((quality == null ? PageQuality.ORIGINAL : quality).toString().toLowerCase())
+                            .getAsString()
+                    );
                 }
             }
         } while(!document.select(".pager-container>.next").isEmpty());
@@ -153,7 +160,8 @@ public class PixivDownload {
         Document document = Jsoup.parse(EntityUtils.toString(response.getEntity()));
 
         HttpClient imageClient = HttpClientBuilder.create().build();
-        Elements elements = document.select(".gtm-illust-recommend-zone>.image-item>.gtm-illust-recommend-thumbnail-link");
+        Elements elements = document
+                .select(".gtm-illust-recommend-zone>.image-item>.gtm-illust-recommend-thumbnail-link");
         for(int illustIndex = 0; illustIndex < elements.size(); illustIndex++){
             String href = elements.get(illustIndex).attr("href");
             int illustId = Integer.parseInt(href.substring(href.lastIndexOf("/") + 1));
@@ -195,8 +203,14 @@ public class PixivDownload {
      * @param fn 回调函数
      * @throws IOException 当请求发生异常时抛出
      */
-    public void getRankingAsInputStream(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode,
-                                        Date time, int range, PageQuality quality, RankingDownloadFunction fn) throws IOException {
+    public void getRankingAsInputStream(
+            RankingContentType contentType,
+            RankingMode mode,
+            Date time,
+            int range,
+            PageQuality quality,
+            RankingDownloadFunction fn
+    ) throws IOException {
         getRankingAsInputStream(contentType, mode, time, 1, range, quality, fn);
     }
 
@@ -211,15 +225,23 @@ public class PixivDownload {
      * @param fn 回调函数
      * @throws IOException 当请求发生异常时抛出
      */
-    public void getRankingAsInputStream(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode,
-                                        Date time, int rankStart, int range, PageQuality quality, RankingDownloadFunction fn) throws IOException {
+    public void getRankingAsInputStream(
+            RankingContentType contentType,
+            RankingMode mode,
+            Date time,
+            int rankStart,
+            int range,
+            PageQuality quality,
+            RankingDownloadFunction fn
+    ) throws IOException {
         getRanking(contentType, mode, time, rankStart, range).forEach(rankInfo -> {
             int rank = rankInfo.get("rank").getAsInt();
             int illustId = rankInfo.get("illust_id").getAsInt();
             int authorId = rankInfo.get("user_id").getAsInt();
             String authorName = rankInfo.get("user_name").getAsString();
             String title = rankInfo.get("title").getAsString();
-            log.trace("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}", rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
+            log.trace("当前到第 {}/{} 名(总共 {} 名), IllustID: {}, Author: ({}) {}, Title: {}",
+                    rank, rankStart + range - 1, range, illustId, authorId, authorName, title);
             log.trace("正在获取PagesLink...");
             List<String> linkList;
             try {
@@ -236,7 +258,11 @@ public class PixivDownload {
             for (int pageIndex = 0; pageIndex < linkList.size(); pageIndex++) {
                 String downloadLink = linkList.get(pageIndex);
                 log.trace("当前Page: {}/{}", pageIndex + 1, linkList.size());
-                try(InputStream imageInputStream = new BufferedInputStream(getImageAsInputStream(HttpClientBuilder.create().build(), downloadLink), 256 * 1024)) {
+                try(InputStream imageInputStream =
+                            new BufferedInputStream(
+                                    getImageAsInputStream(HttpClientBuilder.create().build(), downloadLink),
+                                    256 * 1024)
+                ) {
                     fn.download(rank, downloadLink, rankInfo.deepCopy(), imageInputStream);
                 } catch(IOException e) {
                     log.error("下载插画时发生异常", e);
@@ -256,22 +282,24 @@ public class PixivDownload {
      * @param rankStart 开始排名, 从1开始
      * @param range 取范围
      * @return 成功返回有值List, 失败且无异常返回空
-     * @throws IllegalArgumentException 当{@linkplain net.lamgc.cgj.pixiv.PixivURL.RankingContentType RankingContentType}
-     *                                  与{@linkplain net.lamgc.cgj.pixiv.PixivURL.RankingMode RankingMode}互不兼容时抛出
+     * @throws IllegalArgumentException 当{@linkplain net.lamgc.cgj.pixiv.RankingContentType RankingContentType}
+     *                                  与{@linkplain net.lamgc.cgj.pixiv.RankingMode RankingMode}互不兼容时抛出
      * @throws IndexOutOfBoundsException 当排行榜选取范围超出排行榜范围时抛出(排行榜范围为 1 ~ 500 名)
      * @throws IOException 当Http请求发生异常时抛出, 或Http请求响应码非200时抛出
      */
-    public List<JsonObject> getRanking(PixivURL.RankingContentType contentType, PixivURL.RankingMode mode,
+    public List<JsonObject> getRanking(RankingContentType contentType, RankingMode mode,
                                            Date time, int rankStart, int range) throws IOException {
         Objects.requireNonNull(time);
         if(!Objects.requireNonNull(contentType).isSupportedMode(Objects.requireNonNull(mode))) {
-            throw new IllegalArgumentException("ContentType不支持指定的RankingMode: ContentType: " + contentType.name() + ", Mode: " + mode.name());
+            throw new IllegalArgumentException("ContentType不支持指定的RankingMode: ContentType: "
+                    + contentType.name() + ", Mode: " + mode.name());
         } else if(rankStart <= 0) {
             throw new IndexOutOfBoundsException("rankStart cannot be less than or equal to zero: " + rankStart);
         } else if(range <= 0) {
             throw new IndexOutOfBoundsException("range cannot be less than or equal to zero:" + range);
         } else if(rankStart + range - 1 > 500) {
-            throw new IndexOutOfBoundsException("排名选取范围超出了排行榜范围: rankStart=" + rankStart + ", range=" + range + ", length:" + (rankStart + range - 1));
+            throw new IndexOutOfBoundsException("排名选取范围超出了排行榜范围: rankStart="
+                    + rankStart + ", range=" + range + ", length:" + (rankStart + range - 1));
         }
 
         int startPages = (int) Math.max(1, Math.floor(rankStart / 50F));
@@ -294,7 +322,8 @@ public class PixivDownload {
             JsonObject resultObject = gson.fromJson(responseBody, JsonObject.class);
             canNext = resultObject.get("next").getAsJsonPrimitive().isNumber();
             JsonArray resultArray = resultObject.getAsJsonArray("contents");
-            for (int resultIndex = startIndex; resultIndex < resultArray.size() && count < range; resultIndex++, count++) {
+            for (int resultIndex = startIndex;
+                 resultIndex < resultArray.size() && count < range; resultIndex++, count++) {
                 results.add(resultArray.get(resultIndex).getAsJsonObject());
             }
 
@@ -354,8 +383,14 @@ public class PixivDownload {
      * @return 返回该illust所有Page的下载链接
      * @throws IOException 当HttpClient在请求时发生异常, 或接口报错时抛出, 注意{@link IOException#getMessage()}
      */
-    public static List<String> getIllustAllPageDownload(HttpClient httpClient, CookieStore cookieStore, int illustId, PageQuality quality) throws IOException {
-        HttpGet linkApiRequest = new HttpGet(PixivURL.PIXIV_ILLUST_API_URL.replace("{illustId}", Integer.toString(illustId)));
+    public static List<String> getIllustAllPageDownload(
+            HttpClient httpClient,
+            CookieStore cookieStore,
+            int illustId,
+            PageQuality quality
+    ) throws IOException {
+        HttpGet linkApiRequest = new HttpGet(PixivURL.PIXIV_ILLUST_API_URL
+                .replace("{illustId}", Integer.toString(illustId)));
         setCookieInRequest(linkApiRequest, cookieStore);
         HttpResponse response = httpClient.execute(linkApiRequest);
         JsonObject resultObject = new Gson().fromJson(EntityUtils.toString(response.getEntity()), JsonObject.class);
@@ -412,7 +447,8 @@ public class PixivDownload {
     @Deprecated
     public Set<Map.Entry<String, InputStream>> getCollectionAsInputStream(PageQuality quality) throws IOException {
         HashSet<Map.Entry<String, InputStream>> illustInputStreamSet = new HashSet<>();
-        getCollectionAsInputStream(quality, (link, inputStream) -> illustInputStreamSet.add(new AbstractMap.SimpleEntry<>(link, inputStream)));
+        getCollectionAsInputStream(quality, (link, inputStream) ->
+                illustInputStreamSet.add(new AbstractMap.SimpleEntry<>(link, inputStream)));
         return illustInputStreamSet;
     }
 
@@ -493,7 +529,8 @@ public class PixivDownload {
 
     public static void setCookieInRequest(HttpRequest request, CookieStore cookieStore) {
         StringBuilder builder = new StringBuilder();
-        cookieStore.getCookies().forEach(cookie -> builder.append(cookie.getName()).append("=").append(cookie.getValue()).append("; "));
+        cookieStore.getCookies().forEach(cookie ->
+                builder.append(cookie.getName()).append("=").append(cookie.getValue()).append("; "));
         request.setHeader(HttpHeaderNames.COOKIE.toString(), builder.toString());
     }
 

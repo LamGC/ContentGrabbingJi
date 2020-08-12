@@ -1,7 +1,6 @@
 package net.lamgc.cgj.pixiv;
 
 import java.text.SimpleDateFormat;
-import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.GregorianCalendar;
@@ -209,7 +208,13 @@ public final class PixivURL {
      * @param pageIndex 页数，一页50位，总共10页
      * @return 返回构建好的链接
      */
-    public static String getRankingLink(RankingContentType contentType, RankingMode mode, Date time, int pageIndex, boolean json){
+    public static String getRankingLink(
+            RankingContentType contentType,
+            RankingMode mode,
+            Date time,
+            int pageIndex,
+            boolean json
+    ){
         StringBuilder linkBuilder = new StringBuilder(PIXIV_RANKING_LINK);
         linkBuilder.append("mode=").append(mode == null ? RankingMode.MODE_DAILY.modeParam : mode.modeParam);
         if(contentType != null && !contentType.equals(RankingContentType.TYPE_ALL)){
@@ -236,136 +241,11 @@ public final class PixivURL {
     }
 
     /**
-     * 排名榜模式
-     */
-    public enum RankingMode{
-        /**
-         * 每天
-         */
-        MODE_DAILY("daily"),
-        /**
-         * 每周
-         */
-        MODE_WEEKLY("weekly"),
-        /**
-         * 每月
-         */
-        MODE_MONTHLY("monthly"),
-        /**
-         * 新人
-         */
-        MODE_ROOKIE("rookie"),
-        /**
-         * 原创
-         */
-        MODE_ORIGINAL("original"),
-        /**
-         * 受男性喜欢
-         */
-        MODE_MALE("male"),
-        /**
-         * 受女性喜欢
-         */
-        MODE_FEMALE("female"),
-
-        /**
-         * 每天 - R18
-         */
-        MODE_DAILY_R18("daily_r18"),
-        /**
-         * 每周 - R18
-         */
-        MODE_WEEKLY_R18("weekly_r18"),
-        /**
-         * 受男性喜欢 - R18
-         */
-        MODE_MALE_R18("male_r18"),
-        /**
-         * 受女性喜欢 - R18
-         */
-        MODE_FEMALE_R18("female_r18"),
-        ;
-        public String modeParam;
-
-        RankingMode(String modeParamName){
-            this.modeParam = modeParamName;
-        }
-    }
-
-    /**
      * Pixiv搜索接口.<br/>
      * 要使用该链接请使用{@link PixivSearchLinkBuilder}构造链接.<br/>
      * 需要替换的参数: <br/>
      * content - 搜索内容
      */
     final static String PIXIV_SEARCH_CONTENT_URL = "https://www.pixiv.net/ajax/search/{area}/{content}?word={content}";
-
-    /**
-     * 排名榜类型
-     */
-    public enum RankingContentType{
-        TYPE_ALL("", RankingMode.values()),
-        /**
-         * 插画
-         * 支持的时间类型: 每天, 每周, 每月, 新人
-         */
-        TYPE_ILLUST("illust",
-                new RankingMode[]{
-                        RankingMode.MODE_DAILY,
-                        RankingMode.MODE_MONTHLY,
-                        RankingMode.MODE_WEEKLY,
-                        RankingMode.MODE_ROOKIE,
-                        RankingMode.MODE_DAILY_R18,
-                        RankingMode.MODE_WEEKLY_R18,
-                }
-        ),
-        /**
-         * 动图
-         * 支持的时间类型:每天, 每周
-         */
-        TYPE_UGOIRA("ugoira",
-                new RankingMode[]{
-                        RankingMode.MODE_DAILY,
-                        RankingMode.MODE_WEEKLY,
-                        RankingMode.MODE_DAILY_R18,
-                        RankingMode.MODE_WEEKLY_R18
-                }
-        ),
-        /**
-         * 漫画
-         * 支持的时间类型: 每天, 每周, 每月, 新人
-         */
-        TYPE_MANGA("manga",
-                new RankingMode[]{
-                        RankingMode.MODE_DAILY,
-                        RankingMode.MODE_MONTHLY,
-                        RankingMode.MODE_WEEKLY,
-                        RankingMode.MODE_ROOKIE,
-                        RankingMode.MODE_DAILY_R18,
-                        RankingMode.MODE_WEEKLY_R18,
-                }
-        )
-        ;
-
-        String typeName;
-
-        private final RankingMode[] supportedMode;
-
-        RankingContentType(String typeName, RankingMode[] supportedMode){
-            this.typeName = typeName;
-            this.supportedMode = supportedMode;
-        }
-
-        /**
-         * 检查指定RankingMode是否支持
-         * @param mode 要检查的RankingMode项
-         * @return 如果支持返回true
-         */
-        @SuppressWarnings("BooleanMethodIsAlwaysInverted")
-        public boolean isSupportedMode(RankingMode mode) {
-            return Arrays.binarySearch(supportedMode, mode) >= 0;
-        }
-
-    }
 
 }

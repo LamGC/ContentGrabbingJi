@@ -2,7 +2,8 @@ package net.lamgc.cgj.bot;
 
 import net.lamgc.cgj.bot.event.BotEventHandler;
 import net.lamgc.cgj.bot.event.VirtualLoadMessageEvent;
-import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.pixiv.RankingContentType;
+import net.lamgc.cgj.pixiv.RankingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -64,14 +65,15 @@ public class RankingUpdateTimer {
 
         String dateStr = new SimpleDateFormat("yyyy-MM-dd").format(calendar.getTime());
         log.info("正在获取 {} 期排行榜数据...", calendar.getTime());
-        for (PixivURL.RankingMode rankingMode : PixivURL.RankingMode.values()) {
-            for (PixivURL.RankingContentType contentType : PixivURL.RankingContentType.values()) {
+        for (RankingMode rankingMode : RankingMode.values()) {
+            for (RankingContentType contentType : RankingContentType.values()) {
                 if(!contentType.isSupportedMode(rankingMode)) {
                     log.debug("不支持的类型, 填空值跳过...(类型: {}.{})", rankingMode.name(), contentType.name());
                 }
                 log.info("当前排行榜类型: {}.{}, 正在更新...", rankingMode.name(), contentType.name());
                 BotEventHandler.executeMessageEvent(new VirtualLoadMessageEvent(0,0,
-                                ".cgj ranking -type=" + contentType.name() + " -mode=" + rankingMode.name() + " -force -date " + dateStr));
+                                ".cgj ranking -type=" + contentType.name() +
+                                        " -mode=" + rankingMode.name() + " -force -date " + dateStr));
                 log.info("排行榜 {}.{} 负载指令已投递.", rankingMode.name(), contentType.name());
             }
         }

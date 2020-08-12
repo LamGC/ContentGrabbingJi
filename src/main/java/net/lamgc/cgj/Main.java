@@ -10,9 +10,7 @@ import net.lamgc.cgj.bot.boot.BotGlobal;
 import net.lamgc.cgj.bot.framework.cli.ConsoleMain;
 import net.lamgc.cgj.bot.framework.coolq.SpringCQApplication;
 import net.lamgc.cgj.bot.framework.mirai.MiraiMain;
-import net.lamgc.cgj.pixiv.PixivDownload;
-import net.lamgc.cgj.pixiv.PixivSearchLinkBuilder;
-import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.pixiv.*;
 import net.lamgc.utils.base.runner.Argument;
 import net.lamgc.utils.base.runner.ArgumentsRunner;
 import net.lamgc.utils.base.runner.Command;
@@ -182,18 +180,18 @@ public class Main {
         date = format.format(queryDate);
 
         log.info("查询时间: {}", date);
-        PixivURL.RankingMode rankingMode = PixivURL.RankingMode.MODE_DAILY;
-        PixivURL.RankingContentType contentType = null;
+        RankingMode rankingMode = RankingMode.MODE_DAILY;
+        RankingContentType contentType = null;
         if(mode != null) {
             try {
-                rankingMode = PixivURL.RankingMode.valueOf(mode);
+                rankingMode = RankingMode.valueOf(mode);
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的RankingMode: {}", mode);
             }
         }
         if(content != null) {
             try {
-                contentType = PixivURL.RankingContentType.valueOf(content);
+                contentType = RankingContentType.valueOf(content);
             } catch (IllegalArgumentException e) {
                 log.warn("不支持的RankingContentType: {}", content);
             }
@@ -215,7 +213,8 @@ public class Main {
 
         log.info("正在调用方法...");
         try {
-            pixivDownload.getRankingAsInputStream(contentType, rankingMode, queryDate, range, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
+            pixivDownload.getRankingAsInputStream(contentType, rankingMode, queryDate, range,
+                    PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
                 try {
                     ZipEntry entry = new ZipEntry("Rank" + rank + "-" + link.substring(link.lastIndexOf("/") + 1));
                     entry.setComment(rankInfo.toString());
@@ -301,35 +300,39 @@ public class Main {
 
         JsonObject resultBody = jsonObject.getAsJsonObject("body");
 
-        for(PixivSearchLinkBuilder.SearchArea searchArea : PixivSearchLinkBuilder.SearchArea.values()) {
-            if(!resultBody.has(searchArea.jsonKey) || resultBody.getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data").size() == 0) {
-                //log.info("返回数据不包含 {}", searchArea.jsonKey);
-                continue;
-            }
-            JsonArray illustsArray = resultBody
-                    .getAsJsonObject(searchArea.jsonKey).getAsJsonArray("data");
-            log.info("已找到与 {} 相关插图信息({})：", content, searchArea.name().toLowerCase());
-            int count = 1;
-            for (JsonElement jsonElement : illustsArray) {
-                JsonObject illustObj = jsonElement.getAsJsonObject();
-                if(!illustObj.has("illustId")) {
+        for(PixivSearchAttribute attribute : PixivSearchAttribute.values()) {
+            for(String attrName : attribute.attributeNames) {
+                if(!resultBody.has(attrName) ||
+                        resultBody.getAsJsonObject(attrName).getAsJsonArray("data").size() == 0) {
+                    //log.info("返回数据不包含 {}", attrName);
                     continue;
                 }
-                int illustId = illustObj.get("illustId").getAsInt();
-                StringBuilder builder = new StringBuilder("[");
-                illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
-                builder.replace(builder.length() - 2, builder.length(), "]");
-                log.info("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), \n\t作品标题: {}, \n\t作品Tags: {}, \n\t作品链接: {}",
-                        searchArea.name(),
-                        count++,
-                        illustsArray.size(),
-                        illustId,
-                        illustObj.get("userName").getAsString(),
-                        illustObj.get("userId").getAsInt(),
-                        illustObj.get("illustTitle").getAsString(),
-                        builder,
-                        PixivURL.getPixivRefererLink(illustId)
-                );
+                JsonArray illustsArray = resultBody
+                        .getAsJsonObject(attrName).getAsJsonArray("data");
+                log.info("已找到与 {} 相关插图信息({})：", content, attribute.name().toLowerCase());
+                int count = 1;
+                for (JsonElement jsonElement : illustsArray) {
+                    JsonObject illustObj = jsonElement.getAsJsonObject();
+                    if(!illustObj.has("illustId")) {
+                        continue;
+                    }
+                    int illustId = illustObj.get("illustId").getAsInt();
+                    StringBuilder builder = new StringBuilder("[");
+                    illustObj.get("tags").getAsJsonArray().forEach(el -> builder.append(el.getAsString()).append(", "));
+                    builder.replace(builder.length() - 2, builder.length(), "]");
+                    log.info("{} ({} / {})\n\t作品id: {}, \n\t作者名(作者id): {} ({}), " +
+                                    "\n\t作品标题: {}, \n\t作品Tags: {}, \n\t作品链接: {}",
+                            attribute.name(),
+                            count++,
+                            illustsArray.size(),
+                            illustId,
+                            illustObj.get("userName").getAsString(),
+                            illustObj.get("userId").getAsInt(),
+                            illustObj.get("illustTitle").getAsString(),
+                            builder,
+                            PixivURL.getPixivRefererLink(illustId)
+                    );
+                }
             }
         }
     }

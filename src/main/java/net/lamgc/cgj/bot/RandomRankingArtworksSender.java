@@ -4,7 +4,8 @@ import com.google.gson.JsonObject;
 import net.lamgc.cgj.bot.cache.CacheStoreCentral;
 import net.lamgc.cgj.bot.message.MessageSender;
 import net.lamgc.cgj.pixiv.PixivDownload;
-import net.lamgc.cgj.pixiv.PixivURL;
+import net.lamgc.cgj.pixiv.RankingContentType;
+import net.lamgc.cgj.pixiv.RankingMode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +23,8 @@ public class RandomRankingArtworksSender extends AutoSender {
     private final long groupId;
     private final int rankingStart;
     private final int rankingStop;
-    private final PixivURL.RankingMode mode;
-    private final PixivURL.RankingContentType contentType;
+    private final RankingMode mode;
+    private final RankingContentType contentType;
     private final PixivDownload.PageQuality quality;
 
     /**
@@ -40,8 +41,8 @@ public class RandomRankingArtworksSender extends AutoSender {
             MessageSender messageSender,
             int rankingStart,
             int rankingStop,
-            PixivURL.RankingMode mode,
-            PixivURL.RankingContentType contentType,
+            RankingMode mode,
+            RankingContentType contentType,
             PixivDownload.PageQuality quality) {
         this(messageSender, 0, rankingStart, rankingStop, mode, contentType, quality);
     }
@@ -62,8 +63,8 @@ public class RandomRankingArtworksSender extends AutoSender {
             long groupId,
             int rankingStart,
             int rankingStop,
-            PixivURL.RankingMode mode,
-            PixivURL.RankingContentType contentType,
+            RankingMode mode,
+            RankingContentType contentType,
             PixivDownload.PageQuality quality) {
         super(messageSender);
         this.groupId = groupId;
@@ -73,7 +74,8 @@ public class RandomRankingArtworksSender extends AutoSender {
         this.rankingStart = rankingStart > 0 ? rankingStart : 1;
         this.rankingStop = rankingStop > 0 ? rankingStop : 150;
         if(this.rankingStart > this.rankingStop) {
-            throw new IndexOutOfBoundsException("rankingStart=" + this.rankingStart + ", rankingStop=" + this.rankingStop);
+            throw new IndexOutOfBoundsException(
+                    "rankingStart=" + this.rankingStart + ", rankingStop=" + this.rankingStop);
         }
         this.quality = quality == null ? PixivDownload.PageQuality.REGULAR : quality;
     }

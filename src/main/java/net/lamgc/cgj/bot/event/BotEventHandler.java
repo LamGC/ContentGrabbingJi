@@ -7,17 +7,18 @@ import net.lamgc.cgj.bot.BotAdminCommandProcess;
 import net.lamgc.cgj.bot.BotCommandProcess;
 import net.lamgc.cgj.bot.MessageEventExecutionDebugger;
 import net.lamgc.cgj.bot.SettingProperties;
-import net.lamgc.cgj.util.DateParser;
-import net.lamgc.cgj.util.PagesQualityParser;
+import net.lamgc.cgj.bot.util.parser.DateParser;
+import net.lamgc.cgj.bot.util.parser.PagesQualityParser;
+import net.lamgc.cgj.bot.util.parser.RankingContentTypeParser;
+import net.lamgc.cgj.bot.util.parser.RankingModeParser;
 import net.lamgc.cgj.util.TimeLimitThreadPoolExecutor;
 import net.lamgc.utils.base.runner.ArgumentsRunner;
 import net.lamgc.utils.base.runner.ArgumentsRunnerConfig;
 import net.lamgc.utils.base.runner.exception.DeveloperRunnerException;
 import net.lamgc.utils.base.runner.exception.NoSuchCommandException;
 import net.lamgc.utils.base.runner.exception.ParameterNoFoundException;
-import net.lamgc.utils.event.*;
 import net.lamgc.utils.event.EventObject;
-
+import net.lamgc.utils.event.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +71,13 @@ public class BotEventHandler implements EventHandler {
         executor.setEventUncaughtExceptionHandler(new EventUncaughtExceptionHandler() {
             private final Logger log = LoggerFactory.getLogger(this.getClass());
             @Override
-            public void exceptionHandler(Thread executeThread, EventHandler handler, Method handlerMethod, EventObject event, Throwable cause) {
+            public void exceptionHandler(
+                    Thread executeThread,
+                    EventHandler handler,
+                    Method handlerMethod,
+                    EventObject event,
+                    Throwable cause
+            ) {
                 log.error("EventExecutor@{} 发生未捕获异常:\n\t" +
                                 "Thread:{}\n\tEventHandler: {}\n\tHandlerMethod: {}\n\tEventObject: {}\n" +
                         "------------------ Stack Trace ------------------\n{}",
@@ -103,8 +110,11 @@ public class BotEventHandler implements EventHandler {
         ArgumentsRunnerConfig runnerConfig = new ArgumentsRunnerConfig();
         runnerConfig.setUseDefaultValueInsteadOfException(true);
         runnerConfig.setCommandIgnoreCase(true);
+
         runnerConfig.addStringParameterParser(new DateParser(new SimpleDateFormat("yyyy-MM-dd")));
         runnerConfig.addStringParameterParser(new PagesQualityParser());
+        runnerConfig.addStringParameterParser(new RankingModeParser());
+        runnerConfig.addStringParameterParser(new RankingContentTypeParser());
 
         processRunner = new ArgumentsRunner(BotCommandProcess.class, runnerConfig);
         adminRunner = new ArgumentsRunner(BotAdminCommandProcess.class, runnerConfig);
@@ -137,7 +147,8 @@ public class BotEventHandler implements EventHandler {
         if(!event.getMessage().startsWith(ADMIN_COMMAND_PREFIX) &&
                 !Strings.isNullOrEmpty(debuggerName)) {
             try {
-                MessageEventExecutionDebugger debugger = MessageEventExecutionDebugger.valueOf(debuggerName.toUpperCase());
+                MessageEventExecutionDebugger debugger =
+                        MessageEventExecutionDebugger.valueOf(debuggerName.toUpperCase());
                 debugger.debugger.accept(executor, event, SettingProperties.getProperties(SettingProperties.GLOBAL),
                         MessageEventExecutionDebugger.getDebuggerLogger(debugger));
             } catch(IllegalArgumentException e) {
@@ -154,6 +165,9 @@ public class BotEventHandler implements EventHandler {
         }
     }
 
+    private final static Pattern MESSAGE_PATTERN =
+            Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
+
     /**
      * 以事件形式处理消息事件
      * @param event 消息事件对象
@@ -166,8 +180,7 @@ public class BotEventHandler implements EventHandler {
             return;
         }
 
-        Pattern pattern = Pattern.compile("/\\s*(\".+?\"|[^:\\s])+((\\s*:\\s*(\".+?\"|[^\\s])+)|)|(\".+?\"|[^\"\\s])+");
-        Matcher matcher = pattern.matcher(Strings.nullToEmpty(msg));
+        Matcher matcher = MESSAGE_PATTERN.matcher(Strings.nullToEmpty(msg));
         List<String> argsList = new ArrayList<>();
         while (matcher.find()) {
             String arg = matcher.group();
@@ -197,6 +210,7 @@ public class BotEventHandler implements EventHandler {
         args = Arrays.copyOf(args, args.length + 4);
         argsList.toArray(args);
 
+        String[] runnerArguments = args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length);
         log.info("正在处理命令...");
         long time = System.currentTimeMillis();
         Object result;
@@ -206,10 +220,10 @@ public class BotEventHandler implements EventHandler {
                         .equals(SettingProperties.getProperty(0, "admin.adminId"))) {
                     result = "你没有执行该命令的权限！";
                 } else {
-                    result = adminRunner.run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
+                    result = adminRunner.run(runnerArguments);
                 }
             } else {
-                result = processRunner.run(args.length <= 1 ? new String[0] : Arrays.copyOfRange(args, 1, args.length));
+                result = processRunner.run(runnerArguments);
             }
         } catch(NoSuchCommandException e) {
             result = "没有这个命令！请使用“.cgj”查看帮助说明！";
@@ -246,7 +260,8 @@ public class BotEventHandler implements EventHandler {
         long totalTime = System.currentTimeMillis() - time;
         log.info("命令反馈完成.(事件耗时: {}ms, P: {}%({}ms), R: {}%({}ms))", totalTime,
                 String.format("%.3f", ((double) processTime / (double)totalTime) * 100F), processTime,
-                String.format("%.3f", ((double) (totalTime - processTime) / (double)totalTime) * 100F), totalTime - processTime);
+                String.format("%.3f", ((double) (totalTime - processTime) / (double)totalTime) * 100F),
+                totalTime - processTime);
     }
 
     /**

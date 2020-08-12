@@ -133,7 +133,7 @@ public class PixivDownloadTest {
         zos.setLevel(9);
         log.info("正在调用方法...");
         try {
-            pixivDownload.getRankingAsInputStream(null, PixivURL.RankingMode.MODE_DAILY_R18, queryDate, 500, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
+            pixivDownload.getRankingAsInputStream(null, RankingMode.MODE_DAILY_R18, queryDate, 500, PixivDownload.PageQuality.ORIGINAL, (rank, link, rankInfo, inputStream) -> {
                 try {
                     ZipEntry entry = new ZipEntry("Rank" + rank + "-" + link.substring(link.lastIndexOf("/") + 1));
                     entry.setComment(rankInfo.toString());
