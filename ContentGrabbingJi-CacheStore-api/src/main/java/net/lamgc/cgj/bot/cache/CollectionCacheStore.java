@@ -73,9 +73,10 @@ public interface CollectionCacheStore<E> extends CacheStore<Collection<E>> {
 
     /**
      * 清空集合中的所有元素.
+     * @param key 欲清空集合的缓存项键名.
      * @return 操作成功返回 true.
      */
-    boolean clearCollection();
+    boolean clearCollection(String key);
 
     /**
      * 删除缓存项中指定的元素.
