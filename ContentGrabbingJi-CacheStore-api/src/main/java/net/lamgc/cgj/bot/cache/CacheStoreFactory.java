@@ -17,6 +17,8 @@
 
 package net.lamgc.cgj.bot.cache;
 
+import net.lamgc.cgj.bot.cache.convert.StringConverter;
+
 /**
  * 缓存存储容器构造工厂.
  * 可支持不同实现缓存存储容器.

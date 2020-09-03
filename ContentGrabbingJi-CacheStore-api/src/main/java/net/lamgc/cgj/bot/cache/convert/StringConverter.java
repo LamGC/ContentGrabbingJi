@@ -15,28 +15,13 @@
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-package net.lamgc.cgj.bot.cache;
+package net.lamgc.cgj.bot.cache.convert;
 
 /**
- * 转换器接口
- * @param <S> 源类型
- * @param <T> 目标类型
+ * 某类型到字符串的转换器接口.
+ * @param <T> 源类型.
  * @author LamGC
  */
-public interface Converter<S, T> {
-
-    /**
-     * 将源类型对象转换成目标类型.
-     * @param source 源类型对象.
-     * @return 对应的目标类型对象.
-     */
-    T to(S source);
-
-    /**
-     * 从目标类型对象转换回源类型.
-     * @param target 目标类型对象.
-     * @return 对应的源类型对象.
-     */
-    S from(T target);
+public interface StringConverter<T> extends Converter<T, String> {
 
 }
