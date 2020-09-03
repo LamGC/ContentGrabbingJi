@@ -24,7 +24,7 @@ import java.util.Collection;
  * @param <E> 元素类型.
  * @author LamGC
  */
-public interface CollectionCacheStore<E> extends CacheStore<Collection<E>> {
+public interface CollectionCacheStore<E, C extends Collection<E>> extends CacheStore<C> {
 
     /**
      * 为缓存项添加一个元素.

@@ -25,7 +25,7 @@ import java.util.List;
  * @param <E> 值类型.
  * @author LamGC
  */
-public interface ListCacheStore<E> extends CollectionCacheStore<E> {
+public interface ListCacheStore<E> extends CollectionCacheStore<E, List<E>> {
 
     /**
      * 获取缓存项中的指定元素.
