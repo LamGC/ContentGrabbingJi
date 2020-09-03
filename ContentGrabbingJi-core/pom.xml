@@ -36,6 +36,11 @@
         </dependency>
         <dependency>
             <groupId>net.lamgc</groupId>
+            <artifactId>ContentGrabbingJi-CacheStore-api</artifactId>
+            <version>3.0.0-alpha-SNAPSHOT</version>
+        </dependency>
+        <dependency>
+            <groupId>net.lamgc</groupId>
             <artifactId>ContentGrabbingJi-pixiv</artifactId>
             <version>3.0.0-alpha-SNAPSHOT</version>
         </dependency>
