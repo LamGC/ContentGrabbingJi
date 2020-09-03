@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright (C) 2020  LamGC
+  ~
+  ~ ContentGrabbingJi is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as
+  ~ published by the Free Software Foundation, either version 3 of the
+  ~ License, or (at your option) any later version.
+  ~
+  ~ ContentGrabbingJi is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with this program.  If not, see <https://www.gnu.org/licenses/>.
+  -->
+
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <packaging>pom</packaging>
+    <groupId>net.lamgc</groupId>
+    <artifactId>ContentGrabbingJi</artifactId>
+    <version>3.0.0-alpha-SNAPSHOT</version>
+    <modules>
+        <module>ContentGrabbingJi-core</module>
+        <module>ContentGrabbingJi-framework-api</module>
+        <module>ContentGrabbingJi-exec</module>
+        <module>ContentGrabbingJi-framework-mirai</module>
+        <module>ContentGrabbingJi-pixiv</module>
+        <module>ContentGrabbingJi-CacheStore-api</module>
+        <module>ContentGrabbingJi-CacheStore-redis</module>
+        <module>ContentGrabbingJi-CacheStore-local</module>
+    </modules>
+
+    <developers>
+        <developer>
+            <name>LamGC</name>
+            <email>lam827@lamgc.net</email>
+            <url>https://github.com/LamGC</url>
+            <roles>
+                <role>Project Manager</role>
+                <role>Key contributors</role>
+            </roles>
+            <timezone>UTC+8</timezone>
+        </developer>
+    </developers>
+
+    <licenses>
+        <license>
+            <name>GNU Affero General Public License</name>
+            <url>http://www.gnu.org/licenses/agpl-3.0.txt</url>
+            <distribution>repo</distribution>
+        </license>
+    </licenses>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+        <maven.compiler.encoding>UTF-8</maven.compiler.encoding>
+    </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.8.1</version>
+                <configuration>
+                    <source>1.8</source>
+                    <target>1.8</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
+
+    <dependencies>
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>29.0-jre</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>1.7.30</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-slf4j-impl</artifactId>
+            <version>2.13.1</version>
+            <scope>test</scope>
+        </dependency>
+
+    </dependencies>
+
+</project>
