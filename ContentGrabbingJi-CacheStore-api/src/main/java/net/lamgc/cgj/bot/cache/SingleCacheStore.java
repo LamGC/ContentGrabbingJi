@@ -19,7 +19,7 @@ package net.lamgc.cgj.bot.cache;
 
 /**
  * 单项存取的缓存存储容器.
- * 该缓存存储容器在存储上, 一个键对应一个值, 不存在一对多的情况.
+ * <p>该缓存存储容器在存储上, 一个键对应一个值, 不存在一对多的情况.
  * @param <V> 值类型.
  * @author LamGC
  */
@@ -28,7 +28,7 @@ public interface SingleCacheStore<V> extends CacheStore<V> {
     /**
      * 设置指定键为指定值.
      * 如果缓存项不存在, 则新建缓存并存储, 如果存在, 则覆盖原缓存;
-     * 覆盖缓存相当于是"删除"该缓存并重新创建, "删除"意味着原缓存项的相关设置将会丢失(例如"过期时间").
+     * <p>覆盖缓存相当于是"删除"该缓存并重新创建, "删除"意味着原缓存项的相关设置将会丢失(例如"过期时间").
      * @param key 缓存项键名.
      * @param value 缓存值.
      * @return 如果成功返回 true.
@@ -38,7 +38,7 @@ public interface SingleCacheStore<V> extends CacheStore<V> {
 
     /**
      * 设置指定键为指定值.
-     * 该方法与 {@link #set(String, Object)} 类似, 但如果该 key 已经存在缓存, 则不执行 set 操作并返回 false.
+     * <p>该方法与 {@link #set(String, Object)} 类似, 但如果该 key 已经存在缓存, 则不执行 set 操作并返回 false.
      * @param key 缓存项键名.
      * @param value 缓存值.
      * @return 如果成功返回 true, 当 key 已存在, 或设置失败时返回 false.

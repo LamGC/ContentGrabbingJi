@@ -75,15 +75,17 @@ public interface CollectionCacheStore<E, C extends Collection<E>> extends CacheS
      * 清空集合中的所有元素.
      * @param key 欲清空集合的缓存项键名.
      * @return 操作成功返回 true.
+     * @throws NullPointerException 当 key 为 null 时抛出.
      */
     boolean clearCollection(String key);
 
     /**
      * 删除缓存项中指定的元素.
-     * 该方法与 {@link CacheStore#remove(String)} 不同, 该方法仅删除缓存项中的指定元素, 即使删除后缓存项中没有元素, 也不会删除缓存项.
+     * <p>该方法与 {@link CacheStore#remove(String)} 不同, 该方法仅删除缓存项中的指定元素, 即使删除后缓存项中没有元素, 也不会删除缓存项.
      * @param key 待操作的缓存项键名.
      * @param element 欲删除的元素.
      * @return 如果元素存在且删除成功, 返回 true.
+     * @throws NullPointerException 当 key 为 null 时抛出.
      */
     boolean removeElement(String key, E element);
 

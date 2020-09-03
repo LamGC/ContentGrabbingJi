@@ -21,7 +21,8 @@ import net.lamgc.cgj.bot.cache.convert.StringConverter;
 
 /**
  * 缓存存储容器构造工厂.
- * 可支持不同实现缓存存储容器.
+ *
+ * <p>可支持不同实现缓存存储容器.
  * @author LamGC
  */
 public interface CacheStoreFactory {
