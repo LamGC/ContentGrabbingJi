@@ -44,7 +44,6 @@ public interface SingleCacheStore<V> extends CacheStore<V> {
      * @return 如果成功返回 true, 当 key 已存在, 或设置失败时返回 false.
      * @throws NullPointerException 当 key 或 value 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
      */
-    @SuppressWarnings("AlibabaLowerCamelCaseVariableNaming")
     boolean setIfNoExist(String key, V value);
 
     /**
