@@ -30,30 +30,30 @@ public interface CollectionCacheStore<E> extends CacheStore<Collection<E>> {
      * 为缓存项添加一个元素.
      * 当缓存项不存在时, 将会创建一个新的缓存项.
      * @param key 缓存项键名.
-     * @param value 待添加的元素.
+     * @param element 待添加的元素.
      * @return 如果成功返回 true.
-     * @throws NullPointerException 当 key 或 value 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
+     * @throws NullPointerException 当 key 或 element 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
      */
-    boolean addElement(String key, E value);
+    boolean addElement(String key, E element);
 
     /**
      * 为缓存项添加一组元素.
      * 当缓存项不存在时, 将会创建一个新的缓存项.
      * @param key 缓存项键名.
-     * @param values 欲添加的元素集合.
+     * @param elements 欲添加的元素集合.
      * @return 如果成功添加, 返回 true, 如果无法添加(例如缓存项 List/Set 长度限制), 返回 false.
      * @throws NullPointerException 当 key 或 value 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
      */
-    boolean addElements(String key, Collection<E> values);
+    boolean addElements(String key, Collection<E> elements);
 
     /**
      * 检查指定元素是否包含在指定缓存项中.
      * @param key 待检查的缓存项键名.
-     * @param value 待查找的缓存值.
+     * @param element 待查找的缓存值.
      * @return 如果存在, 返回 true, 如果元素不存在, 或缓存项不存在, 返回 false.
-     * @throws NullPointerException 当 key 或 value 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
+     * @throws NullPointerException 当 key 或 element 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
      */
-    boolean containsElement(String key, E value);
+    boolean containsElement(String key, E element);
 
     /**
      * 检查指定缓存项是否为空.

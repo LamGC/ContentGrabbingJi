@@ -25,7 +25,7 @@ import java.util.List;
  * @param <E> 值类型.
  * @author LamGC
  */
-public interface ListCacheStore<E> extends CollectionCacheStore<List<E>> {
+public interface ListCacheStore<E> extends CollectionCacheStore<E> {
 
     /**
      * 获取缓存项中的指定元素.
@@ -68,5 +68,5 @@ public interface ListCacheStore<E> extends CollectionCacheStore<List<E>> {
      * @return 如果元素存在且删除成功, 返回 true.
      */
     @Override
-    boolean removeElement(String key, List<E> element);
+    boolean removeElement(String key, E element);
 }

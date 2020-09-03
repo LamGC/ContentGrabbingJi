@@ -24,7 +24,7 @@ import java.util.Set;
  * @param <E> 值类型.
  * @author LamGC
  */
-public interface SetCacheStore<E> extends CollectionCacheStore<Set<E>> {
+public interface SetCacheStore<E> extends CollectionCacheStore<E> {
 
 
 
