@@ -20,6 +20,7 @@ package net.lamgc.cgj.bot.cache.local;
 import net.lamgc.cgj.bot.cache.CacheStore;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
 
 /**
  * 基于 {@link Hashtable} 的缓存存储容器.
@@ -28,7 +29,7 @@ import java.util.*;
  * @see net.lamgc.cgj.bot.cache.CacheStore
  * @see Hashtable
  */
-public abstract class HashCacheStore<V> implements CacheStore<V> {
+public abstract class HashCacheStore<V> implements CacheStore<V>, Cleanable {
 
     private final Map<String, CacheItem<V>> cacheMap = new Hashtable<>();
 
@@ -98,6 +99,22 @@ public abstract class HashCacheStore<V> implements CacheStore<V> {
     @Override
     public Set<String> keySet() {
         return Collections.unmodifiableSet(cacheMap.keySet());
+    }
+
+    @Override
+    public long clean() {
+        Map<String, CacheItem<V>> cacheMap = getCacheMap();
+        Date currentDate = new Date();
+        AtomicLong cleanCount = new AtomicLong(0);
+        cacheMap.keySet().removeIf(key -> {
+            CacheItem<V> item = cacheMap.get(key);
+            if (item != null && item.isExpire(currentDate)) {
+                cleanCount.incrementAndGet();
+                return true;
+            }
+            return false;
+        });
+        return cleanCount.get();
     }
 
     /**
