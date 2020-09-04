@@ -33,7 +33,7 @@ public interface CacheStoreFactory {
      * @param converter 类型的转换器.
      * @return 返回 CacheStore 对象.
      */
-    <V> SingleCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter);
+    <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter);
 
     /**
      * 获取一个新的有序列表缓存存储容器.
@@ -53,4 +53,12 @@ public interface CacheStoreFactory {
      */
     <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter);
 
+    /**
+     * 获取一个新的映射表缓存存储容器.
+     * @param identify 缓存标识
+     * @param converter 字段值类型与 String 的转换器.
+     * @param <V> 字段值类型.
+     * @return 返回新的映射表缓存存储容器.
+     */
+    <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter);
 }
