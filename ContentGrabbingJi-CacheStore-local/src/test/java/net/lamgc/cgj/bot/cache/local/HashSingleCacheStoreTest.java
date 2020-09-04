@@ -33,11 +33,15 @@ public class HashSingleCacheStoreTest {
     @Test
     public void nullThrowTest() {
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
+
+        // HashSingleCacheStore
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.set(null, "testValue"));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.set("testKey", null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.get(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.setIfNotExist(null, "testValue"));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.setIfNotExist("testKey", null));
+
+        // HashCacheStore
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.exists(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.getTimeToLive(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.setTimeToLive(null, 0));
@@ -49,6 +53,7 @@ public class HashSingleCacheStoreTest {
         SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
         final String key = "test01";
         final String value = "testValue";
+
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
         Assert.assertEquals(value, cacheStore.get("test01"));
         Assert.assertTrue("Remove operation failed!", cacheStore.remove(key));
@@ -62,6 +67,7 @@ public class HashSingleCacheStoreTest {
         final String value = "testValue";
         final String value2 = "testValue02";
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
+
         Assert.assertFalse(cacheStore.setIfNotExist(key, value2));
         Assert.assertEquals(value, cacheStore.get(key));
     }
@@ -110,10 +116,12 @@ public class HashSingleCacheStoreTest {
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
         final String key = "test01";
         final String value = "testValue";
+
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertTrue("before-exists operation failed!", cacheStore.exists(key));
+
+        Assert.assertTrue(cacheStore.exists(key));
         Assert.assertTrue("Clear operation failed!", cacheStore.clear());
-        Assert.assertFalse("after-exists operation failed!", cacheStore.exists(key));
+        Assert.assertFalse(cacheStore.exists(key));
     }
 
     @Test

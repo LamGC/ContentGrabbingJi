@@ -60,6 +60,7 @@ public class ListCacheStoreTest {
     public void notExistCacheTest() {
         final ListCacheStore<String> cacheStore = new CopyOnWriteArrayListCacheStore<>();
         final String key = "testKey";
+
         Assert.assertFalse(cacheStore.clearCollection(key));
         Assert.assertFalse(cacheStore.isEmpty(key));
         Assert.assertEquals(-1, cacheStore.elementsLength(key));
