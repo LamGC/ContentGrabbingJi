@@ -21,6 +21,7 @@ import java.util.Set;
 
 /**
  * 无序集合的缓存存储容器.
+ * <p>其中, 元素是唯一的, 不会出现重复情况.
  * @param <E> 值类型.
  * @author LamGC
  */
