@@ -38,7 +38,7 @@ public class HashMapCacheStore<V> extends HashCacheStore<Map<String, V>> impleme
 
     @Override
     public Set<String> mapFieldSet(String key) {
-        return getMap(key, false, Map::keySet, null);
+        return getMap(key, false, map -> Collections.unmodifiableSet(map.keySet()), null);
     }
 
     @Override
