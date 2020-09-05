@@ -35,7 +35,7 @@ public interface ListCacheStore<E> extends CollectionCacheStore<E, List<E>> {
      *         如果缓存项不存在, 或索引超出范围(超出长度或低于 0)等导致获取失败, 返回 null.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    E getElement(String key, int index);
+    E getElement(CacheKey key, int index);
 
     /**
      * 根据返回获取部分元素.
@@ -52,28 +52,28 @@ public interface ListCacheStore<E> extends CollectionCacheStore<E, List<E>> {
      *         但需要注意的是: 获取异常不包括在上述范围, 因此如果在获取中出现错误导致获取失败, 应以失败返回 null.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    List<E> getElementsByRange(String key, int index, int length);
+    List<E> getElementsByRange(CacheKey key, int index, int length);
 
     /**
      * 删除指定索引的元素.
      *
-     * <p>该方法与 {@link CacheStore#remove(String)} 不同, 该方法仅删除缓存项中的指定元素, 即使删除后缓存项中没有元素, 也不会删除缓存项.
+     * <p>该方法与 {@link CacheStore#remove(CacheKey)} 不同, 该方法仅删除缓存项中的指定元素, 即使删除后缓存项中没有元素, 也不会删除缓存项.
      * @param key 待操作的缓存项键名.
      * @param index 欲删除元素的索引, 从 0 开始.
      * @return 如果元素存在且删除成功, 返回 true.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    boolean removeElement(String key, int index);
+    boolean removeElement(CacheKey key, int index);
 
     /**
      * 删除缓存项中指定的元素.
      * <p>当 List 存在多个该元素时, 删除第一个匹配到的元素.
-     * <p>该方法与 {@link CacheStore#remove(String)} 不同, 该方法仅删除缓存项中的指定元素, 即使删除后缓存项中没有元素, 也不会删除缓存项.
+     * <p>该方法与 {@link CacheStore#remove(CacheKey)} 不同, 该方法仅删除缓存项中的指定元素, 即使删除后缓存项中没有元素, 也不会删除缓存项.
      * @param key 待操作的缓存项键名.
      * @param element 欲删除的元素.
      * @return 如果元素存在且删除成功, 返回 true.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
     @Override
-    boolean removeElement(String key, E element);
+    boolean removeElement(CacheKey key, E element);
 }

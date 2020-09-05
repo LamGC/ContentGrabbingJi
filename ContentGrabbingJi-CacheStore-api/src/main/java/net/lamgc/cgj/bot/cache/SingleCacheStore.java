@@ -34,17 +34,17 @@ public interface SingleCacheStore<V> extends CacheStore<V> {
      * @return 如果成功返回 true.
      * @throws NullPointerException 当 key 或 value 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
      */
-    boolean set(String key, V value);
+    boolean set(CacheKey key, V value);
 
     /**
      * 设置指定键为指定值.
-     * <p>该方法与 {@link #set(String, Object)} 类似, 但如果该 key 已经存在缓存, 则不执行 set 操作并返回 false.
+     * <p>该方法与 {@link #set(CacheKey, Object)} 类似, 但如果该 key 已经存在缓存, 则不执行 set 操作并返回 false.
      * @param key 缓存项键名.
      * @param value 缓存值.
      * @return 如果成功返回 true, 当 key 已存在, 或设置失败时返回 false.
      * @throws NullPointerException 当 key 或 value 为 null 时抛出; 本方法不允许存储 null 值, 因为 null 代表"没有/不存在".
      */
-    boolean setIfNotExist(String key, V value);
+    boolean setIfNotExist(CacheKey key, V value);
 
     /**
      * 获取缓存项值.
@@ -52,6 +52,6 @@ public interface SingleCacheStore<V> extends CacheStore<V> {
      * @return 如果缓存项存在, 返回缓存项的值, 否则返回 null.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    V get(String key);
+    V get(CacheKey key);
 
 }

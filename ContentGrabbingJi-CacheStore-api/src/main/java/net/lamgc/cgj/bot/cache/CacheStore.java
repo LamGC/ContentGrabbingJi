@@ -36,7 +36,7 @@ public interface CacheStore<V> {
      * @return 如果设置成功, 返回 true, 如果设置失败, 或缓存项不存在, 返回 false.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    boolean setTimeToLive(String key, long ttl);
+    boolean setTimeToLive(CacheKey key, long ttl);
 
     /**
      * 查询指定缓存项的 TTL.
@@ -44,7 +44,7 @@ public interface CacheStore<V> {
      * @return 如果缓存项存在且已设置 TTL, 则返回当前剩余 TTL, 如果缓存项不存在或未设置 TTL, 返回 -1.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    long getTimeToLive(String key);
+    long getTimeToLive(CacheKey key);
 
     /**
      * 获取当前缓存项数量.
@@ -70,7 +70,7 @@ public interface CacheStore<V> {
      * @return 如果存在, 返回 true, 如果不存在或失效, 返回 false.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    boolean exists(String key);
+    boolean exists(CacheKey key);
 
     /**
      * 删除指定缓存.
@@ -78,7 +78,7 @@ public interface CacheStore<V> {
      * @return 如果存在并删除成功, 返回 true.
      * @throws NullPointerException 当 key 为 null 时抛出.
      */
-    boolean remove(String key);
+    boolean remove(CacheKey key);
 
     // 文档没有硬性要求"Set 中不能存在失效缓存项"的原因是因为: 即便确保了当时获取到的 Set 没有失效缓存项,
     //    但是如果在获取后立刻出现失效缓存项了呢? 这个情况下依然不能保证没有失效的缓存项, 故不在文档中做出该硬性要求.
