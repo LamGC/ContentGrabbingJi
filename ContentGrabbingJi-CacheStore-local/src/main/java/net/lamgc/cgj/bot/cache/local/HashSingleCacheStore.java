@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SingleCacheStore;
 
 import java.util.Objects;
@@ -29,13 +30,13 @@ import java.util.Objects;
 public class HashSingleCacheStore<V> extends HashCacheStore<V> implements SingleCacheStore<V> {
 
     @Override
-    public boolean set(String key, V value) {
-        getCacheMap().put(Objects.requireNonNull(key), new CacheItem<>(Objects.requireNonNull(value)));
+    public boolean set(CacheKey key, V value) {
+        getCacheMap().put(Objects.requireNonNull(key).toString(), new CacheItem<>(Objects.requireNonNull(value)));
         return true;
     }
 
     @Override
-    public boolean setIfNotExist(String key, V value) {
+    public boolean setIfNotExist(CacheKey key, V value) {
         if (exists(key)) {
             return false;
         }
@@ -43,11 +44,11 @@ public class HashSingleCacheStore<V> extends HashCacheStore<V> implements Single
     }
 
     @Override
-    public V get(String key) {
+    public V get(CacheKey key) {
         if (!exists(key)) {
             return null;
         }
-        return getCacheMap().get(key).getValue();
+        return getCacheMap().get(key.toString()).getValue();
     }
 
 }

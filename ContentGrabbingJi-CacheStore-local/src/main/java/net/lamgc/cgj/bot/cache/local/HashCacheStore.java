@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.CacheStore;
 
 import java.util.*;
@@ -43,21 +44,21 @@ public abstract class HashCacheStore<V> implements CacheStore<V>, Cleanable {
     }
 
     @Override
-    public boolean setTimeToLive(String key, long ttl) {
+    public boolean setTimeToLive(CacheKey key, long ttl) {
         if (!exists(key)) {
             return false;
         }
-        CacheItem<V> item = cacheMap.get(key);
+        CacheItem<V> item = cacheMap.get(key.toString());
         item.setExpireDate(ttl < 0 ? null : new Date(System.currentTimeMillis() + ttl));
         return true;
     }
 
     @Override
-    public long getTimeToLive(String key) {
+    public long getTimeToLive(CacheKey key) {
         if (!exists(key)) {
             return -1;
         }
-        CacheItem<V> item = cacheMap.get(key);
+        CacheItem<V> item = cacheMap.get(key.toString());
         Date expireDate = item.getExpireDate();
         if (expireDate != null) {
             return expireDate.getTime() - System.currentTimeMillis();
@@ -77,11 +78,11 @@ public abstract class HashCacheStore<V> implements CacheStore<V>, Cleanable {
     }
 
     @Override
-    public boolean exists(String key) {
-        if (!cacheMap.containsKey(key)) {
+    public boolean exists(CacheKey key) {
+        if (!cacheMap.containsKey(key.toString())) {
             return false;
         }
-        CacheItem<V> item = cacheMap.get(key);
+        CacheItem<V> item = cacheMap.get(key.toString());
         // 在检查其过期情况后根据情况进行清理, 减轻主动清理机制的负担.
         if (item.isExpire(new Date())) {
             remove(key);
@@ -91,9 +92,9 @@ public abstract class HashCacheStore<V> implements CacheStore<V>, Cleanable {
     }
 
     @Override
-    public boolean remove(String key) {
+    public boolean remove(CacheKey key) {
         // 根据 Collection 说明, 删除时 key 存在映射就会返回, 只要返回 null 就代表没有.
-        return cacheMap.remove(key) != null;
+        return cacheMap.remove(key.toString()) != null;
     }
 
     @Override

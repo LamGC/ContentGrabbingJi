@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.ListCacheStore;
 
 import java.util.*;
@@ -30,7 +31,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 public class CopyOnWriteArrayListCacheStore<E> extends LocalCollectionCacheStore<E, List<E>> implements ListCacheStore<E> {
 
     @Override
-    public E getElement(String key, int index) {
+    public E getElement(CacheKey key, int index) {
         List<E> itemCollection = getCacheItemCollection(key, false);
         try {
             return itemCollection == null ? null : itemCollection.get(index);
@@ -40,7 +41,7 @@ public class CopyOnWriteArrayListCacheStore<E> extends LocalCollectionCacheStore
     }
 
     @Override
-    public List<E> getElementsByRange(String key, int index, int length) {
+    public List<E> getElementsByRange(CacheKey key, int index, int length) {
         int listLength = elementsLength(key);
         if (listLength == -1) {
             return null;
@@ -62,7 +63,7 @@ public class CopyOnWriteArrayListCacheStore<E> extends LocalCollectionCacheStore
     }
 
     @Override
-    public boolean removeElement(String key, int index) {
+    public boolean removeElement(CacheKey key, int index) {
         List<E> itemCollection = getCacheItemCollection(key, false);
         if (itemCollection != null) {
             try {
@@ -76,16 +77,16 @@ public class CopyOnWriteArrayListCacheStore<E> extends LocalCollectionCacheStore
     }
 
     @Override
-    protected List<E> getCacheItemCollection(String key, boolean create) {
+    protected List<E> getCacheItemCollection(CacheKey key, boolean create) {
         Objects.requireNonNull(key);
         Map<String, CacheItem<List<E>>> cacheMap = getCacheMap();
-        if (!cacheMap.containsKey(key)) {
+        if (!cacheMap.containsKey(key.toString())) {
             if (create) {
-                cacheMap.put(key, new CacheItem<>(new CopyOnWriteArrayList<>()));
+                cacheMap.put(key.toString(), new CacheItem<>(new CopyOnWriteArrayList<>()));
             } else {
                 return null;
             }
         }
-        return cacheMap.get(key).getValue();
+        return cacheMap.get(key.toString()).getValue();
     }
 }

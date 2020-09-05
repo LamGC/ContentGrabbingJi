@@ -18,6 +18,7 @@
 package net.lamgc.cgj.bot.cache.local;
 
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.MapCacheStore;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,21 +34,22 @@ public class HashMapCacheStoreTest {
     @Test
     public void nullThrowTest() {
         final MapCacheStore<String> cacheStore = new HashMapCacheStore<>();
-
+        final CacheKey key = new CacheKey("testKey");
+        
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.mapSize(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.mapFieldSet(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.mapValueSet(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.put(null, "field", "value"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.put("testKey", null, "value"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.put("testKey", "field", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.put(key, null, "value"));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.put(key, "field", null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.putAll(null, new HashMap<>()));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.putAll("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.putAll(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.putIfNotExist(null, "field", "value"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.putIfNotExist("testKey", null, "value"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.putIfNotExist("testKey", "field", null));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.get("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.putIfNotExist(key, null, "value"));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.putIfNotExist(key, "field", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.get(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.get(null, "field"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.removeField("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.removeField(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.removeField(null, "field"));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.mapIsEmpty(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.clearMap(null));
@@ -56,7 +58,7 @@ public class HashMapCacheStoreTest {
     @Test
     public void keyNotExistTest() {
         final MapCacheStore<String> cacheStore = new HashMapCacheStore<>();
-        final String key = "testKey";
+        final CacheKey key = new CacheKey("testKey");
 
         Assert.assertEquals(-1, cacheStore.mapSize(key));
         Assert.assertFalse(cacheStore.mapIsEmpty(key));
@@ -74,7 +76,7 @@ public class HashMapCacheStoreTest {
     @Test
     public void putAndGetTest() {
         final MapCacheStore<String> cacheStore = new HashMapCacheStore<>();
-        final String key = "testKey";
+        final CacheKey key = new CacheKey("testKey");
         final Map<String, String> expectedMap = new HashMap<>();
         expectedMap.put("test01", "testValue01");
         expectedMap.put("test02", "testValue02");
@@ -103,7 +105,7 @@ public class HashMapCacheStoreTest {
     @Test
     public void fieldChangeTest() {
         final MapCacheStore<String> cacheStore = new HashMapCacheStore<>();
-        final String key = "testKey";
+        final CacheKey key = new CacheKey("testKey");
         final Map<String, String> expectedMap = new HashMap<>();
         expectedMap.put("test01", "testValue01");
         expectedMap.put("test02", "testValue02");

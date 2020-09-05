@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SingleCacheStore;
 import org.junit.Assert;
 import org.junit.Test;
@@ -33,13 +34,14 @@ public class HashSingleCacheStoreTest {
     @Test
     public void nullThrowTest() {
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
+        final CacheKey key = new CacheKey("testKey");
 
         // HashSingleCacheStore
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.set(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.set("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.set(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.get(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.setIfNotExist(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.setIfNotExist("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.setIfNotExist(key, null));
 
         // HashCacheStore
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.exists(null));
@@ -51,11 +53,11 @@ public class HashSingleCacheStoreTest {
     @Test
     public void setAndGetTest() {
         SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
 
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertEquals(value, cacheStore.get("test01"));
+        Assert.assertEquals(value, cacheStore.get(key));
         Assert.assertTrue("Remove operation failed!", cacheStore.remove(key));
         Assert.assertNull("Set operation failed!", cacheStore.get(key));
     }
@@ -63,7 +65,7 @@ public class HashSingleCacheStoreTest {
     @Test
     public void setIfNotExistTest() {
         SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
         final String value2 = "testValue02";
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
@@ -75,7 +77,7 @@ public class HashSingleCacheStoreTest {
     @Test
     public void expireTest() throws InterruptedException {
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
 
         // Cache
@@ -101,7 +103,7 @@ public class HashSingleCacheStoreTest {
     @Test
     public void removeTest() {
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
 
         // 删除不存在Cache测试
@@ -114,7 +116,7 @@ public class HashSingleCacheStoreTest {
     @Test
     public void clearTest() {
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
 
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
@@ -135,7 +137,7 @@ public class HashSingleCacheStoreTest {
         expectedMap.put("test06", "testValue06");
 
         final SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
-        expectedMap.forEach(cacheStore::set);
+        expectedMap.forEach((key, value) -> cacheStore.set(new CacheKey(key), value));
         Assert.assertEquals(expectedMap.size(), cacheStore.size());
         Assert.assertTrue(expectedMap.keySet().containsAll(cacheStore.keySet()));
     }

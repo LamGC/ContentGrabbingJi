@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SetCacheStore;
 
 import java.util.*;
@@ -29,16 +30,18 @@ import java.util.*;
 public class HashSetCacheStore<E> extends LocalCollectionCacheStore<E, Set<E>> implements SetCacheStore<E> {
 
     @Override
-    protected Set<E> getCacheItemCollection(String key, boolean create) {
+    protected Set<E> getCacheItemCollection(CacheKey key, boolean create) {
+        Objects.requireNonNull(key);
+        String keyString = key.toString();
         Map<String, CacheItem<Set<E>>> cacheMap = getCacheMap();
-        if (!cacheMap.containsKey(key)) {
+        if (!cacheMap.containsKey(keyString)) {
             if (create) {
-                cacheMap.put(key, new CacheItem<>(new HashSet<>()));
+                cacheMap.put(keyString, new CacheItem<>(new HashSet<>()));
             } else {
                 return null;
             }
         }
-        return cacheMap.get(key).getValue();
+        return cacheMap.get(keyString).getValue();
     }
 
 }

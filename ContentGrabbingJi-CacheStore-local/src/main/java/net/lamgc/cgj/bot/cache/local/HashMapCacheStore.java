@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.MapCacheStore;
 
 import java.util.*;
@@ -32,22 +33,22 @@ import java.util.function.Function;
 public class HashMapCacheStore<V> extends HashCacheStore<Map<String, V>> implements MapCacheStore<V> {
 
     @Override
-    public int mapSize(String key) {
+    public int mapSize(CacheKey key) {
         return getMap(key, false, Map::size, -1);
     }
 
     @Override
-    public Set<String> mapFieldSet(String key) {
+    public Set<String> mapFieldSet(CacheKey key) {
         return getMap(key, false, map -> Collections.unmodifiableSet(map.keySet()), null);
     }
 
     @Override
-    public Set<V> mapValueSet(String key) {
+    public Set<V> mapValueSet(CacheKey key) {
         return getMap(key, false, map -> new HashSet<>(map.values()), null);
     }
 
     @Override
-    public boolean put(String key, String field, V value) {
+    public boolean put(CacheKey key, String field, V value) {
         return getMap(key, true, map -> {
             map.put(Objects.requireNonNull(field), Objects.requireNonNull(value));
             return true;
@@ -55,7 +56,7 @@ public class HashMapCacheStore<V> extends HashCacheStore<Map<String, V>> impleme
     }
 
     @Override
-    public boolean putAll(String key, Map<String, V> map) {
+    public boolean putAll(CacheKey key, Map<String, V> map) {
         return getMap(key, true, keyMap -> {
             keyMap.putAll(Objects.requireNonNull(map));
             return true;
@@ -63,7 +64,7 @@ public class HashMapCacheStore<V> extends HashCacheStore<Map<String, V>> impleme
     }
 
     @Override
-    public boolean putIfNotExist(String key, String field, V value) {
+    public boolean putIfNotExist(CacheKey key, String field, V value) {
         return getMap(key, true, map -> {
             if (map.containsKey(Objects.requireNonNull(field))) {
                 return false;
@@ -74,44 +75,45 @@ public class HashMapCacheStore<V> extends HashCacheStore<Map<String, V>> impleme
     }
 
     @Override
-    public V get(String key, String field) {
+    public V get(CacheKey key, String field) {
         return getMap(key, false, map -> map.get(Objects.requireNonNull(field)), null);
     }
 
     @Override
-    public boolean removeField(String key, String field) {
+    public boolean removeField(CacheKey key, String field) {
         return getMap(key, false, map -> map.remove(Objects.requireNonNull(field)) != null, false);
     }
 
     @Override
-    public boolean containsField(String key, String field) {
+    public boolean containsField(CacheKey key, String field) {
         return getMap(key, false, map -> map.containsKey(Objects.requireNonNull(field)), false);
     }
 
     @Override
-    public boolean mapIsEmpty(String key) {
+    public boolean mapIsEmpty(CacheKey key) {
         return getMap(key, false, Map::isEmpty, false);
     }
 
     @Override
-    public boolean clearMap(String key) {
+    public boolean clearMap(CacheKey key) {
         return getMap(key, false, map -> {
             map.clear();
             return true;
         }, false);
     }
 
-    private <R> R getMap(String key, boolean create, Function<Map<String, V>, R> notNull, R isNull) {
+    private <R> R getMap(CacheKey key, boolean create, Function<Map<String, V>, R> notNull, R isNull) {
         Objects.requireNonNull(key);
+        String keyString = key.toString();
         Map<String, CacheItem<Map<String, V>>> cacheMap = getCacheMap();
-        if (!cacheMap.containsKey(key)) {
+        if (!cacheMap.containsKey(keyString)) {
             if (create) {
-                cacheMap.put(key, new CacheItem<>(new Hashtable<>()));
+                cacheMap.put(keyString, new CacheItem<>(new Hashtable<>()));
             } else {
                 return isNull;
             }
         }
-        return notNull.apply(cacheMap.get(key).getValue());
+        return notNull.apply(cacheMap.get(keyString).getValue());
     }
 
 }

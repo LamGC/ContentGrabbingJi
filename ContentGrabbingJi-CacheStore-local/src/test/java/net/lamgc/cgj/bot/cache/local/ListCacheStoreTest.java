@@ -18,6 +18,7 @@
 package net.lamgc.cgj.bot.cache.local;
 
 import com.google.common.collect.Lists;
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.ListCacheStore;
 import org.junit.Assert;
 import org.junit.Test;
@@ -35,19 +36,20 @@ public class ListCacheStoreTest {
     @Test
     public void nullThrowTest() {
         final ListCacheStore<String> cacheStore = new CopyOnWriteArrayListCacheStore<>();
+        final CacheKey key = new CacheKey("testKey");
 
         // LocalCollectionCacheStore
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.addElement(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.addElement("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.addElement(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.addElements(null, new ArrayList<>()));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.addElements("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.addElements(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.elementsLength(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.containsElement(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.containsElement("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.containsElement(key, null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.isEmpty(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.clearCollection(null));
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.removeElement(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> cacheStore.removeElement("testKey", null));
+        Assert.assertThrows(NullPointerException.class, () -> cacheStore.removeElement(key, null));
 
         // CopyOnWriteArrayListCacheStore
         Assert.assertThrows(NullPointerException.class, () -> cacheStore.getElement(null, 0));
@@ -59,7 +61,7 @@ public class ListCacheStoreTest {
     @Test
     public void notExistCacheTest() {
         final ListCacheStore<String> cacheStore = new CopyOnWriteArrayListCacheStore<>();
-        final String key = "testKey";
+        final CacheKey key = new CacheKey("testKey");
 
         Assert.assertFalse(cacheStore.clearCollection(key));
         Assert.assertFalse(cacheStore.isEmpty(key));
@@ -71,7 +73,7 @@ public class ListCacheStoreTest {
     @Test
     public void addAndGetTest() {
         final ListCacheStore<Integer> cacheStore = new CopyOnWriteArrayListCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         List<Integer> numbers = Lists.newArrayList(1, 2, 3, 4, 5, 6, 7, 8, 9);
         // getElement/getElementsByRange Cache不存在测试
         Assert.assertNull(cacheStore.getElement(key, 0));
@@ -104,7 +106,7 @@ public class ListCacheStoreTest {
     public void removeElementTest() {
         // removeElement(String, E) / removeElement(String, int)
         final ListCacheStore<String> cacheStore = new CopyOnWriteArrayListCacheStore<>();
-        final String key = "test01";
+        final CacheKey key = new CacheKey("testKey");
         Random random = new Random();
         List<String> numbers = Lists.newArrayList("1", "2", "3", "4", "5", "6", "7", "8", "9");
 

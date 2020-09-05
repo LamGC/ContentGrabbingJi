@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.CollectionCacheStore;
 
 import java.util.Collection;
@@ -39,10 +40,10 @@ implements CollectionCacheStore<E, C> {
      * @param create 如果不存在, 是否创建.
      * @return 如果不存在且 create 为 false, 或添加失败, 返回 false, 添加成功返回 true.
      */
-    protected abstract C getCacheItemCollection(String key, boolean create);
+    protected abstract C getCacheItemCollection(CacheKey key, boolean create);
 
     @Override
-    public boolean addElement(String key, E element) {
+    public boolean addElement(CacheKey key, E element) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(element);
         Collection<E> itemCollection = getCacheItemCollection(key, true);
@@ -50,7 +51,7 @@ implements CollectionCacheStore<E, C> {
     }
 
     @Override
-    public boolean addElements(String key, Collection<E> elements) {
+    public boolean addElements(CacheKey key, Collection<E> elements) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(elements);
         Collection<E> itemCollection = getCacheItemCollection(key, true);
@@ -58,7 +59,7 @@ implements CollectionCacheStore<E, C> {
     }
 
     @Override
-    public boolean containsElement(String key, E value) {
+    public boolean containsElement(CacheKey key, E value) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(value);
         Collection<E> itemCollection = getCacheItemCollection(key, false);
@@ -69,7 +70,7 @@ implements CollectionCacheStore<E, C> {
     }
 
     @Override
-    public boolean isEmpty(String key) {
+    public boolean isEmpty(CacheKey key) {
         Collection<E> itemCollection = getCacheItemCollection(Objects.requireNonNull(key), false);
         if (itemCollection == null) {
             return false;
@@ -78,7 +79,7 @@ implements CollectionCacheStore<E, C> {
     }
 
     @Override
-    public int elementsLength(String key) {
+    public int elementsLength(CacheKey key) {
         Collection<E> itemCollection = getCacheItemCollection(Objects.requireNonNull(key), false);
         if (itemCollection == null) {
             return -1;
@@ -87,7 +88,7 @@ implements CollectionCacheStore<E, C> {
     }
 
     @Override
-    public boolean clearCollection(String key) {
+    public boolean clearCollection(CacheKey key) {
         Collection<E> itemCollection = getCacheItemCollection(Objects.requireNonNull(key), false);
         if (itemCollection == null) {
             return false;
@@ -97,7 +98,7 @@ implements CollectionCacheStore<E, C> {
     }
 
     @Override
-    public boolean removeElement(String key, E element) {
+    public boolean removeElement(CacheKey key, E element) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(element);
         Collection<E> itemCollection = getCacheItemCollection(key, false);
