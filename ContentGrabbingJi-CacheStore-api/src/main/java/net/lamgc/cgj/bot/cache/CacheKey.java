@@ -46,6 +46,18 @@ public final class CacheKey {
     }
 
     /**
+     * 提供一组字符串用于组成缓存键.
+     * @param keyStrings 键名组成数组.
+     */
+    public CacheKey(String[] keyStrings) {
+        Objects.requireNonNull(keyStrings);
+        if (keyStrings.length == 0) {
+            throw new IllegalArgumentException("Provide at least one element that makes up the key");
+        }
+        this.key = keyStrings;
+    }
+
+    /**
      * 获取组成 Key 的字符串数组.
      * @return 返回用于组成 Key 的字符串数组.
      */
