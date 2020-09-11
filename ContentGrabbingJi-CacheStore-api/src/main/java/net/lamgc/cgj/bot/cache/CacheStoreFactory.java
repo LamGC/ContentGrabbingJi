@@ -18,6 +18,7 @@
 package net.lamgc.cgj.bot.cache;
 
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
+import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
 
 /**
  * 缓存存储容器构造工厂.
@@ -32,8 +33,9 @@ public interface CacheStoreFactory {
      * @param identify 缓存标识.
      * @param converter 类型的转换器.
      * @return 返回 CacheStore 对象.
+     * @throws GetCacheStoreException 当 Factory 无法返回 CacheStore 对象时抛出, 需说明失败原因.
      */
-    <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter);
+    <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) throws GetCacheStoreException;
 
     /**
      * 获取一个新的有序列表缓存存储容器.
@@ -41,8 +43,9 @@ public interface CacheStoreFactory {
      * @param converter 元素类型与 String 的转换器.
      * @param <E> 元素类型.
      * @return 返回新的有序列表缓存存储容器.
+     * @throws GetCacheStoreException 当 Factory 无法返回 CacheStore 对象时抛出, 需说明失败原因.
      */
-    <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter);
+    <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter) throws GetCacheStoreException;
 
     /**
      * 获取一个新的无序集合缓存存储容器.
@@ -50,8 +53,9 @@ public interface CacheStoreFactory {
      * @param converter 元素类型与 String 的转换器.
      * @param <E> 元素类型.
      * @return 返回新的无序集合缓存存储容器.
+     * @throws GetCacheStoreException 当 Factory 无法返回 CacheStore 对象时抛出, 需说明失败原因.
      */
-    <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter);
+    <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter) throws GetCacheStoreException;
 
     /**
      * 获取一个新的映射表缓存存储容器.
@@ -59,6 +63,21 @@ public interface CacheStoreFactory {
      * @param converter 字段值类型与 String 的转换器.
      * @param <V> 字段值类型.
      * @return 返回新的映射表缓存存储容器.
+     * @throws GetCacheStoreException 当 Factory 无法返回 CacheStore 对象时抛出, 需说明失败原因.
      */
-    <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter);
+    <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter) throws GetCacheStoreException;
+
+    /**
+     * 当前是否可以创建 {@link CacheStore}
+     *
+     * <p> 如果返回 true, 将会使用该 Factory.
+     *     如果返回 false 或抛出异常, 将不会通过该 Factory 创建 CacheStore,
+     *
+     * <p> 除非模块能保证 Factory 正常情况下一定能提供 CacheStore 对象,
+     *     否则请不要尝试永远返回 true 来向应用保证 Factory 一定能创建 CacheStore, 保持 Factory 的有效性,
+     *     一旦后续创建 CacheStore 时发生异常, 将视为无法创建.
+     * @return 如果可以, 返回 true.
+     */
+    boolean canGetCacheStore();
+
 }
