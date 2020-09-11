@@ -26,6 +26,7 @@ import net.lamgc.cgj.bot.cache.convert.StringConverter;
  * 最简单的缓存实现, 无持久化功能.
  * @author LamGC
  */
+@Factory(name = "Local", priority = FactoryPriority.PRIORITY_LOWEST)
 public class LocalCacheStoreFactory implements CacheStoreFactory {
 
     @Override
@@ -48,4 +49,15 @@ public class LocalCacheStoreFactory implements CacheStoreFactory {
         return new HashMapCacheStore<>();
     }
 
+    /**
+     * 内存使用阀值.
+     * <p>当内存使用到了指定百分比时, 将禁止创建 CacheStore.
+     */
+    private final static double MEMORY_USAGE_THRESHOLD = 85;
+    @Override
+    public boolean canGetCacheStore() {
+        Runtime runtime = Runtime.getRuntime();
+        double memoryUsedPercentage = (double) runtime.totalMemory() / runtime.maxMemory();
+        return memoryUsedPercentage < MEMORY_USAGE_THRESHOLD;
+    }
 }
