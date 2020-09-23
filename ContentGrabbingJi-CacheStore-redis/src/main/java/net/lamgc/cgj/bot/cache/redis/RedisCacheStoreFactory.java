@@ -19,6 +19,7 @@ package net.lamgc.cgj.bot.cache.redis;
 
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
+import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
 
 /**
  *
@@ -33,12 +34,12 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
 
     @Override
     public <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter) {
-        return null;
+        throw new GetCacheStoreException("No corresponding implementation");
     }
 
     @Override
     public <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter) {
-        return null;
+        throw new GetCacheStoreException("No corresponding implementation");
     }
 
     @Override
