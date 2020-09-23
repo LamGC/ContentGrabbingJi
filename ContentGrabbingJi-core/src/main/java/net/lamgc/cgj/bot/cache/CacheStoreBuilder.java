@@ -52,9 +52,9 @@ public class CacheStoreBuilder {
         if (FACTORY_LIST.size() != 0) {
             return;
         }
-        final ServiceLoader<CacheStoreFactory> FACTORY_LOADER = ServiceLoader.load(CacheStoreFactory.class);
+        final ServiceLoader<CacheStoreFactory> factoryLoader = ServiceLoader.load(CacheStoreFactory.class);
         try {
-            for (CacheStoreFactory factory : FACTORY_LOADER) {
+            for (CacheStoreFactory factory : factoryLoader) {
                 FactoryInfo info;
                 try {
                     info = new FactoryInfo(factory.getClass());
