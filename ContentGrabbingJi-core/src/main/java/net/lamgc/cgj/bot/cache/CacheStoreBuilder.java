@@ -58,6 +58,10 @@ public class CacheStoreBuilder {
                 FactoryInfo info;
                 try {
                     info = new FactoryInfo(factory.getClass());
+                    if (FACTORY_INFO_MAP.containsValue(info)) {
+                        log.warn("发现 Name 重复的 Factory, 已跳过. (被拒绝的实现: {})", factory.getClass().getName());
+                        continue;
+                    }
                     FACTORY_INFO_MAP.put(factory, info);
                 } catch (IllegalArgumentException e) {
                     log.warn("Factory {} 加载失败: {}", factory.getClass().getName(), e.getMessage());

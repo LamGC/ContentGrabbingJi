@@ -46,6 +46,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.code.gson</groupId>
+            <artifactId>gson</artifactId>
+            <version>2.8.5</version>
+        </dependency>
+
+        <dependency>
             <groupId>net.lamgc</groupId>
             <artifactId>ContentGrabbingJi-CacheStore-local</artifactId>
             <version>3.0.0-alpha-SNAPSHOT</version>
