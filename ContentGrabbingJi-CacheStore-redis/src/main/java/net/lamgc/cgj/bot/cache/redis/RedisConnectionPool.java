@@ -30,7 +30,7 @@ import java.util.function.Function;
  * 统一的 Redis 连接池.
  * @author LamGC
  */
-public class RedisConnectionPool {
+class RedisConnectionPool {
 
     private final static Logger log = LoggerFactory.getLogger(RedisConnectionPool.class);
     private final static AtomicReference<JedisPool> POOL = new AtomicReference<>();
