@@ -22,6 +22,8 @@ import java.util.Collection;
 /**
  * 集合型缓存存储容器.
  * @param <E> 元素类型.
+ * @param <C> 集合类型.
+ * @see Collection
  * @author LamGC
  */
 public interface CollectionCacheStore<E, C extends Collection<E>> extends CacheStore<C> {
