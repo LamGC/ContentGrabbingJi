@@ -25,7 +25,7 @@ import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
  *
  * @author LamGC
  */
-@Factory(name = "Redis")
+@Factory(name = "Redis", priority = FactoryPriority.PRIORITY_HIGHER, source = CacheStoreSource.REMOTE)
 public class RedisCacheStoreFactory implements CacheStoreFactory {
     @Override
     public <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {
