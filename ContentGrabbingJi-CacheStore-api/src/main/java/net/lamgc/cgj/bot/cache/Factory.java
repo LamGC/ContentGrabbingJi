@@ -47,4 +47,11 @@ public @interface Factory {
      */
     int priority() default FactoryPriority.PRIORITY_NORMAL;
 
+    /**
+     * CacheStore 存储源类型.
+     * <p> 可帮助 Core 根据需要选择对应的类型(比如部分低TTL临时缓存追求速度不强求持久化, 建立热点数据高频短时缓存等).
+     * @return 返回存储源类型.
+     */
+    CacheStoreSource source() default CacheStoreSource.LOCAL;
+
 }
