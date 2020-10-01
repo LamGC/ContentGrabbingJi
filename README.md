@@ -56,6 +56,8 @@
 目前支持的管理员命令：
 ```bash
 # 清除缓存(慎用)
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLamGC%2FContentGrabbingJi.svg?type=shield)](https://app.fossa.com/projects/git%2Bgithub.com%2FLamGC%2FContentGrabbingJi?ref=badge_shield)
+
 # 该操作将会清除Redis服务器内的所有数据, 以及色图姬下载到本地的所有图片缓存.
 .cgjadmin cleanCache
 
@@ -137,3 +139,6 @@
     along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 ```
 尤其注意：根据协议，如果你基于本项目开发本项目的衍生版本并通过网络为他人提供服务，则必须遵守该协议，向 *服务的使用者* 提供 **为其服务的衍生版本** 的 **完整源代码**。
+
+
+[![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLamGC%2FContentGrabbingJi.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FLamGC%2FContentGrabbingJi?ref=badge_large)
