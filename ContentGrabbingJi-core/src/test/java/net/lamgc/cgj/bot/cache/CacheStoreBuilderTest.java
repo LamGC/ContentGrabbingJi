@@ -32,9 +32,9 @@ public class CacheStoreBuilderTest {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
 
-        Assert.assertNotNull(CacheStoreBuilder.newSingleCacheStore(identify, converter));
-        Assert.assertNotNull(CacheStoreBuilder.newListCacheStore(identify, converter));
-        Assert.assertNotNull(CacheStoreBuilder.newMapCacheStore(identify, converter));
+        Assert.assertNotNull(CacheStoreBuilder.newSingleCacheStore(CacheStoreSource.REMOTE, identify, converter));
+        Assert.assertNotNull(CacheStoreBuilder.newListCacheStore(CacheStoreSource.MEMORY, identify, converter));
+        Assert.assertNotNull(CacheStoreBuilder.newMapCacheStore(CacheStoreSource.REMOTE, identify, converter));
         Assert.assertNotNull(CacheStoreBuilder.newSetCacheStore(identify, converter));
     }
 

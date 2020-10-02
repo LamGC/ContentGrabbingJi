@@ -29,6 +29,7 @@ public class FactoryInfo {
 
     private final String factoryName;
     private final int factoryPriority;
+    private final CacheStoreSource storeSource;
 
     public FactoryInfo(Class<? extends CacheStoreFactory> factoryClass) {
         Factory factoryAnnotation = factoryClass.getAnnotation(Factory.class);
@@ -39,6 +40,7 @@ public class FactoryInfo {
         }
 
         this.factoryName = factoryAnnotation.name();
+        this.storeSource = factoryAnnotation.source();
         int factoryPriority = factoryAnnotation.priority();
         if (factoryPriority > FactoryPriority.PRIORITY_HIGHEST) {
             this.factoryPriority = FactoryPriority.PRIORITY_HIGHEST;
@@ -63,6 +65,14 @@ public class FactoryInfo {
      */
     public int getFactoryPriority() {
         return factoryPriority;
+    }
+
+    /**
+     * 获取存储容器实现的存储源类型.
+     * @return 返回 Factory 所属实现组件的存储源类型.
+     */
+    public CacheStoreSource getStoreSource() {
+        return storeSource;
     }
 
     @Override

@@ -37,13 +37,13 @@ import java.util.function.Function;
 public class CacheStoreBuilder {
 
     private final static Logger log = LoggerFactory.getLogger(CacheStoreBuilder.class);
-    private final static List<CacheStoreFactory> FACTORY_LIST = new LinkedList<>();
+    private final static List<CacheStoreFactory> FACTORY_LIST = new ArrayList<>();
     private final static Map<CacheStoreFactory, FactoryInfo> FACTORY_INFO_MAP = new Hashtable<>();
 
     /**
      * 使用 SPI 机制加载所有缓存组件.
      *
-     * <p>第一次执行时加载, 由 {@link #getFactory(Function)} 调用.
+     * <p>第一次执行时加载, 由 {@link #getFactory(CacheStoreSource, Function)} 调用.
      * <p>由于 ServiceLoader 线程不安全, 所以通过 synchronized 保证其安全性.
      * 不通过 static 块进行初始化的原因是因为担心发生异常导致无法继续执行
      * (除非必要, 否则不要使用 static 执行可能会发生异常的代码.).
@@ -97,7 +97,8 @@ public class CacheStoreBuilder {
      * 获取一个当前可用的高优先级 Factory 对象.
      * @return 返回可用的高优先级 Factory 对象.
      */
-    private static <R extends CacheStore<?>> R getFactory(Function<CacheStoreFactory, R> function) throws NoSuchFactoryException {
+    private static <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource, Function<CacheStoreFactory, R> function)
+    throws NoSuchFactoryException {
         if (FACTORY_LIST.size() == 0) {
             loadFactory();
         }
@@ -105,6 +106,9 @@ public class CacheStoreBuilder {
         while (iterator.hasNext()) {
             CacheStoreFactory factory = iterator.next();
             FactoryInfo info = FACTORY_INFO_MAP.get(factory);
+            if (storeSource != null && info.getStoreSource() != storeSource) {
+                continue;
+            }
             try {
                 if (factory.canGetCacheStore()) {
                     log.debug("CacheStoreFactory {} 可用(优先级: {}).", info.getFactoryName(), info.getFactoryPriority());
@@ -149,8 +153,21 @@ public class CacheStoreBuilder {
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
     public static <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {
+        return newSingleCacheStore(null, identify, converter);
+    }
+
+    /**
+     * 获取单项缓存存储容器.
+     * @param storeSource 存储类型.
+     * @param identify 缓存容器标识.
+     * @param converter 类型转换器.
+     * @param <V> 值类型.
+     * @return 返回新的存储容器, 与其他容器互不干扰.
+     * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
+     */
+    public static <V> SingleCacheStore<V> newSingleCacheStore(CacheStoreSource storeSource, String identify, StringConverter<V> converter) {
         try {
-            return getFactory(factory -> {
+            return getFactory(storeSource, factory -> {
                 SingleCacheStore<V> singleCacheStoreInstance = factory.newSingleCacheStore(identify, converter);
                 if (singleCacheStoreInstance == null) {
                     throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
@@ -171,8 +188,21 @@ public class CacheStoreBuilder {
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
     public static <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter) {
+        return newListCacheStore(null, identify, converter);
+    }
+
+    /**
+     * 获取列表缓存存储容器.
+     * @param storeSource 存储类型.
+     * @param identify 缓存容器标识.
+     * @param converter 类型转换器.
+     * @param <E> 元素类型.
+     * @return 返回新的存储容器, 与其他容器互不干扰.
+     * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
+     */
+    public static <E> ListCacheStore<E> newListCacheStore(CacheStoreSource storeSource, String identify, StringConverter<E> converter) {
         try {
-            return getFactory(factory -> {
+            return getFactory(storeSource, factory -> {
                 ListCacheStore<E> listCacheStoreInstance = factory.newListCacheStore(identify, converter);
                 if (listCacheStoreInstance == null) {
                     throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
@@ -193,8 +223,20 @@ public class CacheStoreBuilder {
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
     public static <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter) {
+        return newSetCacheStore(null, identify, converter);
+    }
+
+    /**
+     * 获取集合缓存存储容器.
+     * @param identify 缓存容器标识.
+     * @param converter 类型转换器.
+     * @param <E> 元素类型.
+     * @return 返回新的存储容器, 与其他容器互不干扰.
+     * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
+     */
+    public static <E> SetCacheStore<E> newSetCacheStore(CacheStoreSource storeSource, String identify, StringConverter<E> converter) {
         try {
-            return getFactory(factory -> {
+            return getFactory(storeSource, factory -> {
                 SetCacheStore<E> setCacheStoreInstance = factory.newSetCacheStore(identify, converter);
                 if (setCacheStoreInstance == null) {
                     throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
@@ -215,8 +257,21 @@ public class CacheStoreBuilder {
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
     public static <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter) {
+        return newMapCacheStore(null, identify, converter);
+    }
+
+    /**
+     * 获取映射表缓存存储容器.
+     * @param storeSource 存储类型.
+     * @param identify 缓存容器标识.
+     * @param converter 类型转换器.
+     * @param <V> 值类型.
+     * @return 返回新的存储容器, 与其他容器互不干扰.
+     * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
+     */
+    public static <V> MapCacheStore<V> newMapCacheStore(CacheStoreSource storeSource, String identify, StringConverter<V> converter) {
         try {
-            return getFactory(factory -> {
+            return getFactory(storeSource, factory -> {
                 MapCacheStore<V> mapCacheStoreInstance = factory.newMapCacheStore(identify, converter);
                 if (mapCacheStoreInstance == null) {
                     throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
