@@ -112,6 +112,8 @@ public class CacheStoreBuilder {
             try {
                 if (factory.canGetCacheStore()) {
                     log.debug("CacheStoreFactory {} 可用(优先级: {}).", info.getFactoryName(), info.getFactoryPriority());
+                } else {
+                    continue;
                 }
             } catch (Exception e) {
                 log.error("CacheStoreFactory " + info.getFactoryName() +

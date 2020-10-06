@@ -85,6 +85,7 @@ class RedisConnectionPool {
         JedisPool jedisPool = POOL.get();
         if (jedisPool == null || jedisPool.isClosed()) {
             reconnectRedis();
+            jedisPool = POOL.get();
             if (jedisPool == null || jedisPool.isClosed()) {
                 return false;
             }

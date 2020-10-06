@@ -19,6 +19,10 @@ package net.lamgc.cgj.bot.cache;
 
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.convert.StringToStringConverter;
+import net.lamgc.cgj.bot.cache.local.CopyOnWriteArrayListCacheStore;
+import net.lamgc.cgj.bot.cache.local.HashSetCacheStore;
+import net.lamgc.cgj.bot.cache.redis.RedisMapCacheStore;
+import net.lamgc.cgj.bot.cache.redis.RedisSingleCacheStore;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -32,10 +36,21 @@ public class CacheStoreBuilderTest {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
 
-        Assert.assertNotNull(CacheStoreBuilder.newSingleCacheStore(CacheStoreSource.REMOTE, identify, converter));
-        Assert.assertNotNull(CacheStoreBuilder.newListCacheStore(CacheStoreSource.MEMORY, identify, converter));
-        Assert.assertNotNull(CacheStoreBuilder.newMapCacheStore(CacheStoreSource.REMOTE, identify, converter));
-        Assert.assertNotNull(CacheStoreBuilder.newSetCacheStore(identify, converter));
+        SingleCacheStore<String> singleCacheStore = CacheStoreBuilder.newSingleCacheStore(CacheStoreSource.REMOTE, identify, converter);
+        Assert.assertNotNull(singleCacheStore);
+        Assert.assertEquals(RedisSingleCacheStore.class, singleCacheStore.getClass());
+
+        ListCacheStore<String> listCacheStore = CacheStoreBuilder.newListCacheStore(CacheStoreSource.MEMORY, identify, converter);
+        Assert.assertNotNull(listCacheStore);
+        Assert.assertEquals(CopyOnWriteArrayListCacheStore.class, listCacheStore.getClass());
+
+        MapCacheStore<String> mapCacheStore = CacheStoreBuilder.newMapCacheStore(CacheStoreSource.REMOTE, identify, converter);
+        Assert.assertNotNull(mapCacheStore);
+        Assert.assertEquals(RedisMapCacheStore.class, mapCacheStore.getClass());
+
+        SetCacheStore<String> setCacheStore = CacheStoreBuilder.newSetCacheStore(identify, converter);
+        Assert.assertNotNull(setCacheStore);
+        Assert.assertEquals(HashSetCacheStore.class, setCacheStore.getClass());
     }
 
 
