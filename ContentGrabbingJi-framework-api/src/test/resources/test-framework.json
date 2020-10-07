@@ -1,0 +1,32 @@
+{
+  "id": "cgj-mirai",
+  "description": "test",
+  "version": "3.0.0-alpha",
+  "requiresVersion": "=>3.0.0",
+  "provider": "Github@LamGC, Github@mamoe",
+  "license": "AGPL-3.0",
+  "frameworkClass": "com.example.FrameworkMain",
+  "dependencies": [
+    "xxx@1.0.0",
+    "xxx optional add->?@1.0.0"
+  ],
+
+  "platform": {
+    "name": "Tencent QQ",
+    "identify": "qq"
+  },
+  "authors": [
+    {
+      "name": "LamGC",
+      "url": "https://github.com/LamGC",
+      "email": "lam827@lamgc.net"
+    }
+  ],
+  "botCode": {
+    "patterns": [
+      "(?:\\[mirai:([^:]+)\\])",
+      "(?:\\[mirai:([^\\]]*)?:(.*?)?\\])",
+      "(?:\\[mirai:([^\\]]*)?(:(.*?))*?\\])"
+    ]
+  }
+}
