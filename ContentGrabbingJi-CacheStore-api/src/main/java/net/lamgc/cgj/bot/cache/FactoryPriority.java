@@ -52,5 +52,10 @@ public final class FactoryPriority {
      * <p> 优先级数值: 0
      */
     public final static int PRIORITY_LOWEST = 0;
-    
+
+    /**
+     * 该类不允许实例化.
+     */
+    private FactoryPriority() {}
+
 }
