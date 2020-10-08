@@ -40,6 +40,9 @@ public abstract class Framework extends Plugin {
      */
     public Framework(PluginWrapper wrapper, File dataFolder) {
         super(wrapper);
+        if (!(wrapper.getDescriptor() instanceof FrameworkDescriptor)) {
+            throw new IllegalStateException("Invalid description object");
+        }
         this.dataFolder = dataFolder;
         try {
             initial();
