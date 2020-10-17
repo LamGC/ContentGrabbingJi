@@ -50,6 +50,7 @@ public abstract class Framework extends Plugin {
             wrapper.setFailedException(e);
             wrapper.setPluginState(PluginState.FAILED);
             log.error("An exception occurred while initializing the framework", e);
+            throw new IllegalStateException("An exception occurred while initializing the framework", e);
         }
     }
 
