@@ -26,7 +26,7 @@ import net.lamgc.cgj.bot.cache.convert.StringConverter;
  * 最简单的缓存实现, 无持久化功能.
  * @author LamGC
  */
-@Factory(name = "Local", priority = FactoryPriority.PRIORITY_LOWEST, source = CacheStoreSource.MEMORY)
+@Factory(name = "Local-Memory", priority = FactoryPriority.PRIORITY_LOWEST, source = CacheStoreSource.MEMORY)
 public class LocalCacheStoreFactory implements CacheStoreFactory {
 
     @Override
