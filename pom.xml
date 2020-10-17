@@ -34,6 +34,7 @@
         <module>ContentGrabbingJi-CacheStore-api</module>
         <module>ContentGrabbingJi-CacheStore-redis</module>
         <module>ContentGrabbingJi-CacheStore-local</module>
+        <module>ContentGrabbingJi-common</module>
     </modules>
 
     <developers>
