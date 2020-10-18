@@ -39,7 +39,10 @@ public enum MessageSource {
      */
     DISCUSS,
     /**
-     * 未知来源
+     * 未知来源.
+     * <p> 虽然 MessageSource 提供了这个类型, 但是请不要在实际运行中使用该值.
+     * @deprecated 意义不明的不可使用类型.
      */
+    @Deprecated
     UNKNOWN
 }
