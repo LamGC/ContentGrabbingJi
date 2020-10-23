@@ -97,7 +97,8 @@ public class CacheStoreBuilder {
      * 获取一个当前可用的高优先级 Factory 对象.
      * @return 返回可用的高优先级 Factory 对象.
      */
-    private static <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource, Function<CacheStoreFactory, R> function)
+    private static <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource,
+                                                          Function<CacheStoreFactory, R> function)
     throws NoSuchFactoryException {
         if (FACTORY_LIST.size() == 0) {
             loadFactory();
@@ -130,8 +131,9 @@ public class CacheStoreBuilder {
                 return result;
             } catch (Exception e) {
                 if (!iterator.hasNext()) {
-                    throw new NoSuchFactoryException(new GetCacheStoreException("CacheStoreFactory " + info.getFactoryName() +
-                            " (" + factory.getClass().getName() + ") 创建 CacheStore 时发生异常.", e));
+                    throw new NoSuchFactoryException(new GetCacheStoreException("CacheStoreFactory " +
+                            info.getFactoryName() + " (" + factory.getClass().getName() +
+                            ") 创建 CacheStore 时发生异常.", e));
                 } else {
                     if (e instanceof GetCacheStoreException) {
                         log.warn("CacheStoreFactory '{} ({})' 无法提供相应 CacheStore. 原因: {}",
@@ -167,7 +169,8 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <V> SingleCacheStore<V> newSingleCacheStore(CacheStoreSource storeSource, String identify, StringConverter<V> converter) {
+    public static <V> SingleCacheStore<V> newSingleCacheStore(CacheStoreSource storeSource, String identify,
+                                                              StringConverter<V> converter) {
         try {
             return getFactory(storeSource, factory -> {
                 SingleCacheStore<V> singleCacheStoreInstance = factory.newSingleCacheStore(identify, converter);
@@ -202,7 +205,8 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <E> ListCacheStore<E> newListCacheStore(CacheStoreSource storeSource, String identify, StringConverter<E> converter) {
+    public static <E> ListCacheStore<E> newListCacheStore(CacheStoreSource storeSource, String identify,
+                                                          StringConverter<E> converter) {
         try {
             return getFactory(storeSource, factory -> {
                 ListCacheStore<E> listCacheStoreInstance = factory.newListCacheStore(identify, converter);
@@ -236,7 +240,8 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <E> SetCacheStore<E> newSetCacheStore(CacheStoreSource storeSource, String identify, StringConverter<E> converter) {
+    public static <E> SetCacheStore<E> newSetCacheStore(CacheStoreSource storeSource, String identify,
+                                                        StringConverter<E> converter) {
         try {
             return getFactory(storeSource, factory -> {
                 SetCacheStore<E> setCacheStoreInstance = factory.newSetCacheStore(identify, converter);
@@ -271,7 +276,8 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <V> MapCacheStore<V> newMapCacheStore(CacheStoreSource storeSource, String identify, StringConverter<V> converter) {
+    public static <V> MapCacheStore<V> newMapCacheStore(CacheStoreSource storeSource, String identify,
+                                                        StringConverter<V> converter) {
         try {
             return getFactory(storeSource, factory -> {
                 MapCacheStore<V> mapCacheStoreInstance = factory.newMapCacheStore(identify, converter);
