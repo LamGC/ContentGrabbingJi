@@ -9,7 +9,7 @@
 详细内容可前往 https://github.com/alibaba/p3c 查阅。  
 如果你的 IDE 为 Eclipse 或 Idea，则推荐你为 IDE 添加阿里巴巴根据该规范开发的规范检查插件，该插件有助于你保持代码规范。
 
-### Commit Message ###
+## Commit Message ##
 提交信息需要遵循以下格式：
 ```
 [TAG] ModuleName 对提交的说明;
