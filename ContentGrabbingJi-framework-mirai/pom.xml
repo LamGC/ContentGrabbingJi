@@ -60,11 +60,6 @@
             <artifactId>mirai-core-qqandroid</artifactId>
             <version>${mirai.CoreVersion}</version>
         </dependency>
-        <dependency>
-            <groupId>net.mamoe</groupId>
-            <artifactId>mirai-japt</artifactId>
-            <version>${mirai.JaptVersion}</version>
-        </dependency>
 
         <dependency>
             <groupId>io.ktor</groupId>
