@@ -23,6 +23,7 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.net.URL;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -34,6 +35,13 @@ class RedisConnectionPool {
 
     private final static Logger log = LoggerFactory.getLogger(RedisConnectionPool.class);
     private final static AtomicReference<JedisPool> POOL = new AtomicReference<>();
+    private final static AtomicReference<URL> CONNECTION_URL = new AtomicReference<>();
+
+    public static synchronized void setConnectionUrl(URL connectionUrl) {
+        if(CONNECTION_URL.get() != null) {
+            CONNECTION_URL.set(connectionUrl);
+        }
+    }
 
     public static synchronized void reconnectRedis() {
         JedisPool jedisPool = POOL.get();
@@ -43,7 +51,13 @@ class RedisConnectionPool {
         JedisPoolConfig config = new JedisPoolConfig();
         config.setTestOnBorrow(true);
         config.setTestOnReturn(true);
-        jedisPool = new JedisPool(config);
+        URL connectionUrl = CONNECTION_URL.get();
+        if (connectionUrl == null) {
+            jedisPool = new JedisPool(config);
+        } else {
+            jedisPool = new JedisPool(config, connectionUrl.getHost(), connectionUrl.getPort(),
+                    connectionUrl.getPath().toLowerCase().contains("ssl=true"));
+        }
         POOL.set(jedisPool);
     }
 

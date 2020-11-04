@@ -20,6 +20,8 @@ package net.lamgc.cgj.bot.cache.local;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 
+import java.io.File;
+
 /**
  * 本地缓存存储容器工厂.
  * 最快速但又是最占内存的方法, 适用于远端缓存失效, 或无远端缓存的情况下使用.
@@ -28,6 +30,11 @@ import net.lamgc.cgj.bot.cache.convert.StringConverter;
  */
 @Factory(name = "Local-Memory", priority = FactoryPriority.PRIORITY_LOWEST, source = CacheStoreSource.MEMORY)
 public class LocalCacheStoreFactory implements CacheStoreFactory {
+
+    @Override
+    public void initial(File dataDirectory) {
+        // 不需要做任何事情, 除非需要做持久化.
+    }
 
     @Override
     public <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {

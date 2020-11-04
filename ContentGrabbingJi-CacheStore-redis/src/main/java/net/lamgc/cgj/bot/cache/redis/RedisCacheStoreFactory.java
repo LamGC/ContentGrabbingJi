@@ -17,9 +17,18 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
+import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.Properties;
 
 /**
  *
@@ -27,6 +36,51 @@ import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
  */
 @Factory(name = "Redis", priority = FactoryPriority.PRIORITY_HIGHER, source = CacheStoreSource.REMOTE)
 public class RedisCacheStoreFactory implements CacheStoreFactory {
+
+    private final static Logger log = LoggerFactory.getLogger(RedisCacheStoreFactory.class);
+
+    private final static String PROP_HOST = "redis.host";
+    private final static String PROP_PORT = "redis.port";
+    private final static String PROP_USE_SSL = "redis.useSSL";
+    private final static String PROP_USERNAME = "redis.username";
+    private final static String PROP_PASSWORD = "redis.password";
+    private final static String PROP_DATABASE = "redis.databaseId";
+    private final static String PROP_CLIENT_NAME = "redis.clientName";
+
+    @Override
+    public void initial(File dataDirectory) {
+        final File propertiesFile = new File(dataDirectory, "redis.properties");
+        if (!propertiesFile.exists()) {
+            log.warn("未找到 Redis 配置文件, 使用默认配置.");
+            return;
+        } else if (!propertiesFile.isFile()) {
+            log.warn("Redis 配置文件不是一个文件, 使用默认配置.");
+            return;
+        }
+        Properties properties = new Properties();
+        try (Reader propertiesReader = new BufferedReader(
+                new InputStreamReader(new FileInputStream(propertiesFile), StandardCharsets.UTF_8))) {
+            properties.load(propertiesReader);
+        } catch (IOException e) {
+            log.error("读取 Redis 配置文件时发生异常", e);
+        }
+        try {
+            String queryString = "/?" + "ssl=" + properties.getProperty(PROP_USE_SSL, "false") + '&' +
+                    "user=" + Strings.nullToEmpty(properties.getProperty(PROP_USERNAME)) + '&' +
+                    "passwd=" + Strings.nullToEmpty(properties.getProperty(PROP_PASSWORD)) + '&' +
+                    "database=" + properties.getProperty(PROP_DATABASE, "0") + '&' +
+                    "clientName=" + Strings.nullToEmpty(properties.getProperty(PROP_CLIENT_NAME));
+            URL url = new URL("redis",
+                    properties.getProperty(PROP_HOST, "localhost"),
+                    Integer.parseInt(properties.getProperty(PROP_PORT, "6379")),
+                    queryString);
+
+            RedisConnectionPool.setConnectionUrl(url);
+        } catch (MalformedURLException e) {
+            log.error("构造连接 URL 时发生异常", e);
+        }
+    }
+
     @Override
     public <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {
         return new RedisSingleCacheStore<>(identify, converter);
