@@ -17,11 +17,14 @@
 
 package net.lamgc.cgj.bot.cache;
 
+import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -37,18 +40,36 @@ import java.util.function.Function;
 public class CacheStoreBuilder {
 
     private final static Logger log = LoggerFactory.getLogger(CacheStoreBuilder.class);
-    private final static List<CacheStoreFactory> FACTORY_LIST = new ArrayList<>();
-    private final static Map<CacheStoreFactory, FactoryInfo> FACTORY_INFO_MAP = new Hashtable<>();
+
+    private final List<CacheStoreFactory> FACTORY_LIST = new ArrayList<>();
+    private final Map<CacheStoreFactory, FactoryInfo> FACTORY_INFO_MAP = new Hashtable<>();
+    private final File dataDirectory;
+
+    public static CacheStoreBuilder getInstance(File cacheDataDirectory) throws IOException {
+        if (!cacheDataDirectory.exists() && !cacheDataDirectory.mkdirs()) {
+            throw new IOException("Data directory creation failed: " + cacheDataDirectory.getAbsolutePath());
+        } else if (!cacheDataDirectory.isDirectory()) {
+            throw new IOException("The specified data store path is not a directory: " +
+                    cacheDataDirectory.getAbsolutePath());
+        } else if (!cacheDataDirectory.canRead() || !cacheDataDirectory.canWrite()) {
+            throw new IOException("The specified data store directory cannot be read or written.");
+        }
+        return new CacheStoreBuilder(cacheDataDirectory);
+    }
+
+    private CacheStoreBuilder(File dataDirectory) {
+        this.dataDirectory = dataDirectory;
+    }
 
     /**
      * 使用 SPI 机制加载所有缓存组件.
      *
      * <p>第一次执行时加载, 由 {@link #getFactory(CacheStoreSource, Function)} 调用.
      * <p>由于 ServiceLoader 线程不安全, 所以通过 synchronized 保证其安全性.
-     * 不通过 static 块进行初始化的原因是因为担心发生异常导致无法继续执行
-     * (除非必要, 否则不要使用 static 执行可能会发生异常的代码.).
+     * 不通过 块进行初始化的原因是因为担心发生异常导致无法继续执行
+     * (除非必要, 否则不要使用 执行可能会发生异常的代码.).
      */
-    private synchronized static void loadFactory() {
+    private synchronized void loadFactory() {
         if (FACTORY_LIST.size() != 0) {
             return;
         }
@@ -67,6 +88,12 @@ public class CacheStoreBuilder {
                     log.warn("Factory {} 加载失败: {}", factory.getClass().getName(), e.getMessage());
                     continue;
                 }
+
+
+                if (!initialFactory(factory, info)) {
+                    log.warn("Factory {} 初始化失败.", info.getFactoryName());
+                    continue;
+                }
                 FACTORY_LIST.add(factory);
                 log.info("Factory {} 已加载(优先级: {}, 实现类: {}).",
                         info.getFactoryName(),
@@ -81,10 +108,26 @@ public class CacheStoreBuilder {
         }
     }
 
+    private boolean initialFactory(CacheStoreFactory factory, FactoryInfo info) {
+        File factoryDataDirectory = new File(dataDirectory, info.getFactoryName());
+        if (!factoryDataDirectory.exists() && !factoryDataDirectory.mkdirs()) {
+            log.warn("Factory {} 数据存储目录创建失败, 可能会影响后续操作. (Path: {})",
+                    info.getFactoryName(),
+                    factoryDataDirectory.getAbsolutePath());
+        }
+        try {
+            factory.initial(factoryDataDirectory);
+            return true;
+        } catch (Exception e) {
+            log.error("Factory {} 初始化失败.\n{}", info.getFactoryName(), Throwables.getStackTraceAsString(e));
+            return false;
+        }
+    }
+    
     /**
      * 优先级排序器.
      */
-    private final static class PriorityComparator implements Comparator<CacheStoreFactory> {
+    private final class PriorityComparator implements Comparator<CacheStoreFactory> {
         @Override
         public int compare(CacheStoreFactory o1, CacheStoreFactory o2) {
             FactoryInfo info1 = Objects.requireNonNull(FACTORY_INFO_MAP.get(o1));
@@ -97,7 +140,7 @@ public class CacheStoreBuilder {
      * 获取一个当前可用的高优先级 Factory 对象.
      * @return 返回可用的高优先级 Factory 对象.
      */
-    private static <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource,
+    private <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource,
                                                           Function<CacheStoreFactory, R> function)
     throws NoSuchFactoryException {
         if (FACTORY_LIST.size() == 0) {
@@ -156,7 +199,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {
+    public <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {
         return newSingleCacheStore(null, identify, converter);
     }
 
@@ -169,7 +212,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <V> SingleCacheStore<V> newSingleCacheStore(CacheStoreSource storeSource, String identify,
+    public <V> SingleCacheStore<V> newSingleCacheStore(CacheStoreSource storeSource, String identify,
                                                               StringConverter<V> converter) {
         try {
             return getFactory(storeSource, factory -> {
@@ -192,7 +235,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter) {
+    public <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter) {
         return newListCacheStore(null, identify, converter);
     }
 
@@ -205,7 +248,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <E> ListCacheStore<E> newListCacheStore(CacheStoreSource storeSource, String identify,
+    public <E> ListCacheStore<E> newListCacheStore(CacheStoreSource storeSource, String identify,
                                                           StringConverter<E> converter) {
         try {
             return getFactory(storeSource, factory -> {
@@ -228,7 +271,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter) {
+    public <E> SetCacheStore<E> newSetCacheStore(String identify, StringConverter<E> converter) {
         return newSetCacheStore(null, identify, converter);
     }
 
@@ -240,7 +283,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <E> SetCacheStore<E> newSetCacheStore(CacheStoreSource storeSource, String identify,
+    public <E> SetCacheStore<E> newSetCacheStore(CacheStoreSource storeSource, String identify,
                                                         StringConverter<E> converter) {
         try {
             return getFactory(storeSource, factory -> {
@@ -263,7 +306,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter) {
+    public <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter) {
         return newMapCacheStore(null, identify, converter);
     }
 
@@ -276,7 +319,7 @@ public class CacheStoreBuilder {
      * @return 返回新的存储容器, 与其他容器互不干扰.
      * @throws GetCacheStoreException 当无法获取可用的 CacheStore 时抛出.
      */
-    public static <V> MapCacheStore<V> newMapCacheStore(CacheStoreSource storeSource, String identify,
+    public <V> MapCacheStore<V> newMapCacheStore(CacheStoreSource storeSource, String identify,
                                                         StringConverter<V> converter) {
         try {
             return getFactory(storeSource, factory -> {

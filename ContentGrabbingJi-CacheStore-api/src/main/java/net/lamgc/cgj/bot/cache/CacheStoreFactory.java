@@ -20,6 +20,8 @@ package net.lamgc.cgj.bot.cache;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
 
+import java.io.File;
+
 /**
  * 缓存存储容器构造工厂.
  *
@@ -27,6 +29,15 @@ import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
  * @author LamGC
  */
 public interface CacheStoreFactory {
+
+    /**
+     * Factory 初始化方法.
+     * <p> 当 Factory 被加载且验证正确后, 将会在第一次获取 CacheStore 前被调用一次(也可能在验证完成后执行).
+     * <p> 该方法仅调用一次, 之后将不再调用.
+     * @param dataDirectory 数据存储目录, 可在该目录内存储配置, 或持久化缓存.
+     * @throws Exception 上层管理类允许捕获任何抛出的异常, 如果 Factory 抛出异常, 将视为失效, 不被使用.
+     */
+    void initial(File dataDirectory) throws Exception;
 
     /**
      * 获取一个新的 CacheStore 对象.
