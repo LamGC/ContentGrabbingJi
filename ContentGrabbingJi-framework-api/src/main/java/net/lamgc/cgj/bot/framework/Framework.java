@@ -31,6 +31,7 @@ import java.io.File;
 public abstract class Framework extends Plugin {
 
     private final File dataFolder;
+    private final FrameworkContext context;
 
     /**
      * 由 FrameworkManager 执行的构造方法.
@@ -38,8 +39,9 @@ public abstract class Framework extends Plugin {
      *
      * @param wrapper 包含框架运行期间需要使用对象的包装器.
      */
-    public Framework(PluginWrapper wrapper, File dataFolder) {
+    public Framework(PluginWrapper wrapper, File dataFolder, FrameworkContext context) {
         super(wrapper);
+        this.context = context;
         if (!(wrapper.getDescriptor() instanceof FrameworkDescriptor)) {
             throw new IllegalStateException("Invalid description object");
         }
@@ -86,4 +88,11 @@ public abstract class Framework extends Plugin {
         throw new IllegalStateException("无法转换 Descriptor 的类型, 框架管理器可能遭到修改!");
     }
 
+    /**
+     * 获取当前框架对象与所属 ContentGrabbingJiBot 的上下文.
+     * @return 返回上下文对象.
+     */
+    protected FrameworkContext getContext() {
+        return context;
+    }
 }
