@@ -28,6 +28,12 @@ import java.util.Observer;
 public interface Cancelable {
 
     /**
+     * 取消该事件.
+     * <p> 该操作不可取消.
+     */
+    void cancel();
+
+    /**
      * 检查事件是否已被取消.
      * @return 如果事件已被取消, 返回 true.
      */
