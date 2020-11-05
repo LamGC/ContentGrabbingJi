@@ -41,7 +41,7 @@ public interface SupportedCancel {
      * @param event 事件对象.
      * @return 如果成功, 返回 true, 如果事件已执行完成, 返回 false.
      * @throws UnsupportedOperationException 当事件未实现 {@link Cancelable} 接口时抛出.
-     * @throws NoSuchElementException 当 EventId 所属事件在 {@link SupportedCancel} 中无法找到时抛出.
+     * @throws NoSuchElementException 当事件在 {@link SupportedCancel} 中无法找到时抛出.
      */
     boolean cancelEvent(EventObject event) throws UnsupportedOperationException, NoSuchElementException;
 
@@ -49,8 +49,9 @@ public interface SupportedCancel {
      * 对可取消对象执行取消处理操作.
      * @param cancelableEvent 可取消对象事件.
      * @return 如果成功, 返回 true, 如果事件已执行完成, 返回 false.
-     * @throws NoSuchElementException 当 EventId 所属事件在 {@link SupportedCancel} 中无法找到时抛出.
+     * @throws NoSuchElementException 当事件在 {@link SupportedCancel} 中无法找到时抛出.
+     * @throws IllegalArgumentException 当 Cancelable 对象未实现 {@link EventObject} (即不是一个事件对象) 时抛出.
      */
-    boolean cancelEvent(Cancelable cancelableEvent) throws NoSuchElementException;
+    boolean cancelEvent(Cancelable cancelableEvent) throws NoSuchElementException, IllegalArgumentException;
 
 }
