@@ -17,6 +17,8 @@
 
 package net.lamgc.cgj.bot.framework;
 
+import net.lamgc.cgj.bot.cache.CacheStoreBuilder;
+import net.lamgc.cgj.bot.event.EventExecutor;
 import org.pf4j.*;
 
 import java.io.File;
@@ -27,8 +29,14 @@ import java.io.File;
  */
 public class FrameworkManager extends JarPluginManager {
 
-    public FrameworkManager(String systemVersion, File frameworksDirectory) {
+    private final CacheStoreBuilder cacheStoreBuilder;
+    private final EventExecutor eventExecutor;
+
+    public FrameworkManager(String systemVersion, File frameworksDirectory,
+                            CacheStoreBuilder cacheStoreBuilder, EventExecutor eventExecutor) {
         super(frameworksDirectory.toPath());
+        this.cacheStoreBuilder = cacheStoreBuilder;
+        this.eventExecutor = eventExecutor;
         setSystemVersion(systemVersion);
     }
 
@@ -47,6 +55,7 @@ public class FrameworkManager extends JarPluginManager {
 
     @Override
     protected PluginFactory createPluginFactory() {
-        return new FrameworkFactory(getPluginsRoot().getParent().resolve("frameworkData").toFile());
+        return new FrameworkFactory(getPluginsRoot().getParent().resolve("frameworkData").toFile(),
+                cacheStoreBuilder, eventExecutor);
     }
 }
