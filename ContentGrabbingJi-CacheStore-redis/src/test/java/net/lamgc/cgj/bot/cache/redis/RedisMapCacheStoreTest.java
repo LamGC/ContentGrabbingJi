@@ -18,6 +18,7 @@
 package net.lamgc.cgj.bot.cache.redis;
 
 
+import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.MapCacheStore;
 import net.lamgc.cgj.bot.cache.convert.StringToStringConverter;
@@ -25,7 +26,9 @@ import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -34,8 +37,24 @@ import java.util.Map;
  */
 public class RedisMapCacheStoreTest {
 
-    private final static MapCacheStore<String> cacheStore =
-            new RedisMapCacheStore<>("test", new StringToStringConverter());
+    private final static RedisCacheStoreFactory factory;
+    private final static TemporaryFolder tempFolder = TemporaryFolder.builder().build();
+
+    static {
+        try {
+            tempFolder.create();
+        } catch (IOException e) {
+            Assert.fail(Throwables.getStackTraceAsString(e));
+        }
+        factory = new RedisCacheStoreFactory();
+        try {
+            factory.initial(tempFolder.newFolder("cache-redis"));
+        } catch (IOException e) {
+            Assert.fail(Throwables.getStackTraceAsString(e));
+        }
+    }
+
+    private final static MapCacheStore<String> cacheStore = factory.newMapCacheStore("test", new StringToStringConverter());
 
     @Before
     public void before() {

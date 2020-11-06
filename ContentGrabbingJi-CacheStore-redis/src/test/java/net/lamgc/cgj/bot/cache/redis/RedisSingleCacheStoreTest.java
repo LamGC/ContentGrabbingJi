@@ -17,13 +17,16 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
+import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SingleCacheStore;
 import net.lamgc.cgj.bot.cache.convert.StringToStringConverter;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.junit.rules.TemporaryFolder;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,7 +36,24 @@ import java.util.Map;
  */
 public class RedisSingleCacheStoreTest {
 
-    private final static SingleCacheStore<String> cacheStore = new RedisSingleCacheStore<>("test", new StringToStringConverter());
+    private final static RedisCacheStoreFactory factory;
+    private final static TemporaryFolder tempFolder = TemporaryFolder.builder().build();
+
+    static {
+        try {
+            tempFolder.create();
+        } catch (IOException e) {
+            Assert.fail(Throwables.getStackTraceAsString(e));
+        }
+        factory = new RedisCacheStoreFactory();
+        try {
+            factory.initial(tempFolder.newFolder("cache-redis"));
+        } catch (IOException e) {
+            Assert.fail(Throwables.getStackTraceAsString(e));
+        }
+    }
+
+    private final static SingleCacheStore<String> cacheStore = factory.newSingleCacheStore("test", new StringToStringConverter());
 
     @Before
     public void before() {
@@ -42,8 +62,7 @@ public class RedisSingleCacheStoreTest {
 
     @Test
     public void nullThrowTest() {
-        final SingleCacheStore<String> tempCacheStore =
-                new RedisSingleCacheStore<>("test" + RedisUtils.KEY_SEPARATOR, new StringToStringConverter());
+        final SingleCacheStore<String> tempCacheStore = factory.newSingleCacheStore("test" + RedisUtils.KEY_SEPARATOR, new StringToStringConverter());
         final CacheKey key = new CacheKey("testKey");
 
         // RedisSingleCacheStore

@@ -34,16 +34,17 @@ import java.util.function.Function;
 class RedisConnectionPool {
 
     private final static Logger log = LoggerFactory.getLogger(RedisConnectionPool.class);
-    private final static AtomicReference<JedisPool> POOL = new AtomicReference<>();
-    private final static AtomicReference<URL> CONNECTION_URL = new AtomicReference<>();
 
-    public static synchronized void setConnectionUrl(URL connectionUrl) {
+    private final AtomicReference<JedisPool> POOL = new AtomicReference<>();
+    private final AtomicReference<URL> CONNECTION_URL = new AtomicReference<>();
+
+    public synchronized void setConnectionUrl(URL connectionUrl) {
         if(CONNECTION_URL.get() != null) {
             CONNECTION_URL.set(connectionUrl);
         }
     }
 
-    public static synchronized void reconnectRedis() {
+    public synchronized void reconnectRedis() {
         JedisPool jedisPool = POOL.get();
         if (jedisPool != null && !jedisPool.isClosed()) {
             return;
@@ -66,7 +67,7 @@ class RedisConnectionPool {
      * <p>注意, 需回收 Jedis 对象, 否则可能会耗尽连接池导致后续操作受到影响.
      * @return 返回可用的 Jedis 连接.
      */
-    public static Jedis getConnection() {
+    public Jedis getConnection() {
         JedisPool pool = POOL.get();
         if (pool == null || pool.isClosed()) {
             reconnectRedis();
@@ -85,7 +86,7 @@ class RedisConnectionPool {
      * @param <R> 返回值类型.
      * @return 返回 function 返回的内容.
      */
-    public static <R> R executeRedis(Function<Jedis, R> function) {
+    public <R> R executeRedis(Function<Jedis, R> function) {
         try (Jedis jedis = getConnection()) {
             return function.apply(jedis);
         }
@@ -95,7 +96,7 @@ class RedisConnectionPool {
      * 检查 Redis 连接池是否有可用的资源.
      * @return 如果连接池依然活跃, 返回 true.
      */
-    public static boolean available() {
+    public boolean available() {
         JedisPool jedisPool = POOL.get();
         if (jedisPool == null || jedisPool.isClosed()) {
             reconnectRedis();

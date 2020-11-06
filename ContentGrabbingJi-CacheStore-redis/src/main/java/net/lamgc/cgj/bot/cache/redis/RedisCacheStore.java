@@ -30,6 +30,12 @@ import java.util.Set;
  */
 public abstract class RedisCacheStore<V> implements CacheStore<V> {
 
+    private final RedisConnectionPool connectionPool;
+
+    protected RedisCacheStore(RedisConnectionPool connectionPool) {
+        this.connectionPool = connectionPool;
+    }
+
     /**
      * 获取 Key 前缀.
      * <p>key = getKeyPrefix() + key
@@ -49,7 +55,7 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
     @Override
     public boolean setTimeToLive(CacheKey key, long ttl) {
         String keyString = getKeyString(key);
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             Long result;
             if (ttl >= 0) {
                 result = jedis.pexpire(keyString, ttl);
@@ -62,7 +68,7 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
 
     @Override
     public long getTimeToLive(CacheKey key) {
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             Long ttl = jedis.pttl(getKeyString(key));
             return ttl < 0 ? -1 : ttl;
         });
@@ -70,27 +76,27 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
 
     @Override
     public long size() {
-        return RedisConnectionPool.executeRedis(Jedis::dbSize);
+        return connectionPool.executeRedis(Jedis::dbSize);
     }
 
     @Override
     public boolean clear() {
-        return RedisConnectionPool.executeRedis(jedis -> RedisUtils.isOk(jedis.flushDB()));
+        return connectionPool.executeRedis(jedis -> RedisUtils.isOk(jedis.flushDB()));
     }
 
     @Override
     public boolean exists(CacheKey key) {
-        return RedisConnectionPool.executeRedis(jedis -> jedis.exists(getKeyString(key)));
+        return connectionPool.executeRedis(jedis -> jedis.exists(getKeyString(key)));
     }
 
     @Override
     public boolean remove(CacheKey key) {
-        return RedisConnectionPool.executeRedis(jedis -> jedis.del(getKeyString(key)) == RedisUtils.RETURN_CODE_OK);
+        return connectionPool.executeRedis(jedis -> jedis.del(getKeyString(key)) == RedisUtils.RETURN_CODE_OK);
     }
 
     @Override
     public Set<String> keySet() {
-        Set<String> keys = RedisConnectionPool.executeRedis(jedis -> jedis.keys(RedisUtils.KEY_PATTERN_ALL));
+        Set<String> keys = connectionPool.executeRedis(jedis -> jedis.keys(RedisUtils.KEY_PATTERN_ALL));
         final int prefixLength = getKeyPrefix().length();
         Set<String> newKeys = new HashSet<>();
         for (String key : keys) {

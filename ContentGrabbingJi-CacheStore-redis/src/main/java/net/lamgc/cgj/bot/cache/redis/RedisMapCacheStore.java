@@ -33,8 +33,11 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
     private final String keyPrefix;
     private final StringConverter<V> converter;
+    private final RedisConnectionPool connectionPool;
 
-    public RedisMapCacheStore(String keyPrefix, StringConverter<V> converter) {
+    public RedisMapCacheStore(RedisConnectionPool connectionPool, String keyPrefix, StringConverter<V> converter) {
+        super(connectionPool);
+        this.connectionPool = connectionPool;
         keyPrefix = Strings.nullToEmpty(keyPrefix).trim();
         if (!keyPrefix.isEmpty() && keyPrefix.endsWith(RedisUtils.KEY_SEPARATOR)) {
             this.keyPrefix = keyPrefix;
@@ -52,7 +55,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
     @Override
     public int mapSize(CacheKey key) {
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
             if (jedis.exists(keyString)) {
                 return jedis.hlen(keyString).intValue();
@@ -63,7 +66,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
     @Override
     public Set<String> mapFieldSet(CacheKey key) {
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
             if (jedis.exists(keyString)) {
                 return jedis.hkeys(keyString);
@@ -74,7 +77,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
     @Override
     public Set<V> mapValueSet(CacheKey key) {
-        List<String> rawValueSet = RedisConnectionPool.executeRedis(jedis -> {
+        List<String> rawValueSet = connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
             if (jedis.exists(keyString)) {
                 return jedis.hvals(keyString);
@@ -97,7 +100,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     public boolean put(CacheKey key, String field, V value) {
         Objects.requireNonNull(field);
         Objects.requireNonNull(value);
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
             return jedis.hset(keyString, field, converter.to(value)) == RedisUtils.RETURN_CODE_OK;
         });
@@ -113,7 +116,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
         final Map<String, String> targetMap = new HashMap<>(map.size());
         map.forEach((k, v) -> targetMap.put(k, converter.to(v)));
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
             return RedisUtils.isOk(jedis.hmset(keyString, targetMap));
         });
@@ -123,7 +126,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     public boolean putIfNotExist(CacheKey key, String field, V value) {
         Objects.requireNonNull(field);
         Objects.requireNonNull(value);
-        return RedisConnectionPool.executeRedis(jedis -> {
+        return connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
             return jedis.hsetnx(keyString, field, converter.to(value)) == RedisUtils.RETURN_CODE_OK;
         });
@@ -132,7 +135,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     @Override
     public V get(CacheKey key, String field) {
         Objects.requireNonNull(field);
-        String value = RedisConnectionPool.executeRedis(jedis -> jedis.hget(getKeyString(key), field));
+        String value = connectionPool.executeRedis(jedis -> jedis.hget(getKeyString(key), field));
         if (value == null) {
             return null;
         }
@@ -142,14 +145,14 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     @Override
     public boolean removeField(CacheKey key, String field) {
         Objects.requireNonNull(field);
-        return RedisConnectionPool.executeRedis(jedis ->
+        return connectionPool.executeRedis(jedis ->
                 jedis.hdel(getKeyString(key), field) == RedisUtils.RETURN_CODE_OK);
     }
 
     @Override
     public boolean containsField(CacheKey key, String field) {
         Objects.requireNonNull(field);
-        return RedisConnectionPool.executeRedis(jedis -> jedis.hexists(getKeyString(key), field));
+        return connectionPool.executeRedis(jedis -> jedis.hexists(getKeyString(key), field));
     }
 
     @Override
@@ -168,7 +171,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
         String[] fieldsArray = new String[fields.size()];
         fields.toArray(fieldsArray);
-        return RedisConnectionPool.executeRedis(jedis ->
+        return connectionPool.executeRedis(jedis ->
                 jedis.hdel(getKeyString(key), fieldsArray) != RedisUtils.RETURN_CODE_FAILED);
     }
 

@@ -47,6 +47,8 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
     private final static String PROP_DATABASE = "redis.databaseId";
     private final static String PROP_CLIENT_NAME = "redis.clientName";
 
+    private final RedisConnectionPool connectionPool = new RedisConnectionPool();
+
     @Override
     public void initial(File dataDirectory) {
         final File propertiesFile = new File(dataDirectory, "redis.properties");
@@ -75,7 +77,7 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
                     Integer.parseInt(properties.getProperty(PROP_PORT, "6379")),
                     queryString);
 
-            RedisConnectionPool.setConnectionUrl(url);
+            connectionPool.setConnectionUrl(url);
         } catch (MalformedURLException e) {
             log.error("构造连接 URL 时发生异常", e);
         }
@@ -83,7 +85,7 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
 
     @Override
     public <V> SingleCacheStore<V> newSingleCacheStore(String identify, StringConverter<V> converter) {
-        return new RedisSingleCacheStore<>(identify, converter);
+        return new RedisSingleCacheStore<>(connectionPool, identify, converter);
     }
 
     @Override
@@ -98,11 +100,11 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
 
     @Override
     public <V> MapCacheStore<V> newMapCacheStore(String identify, StringConverter<V> converter) {
-        return new RedisMapCacheStore<>(identify, converter);
+        return new RedisMapCacheStore<>(connectionPool, identify, converter);
     }
 
     @Override
     public boolean canGetCacheStore() {
-        return RedisConnectionPool.available();
+        return connectionPool.available();
     }
 }

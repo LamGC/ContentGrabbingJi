@@ -36,8 +36,11 @@ public class RedisSingleCacheStore<V> extends RedisCacheStore<V> implements Sing
 
     private final String keyPrefix;
     private final StringConverter<V> converter;
+    private final RedisConnectionPool connectionPool;
 
-    public RedisSingleCacheStore(String keyPrefix, StringConverter<V> converter) {
+    public RedisSingleCacheStore(RedisConnectionPool connectionPool, String keyPrefix, StringConverter<V> converter) {
+        super(connectionPool);
+        this.connectionPool = connectionPool;
         keyPrefix = Strings.nullToEmpty(keyPrefix).trim();
         if (!keyPrefix.isEmpty() && keyPrefix.endsWith(RedisUtils.KEY_SEPARATOR)) {
             this.keyPrefix = keyPrefix;
@@ -50,20 +53,20 @@ public class RedisSingleCacheStore<V> extends RedisCacheStore<V> implements Sing
 
     @Override
     public boolean set(CacheKey key, V value) {
-        return RedisConnectionPool.executeRedis(jedis ->
+        return connectionPool.executeRedis(jedis ->
                 RedisUtils.isOk(jedis.set(getKeyString(key), converter.to(Objects.requireNonNull(value)))));
     }
 
     @Override
     public boolean setIfNotExist(CacheKey key, V value) {
-        return RedisConnectionPool.executeRedis(jedis ->
+        return connectionPool.executeRedis(jedis ->
                 jedis.setnx(getKeyString(key), converter.to(Objects.requireNonNull(value)))
                         == RedisUtils.RETURN_CODE_OK);
     }
 
     @Override
     public V get(CacheKey key) {
-        String value = RedisConnectionPool.executeRedis(jedis -> jedis.get(getKeyString(key)));
+        String value = connectionPool.executeRedis(jedis -> jedis.get(getKeyString(key)));
         if (value == null) {
             return null;
         }
