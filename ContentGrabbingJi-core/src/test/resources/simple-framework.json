@@ -1,0 +1,33 @@
+// 该文件为 framework.json 格式完整示例, 非测试用文件.
+{
+  "id": "cgj-mirai",
+  "description": "test",
+  "version": "3.0.0-alpha",
+  "requiresVersion": "=>3.0.0",
+  "provider": "Github@LamGC, Github@mamoe",
+  "license": "AGPL-3.0",
+  "frameworkClass": "com.example.FrameworkMain",
+  "dependencies": [
+    "RequireDepend@1.0.0",
+    "OptionalDepend?@1.0.0"
+  ],
+
+  "platform": {
+    "name": "Tencent QQ",
+    "identify": "qq"
+  },
+  "authors": [
+    {
+      "name": "LamGC",
+      "url": "https://github.com/LamGC",
+      "email": "lam827@lamgc.net"
+    }
+  ],
+  "botCode": {
+    "patterns": [
+      "(?:\\[mirai:([^:]+)\\])",
+      "(?:\\[mirai:([^\\]]*)?:(.*?)?\\])",
+      "(?:\\[mirai:([^\\]]*)?(:(.*?))*?\\])"
+    ]
+  }
+}
