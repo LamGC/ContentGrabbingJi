@@ -27,6 +27,7 @@ import java.util.List;
  * 默认框架描述对象.
  * @author LamGC
  */
+@SuppressWarnings("unused")
 class DefaultFrameworkDescriptor implements FrameworkDescriptor {
 
     private String id;
