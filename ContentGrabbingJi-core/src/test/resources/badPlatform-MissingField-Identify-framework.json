@@ -1,3 +1,4 @@
+// 该文件为 framework.json 格式完整示例, 非测试用文件.
 {
   "id": "cgj-mirai",
   "description": "test",
@@ -12,8 +13,7 @@
   ],
 
   "platform": {
-    "name": "Tencent QQ",
-    "identify": "qq"
+    "name": "Tencent QQ"
   },
   "authors": [
     {
@@ -26,11 +26,7 @@
     "patterns": [
       "(?:\\[mirai:([^:]+)\\])",
       "(?:\\[mirai:([^\\]]*)?:(.*?)?\\])",
-      "(?:\\[mirai:([^\\]]*)?(:(.*?))*?\\])",
-      {
-        "tips": "invalid data"
-      },
-      123456
+      "(?:\\[mirai:([^\\]]*)?(:(.*?))*?\\])"
     ]
   }
 }

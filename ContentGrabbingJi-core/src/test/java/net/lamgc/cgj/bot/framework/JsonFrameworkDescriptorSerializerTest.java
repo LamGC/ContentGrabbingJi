@@ -19,6 +19,8 @@ package net.lamgc.cgj.bot.framework;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
 import net.lamgc.cgj.bot.framework.message.BotCodeDescriptor;
 import net.lamgc.cgj.bot.framework.util.AuthorJsonSerializer;
 import net.lamgc.cgj.bot.framework.util.BotCodeDescriptorJsonSerializer;
@@ -36,17 +38,31 @@ import java.util.regex.Pattern;
 
 public class JsonFrameworkDescriptorSerializerTest {
 
+    private final static Gson gson = getGson();
+
     @Test
     public void deserializerTest() throws IOException {
-        InputStream resource = getClass().getClassLoader().getResourceAsStream("test-framework.json");
-        if (resource == null) {
-            Assert.fail("未找到测试用资源: test-framework.json");
-        }
         FrameworkDescriptor descriptor;
-        try (Reader resourceReader = new BufferedReader(new InputStreamReader(resource, StandardCharsets.UTF_8))) {
-            descriptor = getGson().fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        JsonObject rawObject;
+        try (Reader resourceReader = getResourceAsReader("test-framework.json")) {
+            rawObject = gson.fromJson(resourceReader, JsonObject.class);
+            descriptor = gson.fromJson(rawObject, DefaultFrameworkDescriptor.class);
         }
 
+        assertDescriptor(descriptor);
+        assertDescriptor(gson.fromJson(gson.toJson(descriptor), DefaultFrameworkDescriptor.class));
+    }
+
+    private static Reader getResourceAsReader(String resourceName) {
+        InputStream resource = JsonFrameworkDescriptorSerializerTest.class
+                .getClassLoader().getResourceAsStream(resourceName);
+        if (resource == null) {
+            Assert.fail("未找到测试用资源: " + resourceName);
+        }
+        return new BufferedReader(new InputStreamReader(resource, StandardCharsets.UTF_8));
+    }
+
+    private void assertDescriptor(FrameworkDescriptor descriptor) {
         Assert.assertEquals("cgj-mirai", descriptor.getPluginId());
         Assert.assertEquals("test", descriptor.getPluginDescription());
         Assert.assertEquals("3.0.0-alpha", descriptor.getVersion());
@@ -56,8 +72,8 @@ public class JsonFrameworkDescriptorSerializerTest {
         Assert.assertEquals("com.example.FrameworkMain", descriptor.getPluginClass());
 
         List<PluginDependency> expectedDependency = new ArrayList<>();
-        expectedDependency.add(new PluginDependency("xxx@1.0.0"));
-        expectedDependency.add(new PluginDependency("xxx optional add->?@1.0.0"));
+        expectedDependency.add(new PluginDependency("RequireDepend@1.0.0"));
+        expectedDependency.add(new PluginDependency("OptionalDepend?@1.0.0"));
 
         Assert.assertEquals(expectedDependency, descriptor.getDependencies());
 
@@ -79,7 +95,69 @@ public class JsonFrameworkDescriptorSerializerTest {
                 Assert.fail("存在不符的表达式: " + pattern.pattern());
             }
         }
+    }
 
+    @Test(expected = JsonParseException.class)
+    public void author_missingFieldTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badAuthor-MissingField-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void author_invalidFieldTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badAuthor-InvalidField-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void author_NonAObjectTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badAuthor-NonObject-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void botCode_NonAObjectTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badBotCode-NonObject-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void platform_NonAObjectTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badPlatform-NonObject-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void platform_MissingNameFieldTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badPlatform-MissingField-Name-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void platform_MissingIdentifyFieldTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badPlatform-MissingField-Identify-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void pluginDependency_NonPrimitiveTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badPluginDependency-NonPrimitive-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test(expected = JsonParseException.class)
+    public void pluginDependency_NonStringTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badPluginDependency-NonString-framework.json")) {
+            gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
     }
 
     private static Gson getGson() {

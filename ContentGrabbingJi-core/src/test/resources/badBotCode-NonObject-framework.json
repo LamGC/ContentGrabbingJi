@@ -1,3 +1,4 @@
+// 该文件为 framework.json 格式完整示例, 非测试用文件.
 {
   "id": "cgj-mirai",
   "description": "test",
@@ -22,15 +23,5 @@
       "email": "lam827@lamgc.net"
     }
   ],
-  "botCode": {
-    "patterns": [
-      "(?:\\[mirai:([^:]+)\\])",
-      "(?:\\[mirai:([^\\]]*)?:(.*?)?\\])",
-      "(?:\\[mirai:([^\\]]*)?(:(.*?))*?\\])",
-      {
-        "tips": "invalid data"
-      },
-      123456
-    ]
-  }
+  "botCode": "invalid value"
 }
