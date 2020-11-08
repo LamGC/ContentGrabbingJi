@@ -30,6 +30,10 @@ public class Author {
     private final String url;
     private final String email;
 
+    public Author(String name) {
+        this(name, null, null);
+    }
+
     public Author(String name, String url, String email) {
         this.name = Objects.requireNonNull(name);
         this.url = url;
