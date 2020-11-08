@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.framework.message;
 
+import net.lamgc.cgj.bot.framework.Platform;
 import net.lamgc.cgj.bot.framework.message.exception.UploadImageException;
 
 import java.io.File;
@@ -25,9 +26,30 @@ import java.io.IOException;
 import java.io.InputStream;
 
 /**
+ * 消息发送者.
+ * <p> 可通过该对象回复发送者, 或是获取来自该发送者消息中,
+ * 通过消息内 {@link BotCode} 解析而来的消息资源(例如图片, 视频, 语音, 文件等).
+ * <p>发送者的识别依靠三个要素:
+ *  <ul>
+ *      <li> {@link Platform}
+ *      <li> {@link MessageSource}
+ *      <li> {@link #getId() SenderId}
+ *  </ul>
+ *  三个要素全部符合即为同一个联系人, 有以下情况:
+ *  <ul>
+ *      <li> Platform 相同, MessageSource 相同, 则 SenderId 不允许相同;
+ *      <li> Platform 相同, SenderId 相同, 则 MessageSender 不允许相同;
+ *      <li> MessageSender 相同, SenderId 相同, 则 Platform 不允许相同;
+ *  </ul>
  * @author LamGC
  */
 public interface MessageSender {
+
+    /**
+     * 获取平台信息.
+     * @return 返回平台信息.
+     */
+    Platform getPlatform();
 
     /**
      * 获取消息源类型.
