@@ -27,7 +27,8 @@ import java.lang.reflect.Type;
  * @see PluginDependency
  * @author LamGC
  */
-public class PluginDependencyJsonSerializer implements JsonSerializer<PluginDependency>, JsonDeserializer<PluginDependency> {
+public class PluginDependencyJsonSerializer
+        implements JsonSerializer<PluginDependency>, JsonDeserializer<PluginDependency> {
     private final static String PLUGIN_VERSION_SUPPORT_ALL = "*";
 
     @Override
@@ -44,7 +45,8 @@ public class PluginDependencyJsonSerializer implements JsonSerializer<PluginDepe
     }
 
     @Override
-    public PluginDependency deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context) throws JsonParseException {
+    public PluginDependency deserialize(JsonElement json, Type typeOfT, JsonDeserializationContext context)
+            throws JsonParseException {
         if (!json.isJsonPrimitive()) {
             throw new JsonParseException("Only JsonPrimitive types are supported for conversion");
         }
