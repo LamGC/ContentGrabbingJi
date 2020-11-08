@@ -38,7 +38,7 @@ public class PluginDependencyJsonSerializer
         if (src.isOptional()) {
             builder.append('?');
         }
-        if (src.getPluginVersionSupport() != null || !PLUGIN_VERSION_SUPPORT_ALL.equals(pluginVersionSupport)) {
+        if (!PLUGIN_VERSION_SUPPORT_ALL.equals(pluginVersionSupport)) {
             builder.append('@').append(pluginVersionSupport);
         }
         return new JsonPrimitive(builder.toString());
