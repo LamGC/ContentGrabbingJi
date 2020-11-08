@@ -1,3 +1,4 @@
+// 该文件为 framework.json 格式完整示例, 非测试用文件.
 {
   "id": "cgj-mirai",
   "description": "test",
@@ -8,9 +9,7 @@
   "frameworkClass": "com.example.FrameworkMain",
   "dependencies": [
     "RequireDepend@1.0.0",
-    "OptionalDepend?@1.0.0",
-    "AllVersionSupportedDependA",
-    "AllVersionSupportedDependB@*"
+    "OptionalDepend?@1.0.0"
   ],
 
   "platform": {
@@ -22,25 +21,11 @@
       "name": "LamGC",
       "url": "https://github.com/LamGC",
       "email": "lam827@lamgc.net"
-    },
-    {
-      "name": "UserA",
-      "url": []
-    },
-    {
-      "name": "UserB",
-      "email": []
     }
   ],
   "botCode": {
-    "patterns": [
-      "(?:\\[mirai:([^:]+)\\])",
-      "(?:\\[mirai:([^\\]]*)?:(.*?)?\\])",
-      "(?:\\[mirai:([^\\]]*)?(:(.*?))*?\\])",
-      {
-        "tips": "invalid data"
-      },
-      123456
-    ]
+    "patterns": {
+
+    }
   }
 }

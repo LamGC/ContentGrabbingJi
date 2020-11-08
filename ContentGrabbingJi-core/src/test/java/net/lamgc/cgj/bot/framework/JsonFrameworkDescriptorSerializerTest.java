@@ -74,6 +74,8 @@ public class JsonFrameworkDescriptorSerializerTest {
         List<PluginDependency> expectedDependency = new ArrayList<>();
         expectedDependency.add(new PluginDependency("RequireDepend@1.0.0"));
         expectedDependency.add(new PluginDependency("OptionalDepend?@1.0.0"));
+        expectedDependency.add(new PluginDependency("AllVersionSupportedDependA"));
+        expectedDependency.add(new PluginDependency("AllVersionSupportedDependB@*"));
 
         Assert.assertEquals(expectedDependency, descriptor.getDependencies());
 
@@ -82,6 +84,8 @@ public class JsonFrameworkDescriptorSerializerTest {
 
         List<Author> expectedAuthors = new ArrayList<>();
         expectedAuthors.add(new Author("LamGC", "https://github.com/LamGC", "lam827@lamgc.net"));
+        expectedAuthors.add(new Author("UserA"));
+        expectedAuthors.add(new Author("UserB"));
 
         Assert.assertEquals(expectedAuthors, descriptor.getAuthors());
 
@@ -122,6 +126,24 @@ public class JsonFrameworkDescriptorSerializerTest {
     public void botCode_NonAObjectTest() throws IOException {
         try (Reader resourceReader = getResourceAsReader("badBotCode-NonObject-framework.json")) {
             gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class);
+        }
+    }
+
+    @Test
+    public void botCode_MissingPatternsTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badBotCode-MissingPatternsField-framework.json")) {
+            List<Pattern> patterns = gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class)
+                    .getBotCodeDescriptor().getPatterns();
+            Assert.assertTrue(patterns.isEmpty());
+        }
+    }
+
+    @Test
+    public void botCode_PatternsFieldNonArrayTest() throws IOException {
+        try (Reader resourceReader = getResourceAsReader("badBotCode-PatternsFieldNonArray-framework.json")) {
+            List<Pattern> patterns = gson.fromJson(resourceReader, DefaultFrameworkDescriptor.class)
+                    .getBotCodeDescriptor().getPatterns();
+            Assert.assertTrue(patterns.isEmpty());
         }
     }
 
