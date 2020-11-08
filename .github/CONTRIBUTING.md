@@ -51,9 +51,9 @@ ModuleName 根据修改的相关子模块名填写即可，对项目而非子模
 
 
 
-对大部分文件而言，FileName 按照以上规则填写即可，但对于依赖项而言，则要按照 GAV 坐标填写，  
+对大部分文件而言，FileName 按照以上规则填写即可，但对于依赖项而言，则要按照 GAV（GroupId:ArtifactId:Version）坐标去除 **Version** 项后填写，  
 例如：`[Add] junit:junit 添加 Junit 单元测试依赖项;`，  
-或者更新依赖项：`[Update] junit:junit 更新 Junit 以修复潜在的漏洞('4.13' -> '4.13.1');`
+或者更新依赖项需要添加对依赖项版本号的变更：`[Update] junit:junit 更新 Junit 以修复潜在的漏洞('4.13' -> '4.13.1');`
 
 #### 引用 Github 中的相关 Issue 或者 PR ####
 如需引用相关 Issue 或者 PR（Pull Request），可在相关 Tag 中引用，或者另起一个 Tag 并声明指定的 ID，例如：  
