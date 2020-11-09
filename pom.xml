@@ -36,6 +36,8 @@
         <module>ContentGrabbingJi-CacheStore-local</module>
         <module>ContentGrabbingJi-common</module>
         <module>ContentGrabbingJi-Event</module>
+        <module>ContentGrabbingJi-Command-api</module>
+        <module>ContentGrabbingJi-Command-pixiv</module>
     </modules>
 
     <developers>
