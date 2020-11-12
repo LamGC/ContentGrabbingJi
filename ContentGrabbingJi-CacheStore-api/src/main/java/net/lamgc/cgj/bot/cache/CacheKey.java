@@ -27,9 +27,12 @@ import java.util.Objects;
  */
 public final class CacheKey {
 
+    /**
+     * 默认分隔符.
+     */
     public final static String DEFAULT_SEPARATOR = ".";
 
-    private final String[] key;
+    private final String[] keys;
 
     /**
      * 创建一个缓存键名.
@@ -39,10 +42,14 @@ public final class CacheKey {
      */
     public CacheKey(String first, String... keyStrings) {
         Objects.requireNonNull(first);
-        Objects.requireNonNull(keyStrings);
-        this.key = new String[keyStrings.length + 1];
-        this.key[0] = first;
-        System.arraycopy(keyStrings, 0, this.key, 1, keyStrings.length);
+        if (keyStrings == null || keyStrings.length == 0) {
+            this.keys = new String[] {first};
+        } else {
+            checkKeyStrings(keyStrings);
+            this.keys = new String[keyStrings.length + 1];
+            this.keys[0] = first;
+            System.arraycopy(keyStrings, 0, this.keys, 1, keyStrings.length);
+        }
     }
 
     /**
@@ -51,10 +58,19 @@ public final class CacheKey {
      */
     public CacheKey(String[] keyStrings) {
         Objects.requireNonNull(keyStrings);
+        checkKeyStrings(keyStrings);
         if (keyStrings.length == 0) {
             throw new IllegalArgumentException("Provide at least one element that makes up the key");
         }
-        this.key = keyStrings;
+        this.keys = keyStrings;
+    }
+
+    private void checkKeyStrings(String[] keyStrings) {
+        for (String keyString : keyStrings) {
+            if (keyString == null) {
+                throw new NullPointerException("KeyStrings contains null");
+            }
+        }
     }
 
     /**
@@ -62,7 +78,7 @@ public final class CacheKey {
      * @return 返回用于组成 Key 的字符串数组.
      */
     public String[] getKeyArray() {
-        return key;
+        return keys;
     }
 
     /**
@@ -71,7 +87,7 @@ public final class CacheKey {
      * @return 返回组装后的完整 Key.
      */
     public String join(String separator) {
-        return String.join(separator, key);
+        return String.join(separator, keys);
     }
 
     @Override
@@ -88,11 +104,11 @@ public final class CacheKey {
             return false;
         }
         CacheKey cacheKey = (CacheKey) o;
-        return Arrays.equals(key, cacheKey.key);
+        return Arrays.equals(keys, cacheKey.keys);
     }
 
     @Override
     public int hashCode() {
-        return Arrays.hashCode(key);
+        return Arrays.hashCode(keys);
     }
 }
