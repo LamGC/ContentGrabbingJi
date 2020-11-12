@@ -50,4 +50,11 @@ public class CacheKeyTest {
         Assert.assertEquals("test:key01", new CacheKey("test", "key01").join(":"));
     }
 
+    @Test
+    public void nullValueCheckTest() {
+        CacheKey test = new CacheKey("test", (String[]) null);
+        Assert.assertEquals("test", test.toString());
+        Assert.assertThrows(NullPointerException.class, () -> new CacheKey("test", (String) null));
+    }
+
 }
