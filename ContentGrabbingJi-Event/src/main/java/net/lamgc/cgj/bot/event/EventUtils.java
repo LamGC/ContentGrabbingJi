@@ -19,14 +19,14 @@ package net.lamgc.cgj.bot.event;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
-import java.util.HashSet;
-import java.util.Set;
 
 /**
  * 事件处理工具类.
  * @author LamGC
  */
 public final class EventUtils {
+
+    private EventUtils() {}
 
     /**
      * 检查 {@link EventExecutor} 是否支持取消事件.

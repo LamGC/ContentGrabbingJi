@@ -24,7 +24,7 @@ import java.util.Objects;
  * <p>我觉得改成维护者会更好一些?
  * @author LamGC
  */
-public class Author {
+public final class Author {
 
     private final String name;
     private final String url;
