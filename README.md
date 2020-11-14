@@ -3,7 +3,10 @@
 （重构进行中，欢迎围观 or 贡献！）  
 （旧版还能用，只是不再继续维护）  
 
+<!-- 此处为 Tag 栏, 可以不加空格(大概) -->
 ![Unit test confirmation of commit](https://github.com/LamGC/ContentGrabbingJi/workflows/Unit%20test%20confirmation%20of%20commit/badge.svg?branch=3.0.0&event=push)
+[![codecov](https://codecov.io/gh/LamGC/ContentGrabbingJi/branch/3.0.0/graph/badge.svg)](https://codecov.io/gh/LamGC/ContentGrabbingJi)
+
 ## Install ##
 待 3.0.0-alpha 版发布后将会更新！
 
