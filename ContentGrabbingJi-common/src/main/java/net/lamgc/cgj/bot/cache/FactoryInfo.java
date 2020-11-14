@@ -84,11 +84,11 @@ public final class FactoryInfo {
             return false;
         }
         FactoryInfo that = (FactoryInfo) o;
-        return factoryName.equals(that.factoryName);
+        return factoryName.equals(that.factoryName) && storeSource == that.storeSource;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(factoryName);
+        return Objects.hash(factoryName, storeSource);
     }
 }
