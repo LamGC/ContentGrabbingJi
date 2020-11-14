@@ -37,15 +37,25 @@ import java.util.function.Function;
  * @see CacheStoreFactory
  * @author LamGC
  */
-public class CacheStoreBuilder {
+public final class CacheStoreBuilder {
 
     private final static Logger log = LoggerFactory.getLogger(CacheStoreBuilder.class);
 
-    private final List<CacheStoreFactory> FACTORY_LIST = new ArrayList<>();
-    private final Map<CacheStoreFactory, FactoryInfo> FACTORY_INFO_MAP = new Hashtable<>();
+    private volatile List<CacheStoreFactory> factoryList;
+    private final Map<CacheStoreFactory, FactoryInfo> factoryInfoMap = new Hashtable<>();
+    private final ServiceLoader<CacheStoreFactory> factoryLoader = ServiceLoader.load(CacheStoreFactory.class);
     private final File dataDirectory;
 
+    /**
+     * 获取 CacheStoreBuilder 实例.
+     * <p> 该方法仅提供给 ContentGrabbingJiBot 调用, 请勿通过该方法私自创建 CacheStoreBuilder.
+     * @param cacheDataDirectory 缓存组件数据目录的根目录(例如提供 File 为 {@code /data/cache},
+     *                           缓存组件名为 {@code example}, 则缓存组件的缓存路径为 {@code /data/cache/example}).
+     * @return 返回新的 CacheStoreBuilder 实例, 各实例之间是没有任何关系的(包括创建的 CacheStore, 除非缓存组件设计错误).
+     * @throws IOException 当路径检查失败时抛出.
+     */
     public static CacheStoreBuilder getInstance(File cacheDataDirectory) throws IOException {
+        Objects.requireNonNull(cacheDataDirectory, "Cache component data directory is null");
         if (!cacheDataDirectory.exists() && !cacheDataDirectory.mkdirs()) {
             throw new IOException("Data directory creation failed: " + cacheDataDirectory.getAbsolutePath());
         } else if (!cacheDataDirectory.isDirectory()) {
@@ -59,6 +69,7 @@ public class CacheStoreBuilder {
 
     private CacheStoreBuilder(File dataDirectory) {
         this.dataDirectory = dataDirectory;
+        loadFactory();
     }
 
     /**
@@ -70,20 +81,18 @@ public class CacheStoreBuilder {
      * (除非必要, 否则不要使用 执行可能会发生异常的代码.).
      */
     private synchronized void loadFactory() {
-        if (FACTORY_LIST.size() != 0) {
-            return;
-        }
-        final ServiceLoader<CacheStoreFactory> factoryLoader = ServiceLoader.load(CacheStoreFactory.class);
+        factoryLoader.reload();
+        List<CacheStoreFactory> newFactoryList = new ArrayList<>();
         try {
             for (CacheStoreFactory factory : factoryLoader) {
                 FactoryInfo info;
                 try {
                     info = new FactoryInfo(factory.getClass());
-                    if (FACTORY_INFO_MAP.containsValue(info)) {
+                    if (factoryInfoMap.containsValue(info)) {
                         log.warn("发现 Name 重复的 Factory, 已跳过. (被拒绝的实现: {})", factory.getClass().getName());
                         continue;
                     }
-                    FACTORY_INFO_MAP.put(factory, info);
+                    factoryInfoMap.put(factory, info);
                 } catch (IllegalArgumentException e) {
                     log.warn("Factory {} 加载失败: {}", factory.getClass().getName(), e.getMessage());
                     continue;
@@ -94,13 +103,15 @@ public class CacheStoreBuilder {
                     log.warn("Factory {} 初始化失败.", info.getFactoryName());
                     continue;
                 }
-                FACTORY_LIST.add(factory);
+                newFactoryList.add(factory);
                 log.info("Factory {} 已加载(优先级: {}, 实现类: {}).",
                         info.getFactoryName(),
                         info.getFactoryPriority(),
                         factory.getClass().getName());
             }
-            FACTORY_LIST.sort(new PriorityComparator());
+            newFactoryList.sort(new PriorityComparator());
+            factoryList = newFactoryList;
+            optimizeFactoryInfoMap();
         } catch (Error error) {
             // 防止发生 Error 又不输出到日志导致玄学问题难以排查.
             log.error("加载 CacheStoreFactory 时发生严重错误.", error);
@@ -108,6 +119,19 @@ public class CacheStoreBuilder {
         }
     }
 
+    /**
+     * 清除无效的 {@link FactoryInfo}
+     */
+    private void optimizeFactoryInfoMap() {
+        factoryInfoMap.keySet().removeIf(factory -> !factoryList.contains(factory));
+    }
+
+    /**
+     * 初始化 Factory.
+     * @param factory Factory 对象.
+     * @param info Factory Info.
+     * @return 初始化成功则返回 {@code true}, 否则返回 {@code false}.
+     */
     private boolean initialFactory(CacheStoreFactory factory, FactoryInfo info) {
         File factoryDataDirectory = new File(dataDirectory, info.getFactoryName());
         if (!factoryDataDirectory.exists() && !factoryDataDirectory.mkdirs()) {
@@ -130,8 +154,8 @@ public class CacheStoreBuilder {
     private final class PriorityComparator implements Comparator<CacheStoreFactory> {
         @Override
         public int compare(CacheStoreFactory o1, CacheStoreFactory o2) {
-            FactoryInfo info1 = Objects.requireNonNull(FACTORY_INFO_MAP.get(o1));
-            FactoryInfo info2 = Objects.requireNonNull(FACTORY_INFO_MAP.get(o2));
+            FactoryInfo info1 = Objects.requireNonNull(factoryInfoMap.get(o1));
+            FactoryInfo info2 = Objects.requireNonNull(factoryInfoMap.get(o2));
             return info2.getFactoryPriority() - info1.getFactoryPriority();
         }
     }
@@ -141,15 +165,12 @@ public class CacheStoreBuilder {
      * @return 返回可用的高优先级 Factory 对象.
      */
     private <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource,
-                                                          Function<CacheStoreFactory, R> function)
+                                                   Function<CacheStoreFactory, R> function)
     throws NoSuchFactoryException {
-        if (FACTORY_LIST.size() == 0) {
-            loadFactory();
-        }
-        Iterator<CacheStoreFactory> iterator = FACTORY_LIST.iterator();
+        Iterator<CacheStoreFactory> iterator = factoryList.iterator();
         while (iterator.hasNext()) {
             CacheStoreFactory factory = iterator.next();
-            FactoryInfo info = FACTORY_INFO_MAP.get(factory);
+            FactoryInfo info = factoryInfoMap.get(factory);
             if (storeSource != null && info.getStoreSource() != storeSource) {
                 continue;
             }
@@ -192,6 +213,21 @@ public class CacheStoreBuilder {
     }
 
     /**
+     * 检查是否为 {@code null}.
+     * @param cacheStore 缓存库.
+     * @param factory 工厂对象.
+     * @param <V> 缓存库类型.
+     * @return 如果不为 null, 则正常返回.
+     * @throws GetCacheStoreException 当 cacheStore 为 {@code null} 时抛出.
+     */
+    private <V extends CacheStore<?>> V returnRequireNonNull(V cacheStore, CacheStoreFactory factory) {
+        if (cacheStore == null) {
+            throw new GetCacheStoreException("Factory '" + factory.getClass().getName() + "' returned null");
+        }
+        return cacheStore;
+    }
+
+    /**
      * 获取单项缓存存储容器.
      * @param identify 缓存容器标识.
      * @param converter 类型转换器.
@@ -215,13 +251,8 @@ public class CacheStoreBuilder {
     public <V> SingleCacheStore<V> newSingleCacheStore(CacheStoreSource storeSource, String identify,
                                                               StringConverter<V> converter) {
         try {
-            return getFactory(storeSource, factory -> {
-                SingleCacheStore<V> singleCacheStoreInstance = factory.newSingleCacheStore(identify, converter);
-                if (singleCacheStoreInstance == null) {
-                    throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
-                }
-                return singleCacheStoreInstance;
-            });
+            return getFactory(storeSource, factory ->
+                    returnRequireNonNull(factory.newSingleCacheStore(identify, converter), factory));
         } catch (NoSuchFactoryException e) {
             throw new GetCacheStoreException("无可用的 Factory.", e);
         }
@@ -251,13 +282,8 @@ public class CacheStoreBuilder {
     public <E> ListCacheStore<E> newListCacheStore(CacheStoreSource storeSource, String identify,
                                                           StringConverter<E> converter) {
         try {
-            return getFactory(storeSource, factory -> {
-                ListCacheStore<E> listCacheStoreInstance = factory.newListCacheStore(identify, converter);
-                if (listCacheStoreInstance == null) {
-                    throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
-                }
-                return listCacheStoreInstance;
-            });
+            return getFactory(storeSource, factory ->
+                    returnRequireNonNull(factory.newListCacheStore(identify, converter), factory));
         } catch (NoSuchFactoryException e) {
             throw new GetCacheStoreException("无可用的 Factory.", e);
         }
@@ -286,13 +312,8 @@ public class CacheStoreBuilder {
     public <E> SetCacheStore<E> newSetCacheStore(CacheStoreSource storeSource, String identify,
                                                         StringConverter<E> converter) {
         try {
-            return getFactory(storeSource, factory -> {
-                SetCacheStore<E> setCacheStoreInstance = factory.newSetCacheStore(identify, converter);
-                if (setCacheStoreInstance == null) {
-                    throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
-                }
-                return setCacheStoreInstance;
-            });
+            return getFactory(storeSource, factory ->
+                    returnRequireNonNull(factory.newSetCacheStore(identify, converter), factory));
         } catch (NoSuchFactoryException e) {
             throw new GetCacheStoreException("无可用的 Factory.", e);
         }
@@ -322,13 +343,8 @@ public class CacheStoreBuilder {
     public <V> MapCacheStore<V> newMapCacheStore(CacheStoreSource storeSource, String identify,
                                                         StringConverter<V> converter) {
         try {
-            return getFactory(storeSource, factory -> {
-                MapCacheStore<V> mapCacheStoreInstance = factory.newMapCacheStore(identify, converter);
-                if (mapCacheStoreInstance == null) {
-                    throw new GetCacheStoreException("Factory " + factory.getClass().getName() + " 返回 null.");
-                }
-                return mapCacheStoreInstance;
-            });
+            return getFactory(storeSource, factory ->
+                    returnRequireNonNull(factory.newMapCacheStore(identify, converter), factory));
         } catch (NoSuchFactoryException e) {
             throw new GetCacheStoreException("无可用的 Factory.", e);
         }

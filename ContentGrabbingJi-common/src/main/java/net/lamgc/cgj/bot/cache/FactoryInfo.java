@@ -25,7 +25,7 @@ import java.util.Objects;
  * CacheStoreFactory 的标识信息.
  * @author LamGC
  */
-public class FactoryInfo {
+public final class FactoryInfo {
 
     private final String factoryName;
     private final int factoryPriority;

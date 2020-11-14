@@ -34,19 +34,6 @@
             <artifactId>ContentGrabbingJi-CacheStore-api</artifactId>
             <version>3.0.0-alpha-SNAPSHOT</version>
         </dependency>
-
-        <dependency>
-            <groupId>net.lamgc</groupId>
-            <artifactId>ContentGrabbingJi-CacheStore-local</artifactId>
-            <version>3.0.0-alpha-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
-            <groupId>net.lamgc</groupId>
-            <artifactId>ContentGrabbingJi-CacheStore-redis</artifactId>
-            <version>3.0.0-alpha-SNAPSHOT</version>
-            <scope>test</scope>
-        </dependency>
     </dependencies>
 
 </project>
