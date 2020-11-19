@@ -25,7 +25,8 @@ import java.util.Set;
  * 功能码接口.
  * @author LamGC
  */
-public interface BotCode {
+@SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
+public interface BotCode extends Message {
 
     /**
      * 获取 BotCode 实现所属平台.
