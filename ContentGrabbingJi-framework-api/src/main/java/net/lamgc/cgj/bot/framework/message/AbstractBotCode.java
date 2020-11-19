@@ -31,7 +31,9 @@ public abstract class AbstractBotCode implements BotCode {
     private String functionName;
     private final Map<String, String> functionProperties = new Hashtable<>();
 
-    public AbstractBotCode() {}
+    public AbstractBotCode(String functionName) {
+        this.functionName = functionName;
+    }
 
     /**
      * 将其他实现的 BotCode 转换成该实现的 BotCode.

@@ -17,18 +17,32 @@
 
 package net.lamgc.cgj.bot.framework;
 
+import java.util.Objects;
+
 /**
- * 框架平台DO.
+ * 框架所属平台.
+ * <p> 用于标识一个平台, 每个平台有唯一的 {@link #platformIdentify PlatformIdentify}.
+ * <p> {@link #platformName PlatformName} 是允许不同的,
+ * 只要 {@link #platformIdentify PlatformIdentify} 唯一即可.
+ *
+ * <p> {@link #platformIdentify PlatformIdentify}
+ * 遵循 Camel-Case (骆峰命名法, 每个单词之间无空格, 单词首字母大写),
+ * 对于平台标识由少量字母组成的则全大写(例如腾讯QQ的平台标识则为 'QQ' 而不是 'qq' 或 'Qq').
  * @author LamGC
  */
-public class Platform {
+public final class Platform {
 
     private final String platformName;
     private final String platformIdentify;
 
+    /**
+     * 构造一个 Platform 对象.
+     * @param platformName 平台名
+     * @param platformIdentify 平台唯一标识名.
+     */
     public Platform(String platformName, String platformIdentify) {
-        this.platformName = platformName;
-        this.platformIdentify = platformIdentify;
+        this.platformName = Objects.requireNonNull(platformName, "PlatformName is null");
+        this.platformIdentify = Objects.requireNonNull(platformIdentify, "PlatformIdentify is null");
     }
 
     @Override
@@ -56,4 +70,20 @@ public class Platform {
         return platformIdentify;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) {
+            return true;
+        }
+        if (o == null || getClass() != o.getClass()) {
+            return false;
+        }
+        Platform platform = (Platform) o;
+        return platformIdentify.equals(platform.platformIdentify);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(platformIdentify);
+    }
 }
