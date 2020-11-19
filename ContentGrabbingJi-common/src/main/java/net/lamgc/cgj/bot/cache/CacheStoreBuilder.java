@@ -42,9 +42,11 @@ public final class CacheStoreBuilder {
     private final static Logger log = LoggerFactory.getLogger(CacheStoreBuilder.class);
 
     private volatile List<CacheStoreFactory> factoryList;
-    private final Map<CacheStoreFactory, FactoryInfo> factoryInfoMap = new Hashtable<>();
+    private volatile Map<CacheStoreFactory, FactoryInfo> factoryInfoMap;
     private final ServiceLoader<CacheStoreFactory> factoryLoader = ServiceLoader.load(CacheStoreFactory.class);
     private final File dataDirectory;
+
+    private final Object getFactoryLock = new Object();
 
     /**
      * 获取 CacheStoreBuilder 实例.
@@ -83,21 +85,21 @@ public final class CacheStoreBuilder {
     private synchronized void loadFactory() {
         factoryLoader.reload();
         List<CacheStoreFactory> newFactoryList = new ArrayList<>();
+        Map<CacheStoreFactory, FactoryInfo> newFactoryInfoMap = new HashMap<>(8);
         try {
             for (CacheStoreFactory factory : factoryLoader) {
                 FactoryInfo info;
                 try {
                     info = new FactoryInfo(factory.getClass());
-                    if (factoryInfoMap.containsValue(info)) {
+                    if (newFactoryInfoMap.containsValue(info)) {
                         log.warn("发现 Name 重复的 Factory, 已跳过. (被拒绝的实现: {})", factory.getClass().getName());
                         continue;
                     }
-                    factoryInfoMap.put(factory, info);
+                    newFactoryInfoMap.put(factory, info);
                 } catch (IllegalArgumentException e) {
                     log.warn("Factory {} 加载失败: {}", factory.getClass().getName(), e.getMessage());
                     continue;
                 }
-
 
                 if (!initialFactory(factory, info)) {
                     log.warn("Factory {} 初始化失败.", info.getFactoryName());
@@ -109,21 +111,16 @@ public final class CacheStoreBuilder {
                         info.getFactoryPriority(),
                         factory.getClass().getName());
             }
-            newFactoryList.sort(new PriorityComparator());
-            factoryList = newFactoryList;
-            optimizeFactoryInfoMap();
+            newFactoryList.sort(new PriorityComparator(newFactoryInfoMap));
+            synchronized (getFactoryLock) {
+                this.factoryList = newFactoryList;
+                this.factoryInfoMap = newFactoryInfoMap;
+            }
         } catch (Error error) {
             // 防止发生 Error 又不输出到日志导致玄学问题难以排查.
             log.error("加载 CacheStoreFactory 时发生严重错误.", error);
             throw error;
         }
-    }
-
-    /**
-     * 清除无效的 {@link FactoryInfo}
-     */
-    private void optimizeFactoryInfoMap() {
-        factoryInfoMap.keySet().removeIf(factory -> !factoryList.contains(factory));
     }
 
     /**
@@ -151,7 +148,14 @@ public final class CacheStoreBuilder {
     /**
      * 优先级排序器.
      */
-    private final class PriorityComparator implements Comparator<CacheStoreFactory> {
+    private static final class PriorityComparator implements Comparator<CacheStoreFactory> {
+
+        private final Map<CacheStoreFactory, FactoryInfo> factoryInfoMap;
+
+        private PriorityComparator(Map<CacheStoreFactory, FactoryInfo> factoryInfoMap) {
+            this.factoryInfoMap = factoryInfoMap;
+        }
+
         @Override
         public int compare(CacheStoreFactory o1, CacheStoreFactory o2) {
             FactoryInfo info1 = Objects.requireNonNull(factoryInfoMap.get(o1));
@@ -167,10 +171,15 @@ public final class CacheStoreBuilder {
     private <R extends CacheStore<?>> R getFactory(CacheStoreSource storeSource,
                                                    Function<CacheStoreFactory, R> function)
     throws NoSuchFactoryException {
-        Iterator<CacheStoreFactory> iterator = factoryList.iterator();
+        Map<CacheStoreFactory, FactoryInfo> localFactoryInfoMap;
+        Iterator<CacheStoreFactory> iterator;
+        synchronized (getFactoryLock) {
+            localFactoryInfoMap = this.factoryInfoMap;
+            iterator = factoryList.iterator();
+        }
         while (iterator.hasNext()) {
             CacheStoreFactory factory = iterator.next();
-            FactoryInfo info = factoryInfoMap.get(factory);
+            FactoryInfo info = localFactoryInfoMap.get(factory);
             if (storeSource != null && info.getStoreSource() != storeSource) {
                 continue;
             }

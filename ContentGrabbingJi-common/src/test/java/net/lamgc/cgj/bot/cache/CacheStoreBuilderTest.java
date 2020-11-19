@@ -17,7 +17,6 @@
 
 package net.lamgc.cgj.bot.cache;
 
-import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.convert.StringToStringConverter;
 import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
@@ -38,6 +37,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @see CacheStoreBuilder
@@ -48,25 +48,15 @@ public class CacheStoreBuilderTest {
     private final static Logger log = LoggerFactory.getLogger(CacheStoreBuilderTest.class);
 
     @BeforeClass
-    public static void beforeAction() {
-        try {
-            tempDirectory.create();
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-        }
+    public static void beforeAction() throws IOException {
+        tempDirectory.create();
     }
 
     @Test
-    public void getCacheStoreTest() {
+    public void getCacheStoreTest() throws IOException {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
-        CacheStoreBuilder cacheStoreBuilder;
-        try {
-            cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-            return;
-        }
+        CacheStoreBuilder cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
 
         SingleCacheStore<String> singleCacheStore = cacheStoreBuilder.newSingleCacheStore(CacheStoreSource.REMOTE, identify, converter);
         Assert.assertNotNull(singleCacheStore);
@@ -86,14 +76,8 @@ public class CacheStoreBuilderTest {
     }
 
     @Test
-    public void loadFailureTest() throws IllegalAccessException, NoSuchFieldException {
-        CacheStoreBuilder cacheStoreBuilder;
-        try {
-            cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-            return;
-        }
+    public void loadFailureTest() throws IllegalAccessException, NoSuchFieldException, IOException {
+        CacheStoreBuilder cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
 
         Field factoryListField;
         factoryListField = CacheStoreBuilder.class.getDeclaredField("factoryList");
@@ -129,12 +113,14 @@ public class CacheStoreBuilderTest {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
         final CacheStoreBuilder cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
+        final AtomicBoolean uncaughtExceptionFlag = new AtomicBoolean();
+        final int totalCount = 100000;
 
         final Method loadFactoryMethod = CacheStoreBuilder.class.getDeclaredMethod("loadFactory");
         loadFactoryMethod.setAccessible(true);
 
-        Thread accessThread = new Thread(() -> {
-            for (int i = 0; i < 100000; i++) {
+        Thread accessThreadA = new Thread(() -> {
+            for (int i = 0; i < totalCount; i++) {
                 SingleCacheStore<String> singleCacheStore = cacheStoreBuilder.newSingleCacheStore(CacheStoreSource.REMOTE, identify, converter);
                 Assert.assertNotNull(singleCacheStore);
                 Assert.assertEquals(RemoteCacheFactory.RemoteSingleCacheFactory.class, singleCacheStore.getClass());
@@ -151,11 +137,11 @@ public class CacheStoreBuilderTest {
                 Assert.assertNotNull(setCacheStore);
                 Assert.assertEquals(SetCacheStoreFactory.OnlySetCacheStore.class, setCacheStore.getClass());
             }
-        }, "Thread-AccessBuilder");
-        Thread reloadThread = new Thread(() -> {
+        }, "Thread-AccessBuilderA");
+        Thread reloadThreadA = new Thread(() -> {
             int count = 0;
             final Random random = new Random();
-            while(count++ < 100000) {
+            while(count++ < totalCount) {
                 if (random.nextInt() % 2 == 0) {
                     try {
                         loadFactoryMethod.invoke(cacheStoreBuilder);
@@ -167,26 +153,77 @@ public class CacheStoreBuilderTest {
                     }
                 }
             }
-        }, "Thread-ReloadBuilder");
+        }, "Thread-ReloadBuilderA");
+        Thread accessThreadB = new Thread(() -> {
+            for (int i = 0; i < totalCount; i++) {
+                SingleCacheStore<String> singleCacheStore = cacheStoreBuilder.newSingleCacheStore(CacheStoreSource.REMOTE, identify, converter);
+                Assert.assertNotNull(singleCacheStore);
+                Assert.assertEquals(RemoteCacheFactory.RemoteSingleCacheFactory.class, singleCacheStore.getClass());
 
-        accessThread.start();
-        reloadThread.start();
+                ListCacheStore<String> listCacheStore = cacheStoreBuilder.newListCacheStore(CacheStoreSource.MEMORY, identify, converter);
+                Assert.assertNotNull(listCacheStore);
+                Assert.assertEquals(MemoryFactory.MemoryListCacheStore.class, listCacheStore.getClass());
 
-        accessThread.join();
-        reloadThread.join();
+                MapCacheStore<String> mapCacheStore = cacheStoreBuilder.newMapCacheStore(CacheStoreSource.LOCAL, identify, converter);
+                Assert.assertNotNull(mapCacheStore);
+                Assert.assertEquals(LocalFactory.LocalMapCacheStore.class, mapCacheStore.getClass());
+
+                SetCacheStore<String> setCacheStore = cacheStoreBuilder.newSetCacheStore(identify, converter);
+                Assert.assertNotNull(setCacheStore);
+                Assert.assertEquals(SetCacheStoreFactory.OnlySetCacheStore.class, setCacheStore.getClass());
+            }
+        }, "Thread-AccessBuilderB");
+        Thread reloadThreadB = new Thread(() -> {
+            int count = 0;
+            final Random random = new Random();
+            while(count++ < totalCount) {
+                if (random.nextInt() % 2 == 0) {
+                    try {
+                        loadFactoryMethod.invoke(cacheStoreBuilder);
+                    } catch (IllegalAccessException | InvocationTargetException e) {
+                        log.error("重载 Builder 时发生异常.",
+                                e instanceof InvocationTargetException ?
+                                        ((InvocationTargetException) e).getTargetException() :
+                                        e);
+                    }
+                }
+            }
+        }, "Thread-ReloadBuilderB");
+
+        class TestUncaughtExceptionHandler implements Thread.UncaughtExceptionHandler {
+
+            @Override
+            public void uncaughtException(Thread t, Throwable e) {
+                log.error("An uncapped exception occurred in thread " + t.getName(), e);
+                uncaughtExceptionFlag.set(true);
+            }
+        }
+
+        accessThreadA.setUncaughtExceptionHandler(new TestUncaughtExceptionHandler());
+        reloadThreadA.setUncaughtExceptionHandler(new TestUncaughtExceptionHandler());
+        accessThreadB.setUncaughtExceptionHandler(new TestUncaughtExceptionHandler());
+        reloadThreadB.setUncaughtExceptionHandler(new TestUncaughtExceptionHandler());
+
+        accessThreadA.start();
+        reloadThreadA.start();
+        accessThreadB.start();
+        reloadThreadB.start();
+
+        accessThreadA.join();
+        reloadThreadA.join();
+        accessThreadB.join();
+        reloadThreadB.join();
+
+        if (uncaughtExceptionFlag.get()) {
+            Assert.fail("Exception occurred while multithreading reload");
+        }
     }
 
     @Test
-    public void noSpecifiedGetCacheStoreTest() {
+    public void noSpecifiedGetCacheStoreTest() throws IOException {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
-        CacheStoreBuilder cacheStoreBuilder;
-        try {
-            cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-            return;
-        }
+        CacheStoreBuilder cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
 
         SingleCacheStore<String> singleCacheStore = cacheStoreBuilder.newSingleCacheStore(identify, converter);
         Assert.assertNotNull(singleCacheStore);
@@ -202,16 +239,10 @@ public class CacheStoreBuilderTest {
     }
 
     @Test
-    public void noSuchFactoryExceptionThrowTest() throws NoSuchFieldException, IllegalAccessException {
+    public void noSuchFactoryExceptionThrowTest() throws NoSuchFieldException, IllegalAccessException, IOException {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
-        CacheStoreBuilder cacheStoreBuilder;
-        try {
-            cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-            return;
-        }
+        CacheStoreBuilder cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
 
         Field factoryListField;
         factoryListField = CacheStoreBuilder.class.getDeclaredField("factoryList");
@@ -275,16 +306,10 @@ public class CacheStoreBuilderTest {
     }
 
     @Test
-    public void lastFactoryThrowExceptionTest() throws NoSuchFieldException, IllegalAccessException {
+    public void lastFactoryThrowExceptionTest() throws NoSuchFieldException, IllegalAccessException, IOException {
         final String identify = "test";
         final StringConverter<String> converter = new StringToStringConverter();
-        CacheStoreBuilder cacheStoreBuilder;
-        try {
-            cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-            return;
-        }
+        CacheStoreBuilder cacheStoreBuilder = CacheStoreBuilder.getInstance(tempDirectory.getRoot());
 
         Field factoryListField;
         factoryListField = CacheStoreBuilder.class.getDeclaredField("factoryList");
@@ -329,7 +354,5 @@ public class CacheStoreBuilderTest {
             }
         }
     }
-
-
 
 }
