@@ -40,21 +40,6 @@ public final class CharSequenceMessage implements Message {
     }
 
     @Override
-    public int length() {
-        return content.length();
-    }
-
-    @Override
-    public char charAt(int index) {
-        return content.charAt(index);
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end) {
-        return content.subSequence(start, end);
-    }
-
-    @Override
     public String toString() {
         return "CharSequenceMessage{" +
                 "content='" + content + '\'' +

@@ -85,19 +85,4 @@ public final class MessageChain implements Message {
         return builder.toString();
     }
 
-    @Override
-    public int length() {
-        return contentToString().length();
-    }
-
-    @Override
-    public char charAt(int index) {
-        return contentToString().charAt(index);
-    }
-
-    @Override
-    public CharSequence subSequence(int start, int end) {
-        return contentToString().subSequence(start, end);
-    }
-
 }
