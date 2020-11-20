@@ -36,6 +36,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
 
+/**
+ * @see AuthorJsonSerializer
+ * @see BotCodeDescriptorJsonSerializer
+ * @see PlatformJsonSerializer
+ * @see PluginDependencyJsonSerializer
+ */
 public class JsonFrameworkDescriptorSerializerTest {
 
     private final static Gson gson = getGson();
