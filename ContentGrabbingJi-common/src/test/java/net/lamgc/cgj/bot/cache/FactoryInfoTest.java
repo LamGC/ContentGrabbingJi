@@ -21,8 +21,10 @@ import net.lamgc.cgj.bot.cache.factory.*;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * @see FactoryInfo
+ */
 public class FactoryInfoTest {
-
 
     @Test
     public void analyticTest() {

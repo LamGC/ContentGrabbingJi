@@ -20,6 +20,9 @@ package net.lamgc.cgj.bot.cache;
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * @see CacheKey
+ */
 public class CacheKeyTest {
 
     @Test

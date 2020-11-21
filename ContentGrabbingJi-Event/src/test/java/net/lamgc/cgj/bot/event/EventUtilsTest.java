@@ -27,6 +27,9 @@ import java.lang.reflect.Method;
 import java.util.NoSuchElementException;
 import java.util.UUID;
 
+/**
+ * @see EventUtils
+ */
 public class EventUtilsTest {
 
     @Test
