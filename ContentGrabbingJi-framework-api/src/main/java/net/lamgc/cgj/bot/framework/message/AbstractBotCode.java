@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.framework.message;
 
+import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.framework.util.CollectionUtils;
 
 import java.util.*;
@@ -32,7 +33,7 @@ public abstract class AbstractBotCode implements BotCode {
     private final Map<String, String> functionProperties = new Hashtable<>();
 
     public AbstractBotCode(String functionName) {
-        this.functionName = functionName;
+        this(functionName, null);
     }
 
     /**
@@ -49,20 +50,31 @@ public abstract class AbstractBotCode implements BotCode {
      * @param functionProperties 参数集 Map. 如果不需要可传入 null.
      */
     public AbstractBotCode(String functionName, Map<String, String> functionProperties) {
+        if (Strings.isNullOrEmpty(functionName)) {
+            throw new IllegalArgumentException("functionName is null or empty");
+        }
         this.functionName = functionName;
-        if(functionProperties != null) {
+        if(functionProperties != null && !functionProperties.isEmpty()) {
             this.functionProperties.putAll(functionProperties);
         }
     }
 
     @Override
     public String toString() {
-        StringBuilder mapString = new StringBuilder(functionProperties.getClass().getSimpleName() + "{");
-        functionProperties.forEach((key, value) -> mapString.append(key).append("='").append(value).append("', "));
-        return "AbstractBotCode{" +
+        StringBuilder mapString = new StringBuilder(functionProperties.getClass().getSimpleName());
+        if (!functionProperties.isEmpty()) {
+            mapString.append("{");
+            functionProperties.forEach((key, value) -> {
+                // "key"="value"
+                mapString.append('"').append(key).append("\"='").append(value).append("', ");
+
+            });
+            mapString.delete(mapString.length() - 2, mapString.length());
+        }
+        return this.getClass().getSimpleName() + '@' + Integer.toHexString(this.hashCode()) + '{' +
                 "Platform=" + getPlatform() + ", " +
                 "functionName='" + functionName + '\'' +
-                ", functionProperties=" + mapString.substring(0, mapString.length() - 2) +
+                ", functionProperties={" + mapString.toString() + '}' +
                 '}';
     }
 
@@ -111,6 +123,11 @@ public abstract class AbstractBotCode implements BotCode {
         return functionProperties.get(Objects.requireNonNull(key));
     }
 
+    /**
+     * 获取参数 Keys 集合.
+     * <p> 注意: 通过本方法返回的 Set 不可进行修改.
+     * @return 返回包含所有参数 Keys 的 Set 对象.
+     */
     @Override
     public Set<String> getPropertiesKeys() {
         return Collections.unmodifiableSet(functionProperties.keySet());
