@@ -91,6 +91,13 @@ public class MessageChainTest {
     }
 
     @Test
+    public void plusMessageTest() {
+        MessageChain chain = new MessageChain("This ", "is ", "a ");
+        chain.plus(new CharSequenceMessage("simple message."));
+        Assert.assertEquals("This is a simple message.", chain.contentToString());
+    }
+
+    @Test
     public void deleteTest() {
         final String[] contents = new String[] {"This", " is ", "a ", "simple", " message."};
         MessageChain chain = new MessageChain(contents);
