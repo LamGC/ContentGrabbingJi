@@ -68,11 +68,11 @@ public interface MessageSender {
      * @param message 消息内容, 特殊内容将以功能码形式插入内容中.
      * @return 如果成功返回 0 或消息 Id, 发送失败返回负数代表错误码.
      */
-    int sendMessage(String message);
+    int sendMessage(Message message);
 
     /**
      * 获取消息标识, 用于回复/撤回功能
-     * @param msgId 消息Id, 通过 {@link #sendMessage(String)} 发送消息获得, 或从 MessageEvent 中获得.
+     * @param msgId 消息Id, 通过 {@link #sendMessage(Message)} 发送消息获得, 或从 MessageEvent 中获得.
      * @return 如果成功获取, 返回非null值, 如果不存在或无法获取, 返回 null.
      */
     String getMessageIdentify(int msgId);

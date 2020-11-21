@@ -89,6 +89,16 @@ public abstract class Framework extends Plugin {
     }
 
     /**
+     * 获取框架所属平台.
+     * <p> 等效于
+     *      <pre> {@link #getDescriptor()}.{@link FrameworkDescriptor#getPlatform() getPlatform()}
+     * @return 返回平台对象.
+     */
+    public Platform getPlatform() {
+        return getDescriptor().getPlatform();
+    }
+
+    /**
      * 获取当前框架对象与所属 ContentGrabbingJiBot 的上下文.
      * @return 返回上下文对象.
      */
