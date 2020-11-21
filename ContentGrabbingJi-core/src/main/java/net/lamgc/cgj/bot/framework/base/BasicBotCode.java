@@ -66,7 +66,7 @@ public class BasicBotCode extends AbstractBotCode {
                     throw new IllegalStateException(e);
                 }
             }
-            return builder.deleteCharAt(builder.lastIndexOf("&")).toString();
+            return builder.deleteCharAt(builder.lastIndexOf("&")).append(']').toString();
         }
     }
 
