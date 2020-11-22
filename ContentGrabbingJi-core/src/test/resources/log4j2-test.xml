@@ -30,6 +30,7 @@
 
     <Loggers>
         <Logger level="INFO" name="org.apache.http"/>
+        <Logger level="DEBUG" name="org.pf4j"/>
         <Root level="TRACE">
             <AppenderRef ref="CONSOLE_STDOUT"/>
             <AppenderRef ref="CONSOLE_STDERR"/>
