@@ -2,7 +2,7 @@
   "id": "cgj-mirai",
   "description": "ContentGrabbingJi官方实现的, 基于 Mirai 框架的QQ平台组件",
   "version": "3.0.0-alpha",
-  "requiresVersion": "=>3.0.0",
+  "requiresVersion": "3.0.0",
   "provider": "Github@LamGC, Github@mamoe",
   "license": "AGPL-3.0",
   "frameworkClass": "net.lamgc.cgj.bot.framework.mirai.MiraiMain",
