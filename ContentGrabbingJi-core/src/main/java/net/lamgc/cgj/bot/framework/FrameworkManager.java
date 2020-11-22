@@ -22,6 +22,7 @@ import net.lamgc.cgj.bot.event.EventExecutor;
 import org.pf4j.*;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * 框架管理器.
@@ -43,7 +44,13 @@ public class FrameworkManager extends JarPluginManager {
     @Override
     protected PluginLoader createPluginLoader() {
         return new CompoundPluginLoader()
-                .add(new DevelopmentPluginLoader(this), this::isDevelopment)
+                .add(new DevelopmentPluginLoader(this) {
+                    @Override
+                    protected PluginClassLoader createPluginClassLoader(Path pluginPath, PluginDescriptor pluginDescriptor) {
+                        return new PluginClassLoader(FrameworkManager.this, pluginDescriptor,
+                                getClass().getClassLoader(), ClassLoadingStrategy.ADP);
+                    }
+                }, this::isDevelopment)
                 .add(new JarFrameworkLoader(this), this::isNotDevelopment);
     }
 
