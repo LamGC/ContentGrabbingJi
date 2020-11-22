@@ -19,7 +19,6 @@ package net.lamgc.cgj.bot.framework;
 
 import org.pf4j.Plugin;
 import org.pf4j.PluginDescriptor;
-import org.pf4j.PluginState;
 import org.pf4j.PluginWrapper;
 
 import java.io.File;
@@ -46,18 +45,12 @@ public abstract class Framework extends Plugin {
             throw new IllegalStateException("Invalid description object");
         }
         this.dataFolder = dataFolder;
-        try {
-            initial();
-        } catch (Throwable e) {
-            wrapper.setFailedException(e);
-            wrapper.setPluginState(PluginState.FAILED);
-            log.error("An exception occurred while initializing the framework", e);
-            throw new IllegalStateException("An exception occurred while initializing the framework", e);
-        }
     }
 
     /**
      * 执行初始化操作.
+     * <p> 警告: 请不要在初始化过程中调用 {@link org.pf4j.PluginManager}
+     *      的任何插件管理方法, 这将会导致加载错误.
      */
     protected abstract void initial();
 

@@ -65,19 +65,29 @@ final class FrameworkFactory implements PluginFactory {
 
         // 如果成功获取类, 就需要对其检查, 以确保类符合框架主类的要求.
         int modifiers = pluginClass.getModifiers();
-        if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers)
-                || (!Framework.class.isAssignableFrom(pluginClass))) {
-            log.error("The framework class '{}' is not valid", pluginClassName);
+        if (Modifier.isAbstract(modifiers) || Modifier.isInterface(modifiers)) {
+            log.error("The framework class '{}' is not valid: Classes are abstract, or interfaces", pluginClassName);
+            return null;
+        } else if (!Framework.class.isAssignableFrom(pluginClass)) {
+            log.error("The framework class '{}' is not valid: Class is not a subclass of the Framework",
+                    pluginClassName);
             return null;
         }
 
         try {
             // <init>(PluginWrapper, DataFolder)
-            Constructor<?> constructor = pluginClass
+            Class<? extends Framework> frameworkClass = pluginClass.asSubclass(Framework.class);
+            Constructor<?> constructor = frameworkClass
                     .getConstructor(PluginWrapper.class, File.class, FrameworkContext.class);
-            return (Framework) constructor.newInstance(pluginWrapper,
+            Framework instance = (Framework) constructor.newInstance(pluginWrapper,
                     new File(dataRootFolder, pluginWrapper.getPluginId()),
                     new DefaultFrameworkContext(eventExecutor, cacheStoreBuilder));
+            try {
+                instance.initial();
+            } catch (Throwable e) {
+                throw new IllegalStateException("An exception occurred while initializing the framework", e);
+            }
+            return instance;
         } catch (Exception e) {
             log.error(e.getMessage(), e);
         }
