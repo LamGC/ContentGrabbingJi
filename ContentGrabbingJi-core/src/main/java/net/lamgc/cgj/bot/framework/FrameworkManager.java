@@ -41,6 +41,13 @@ public class FrameworkManager extends JarPluginManager {
     }
 
     @Override
+    protected PluginLoader createPluginLoader() {
+        return new CompoundPluginLoader()
+                .add(new DevelopmentPluginLoader(this), this::isDevelopment)
+                .add(new JarFrameworkLoader(this), this::isNotDevelopment);
+    }
+
+    @Override
     protected PluginDescriptorFinder createPluginDescriptorFinder() {
         return new JsonFrameworkDescriptorFinder();
     }
