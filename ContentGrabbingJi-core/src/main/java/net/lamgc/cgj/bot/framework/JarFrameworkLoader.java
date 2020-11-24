@@ -22,7 +22,8 @@ import org.pf4j.*;
 import java.nio.file.Path;
 
 /**
- *
+ * 对 {@link JarPluginLoader} 重写的 Loader.
+ * <p> 除了更改 {@link ClassLoadingStrategy} 外没啥区别.
  * @author LamGC
  */
 public class JarFrameworkLoader extends JarPluginLoader {
