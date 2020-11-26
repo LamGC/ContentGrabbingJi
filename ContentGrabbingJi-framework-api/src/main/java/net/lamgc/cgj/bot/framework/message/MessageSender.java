@@ -20,10 +20,7 @@ package net.lamgc.cgj.bot.framework.message;
 import net.lamgc.cgj.bot.framework.Platform;
 import net.lamgc.cgj.bot.framework.message.exception.UploadImageException;
 
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
 
 /**
  * 消息发送者.
@@ -109,6 +106,9 @@ public interface MessageSender {
      * @throws UploadImageException 如果图片上传时发生异常可抛出.
      */
     default String uploadImage(File imageFile) throws UploadImageException {
+        if (!imageFile.exists()) {
+            throw new UploadImageException(new FileNotFoundException(imageFile.getAbsolutePath()));
+        }
         try (InputStream imageInput = new FileInputStream(imageFile)) {
             return uploadImage(imageInput);
         } catch(Exception e) {
