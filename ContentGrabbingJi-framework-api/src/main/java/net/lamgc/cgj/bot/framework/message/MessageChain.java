@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.framework.message;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -26,7 +27,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * <p> 消息链代表了由一组元素组成的消息, 是一个消息内容的整体.
  * @author LamGC
  */
-public final class MessageChain implements Message {
+public final class MessageChain implements Message, Iterable<Message> {
 
     private final List<Message> contents = new CopyOnWriteArrayList<>();
 
@@ -173,4 +174,8 @@ public final class MessageChain implements Message {
         return builder.toString();
     }
 
+    @Override
+    public Iterator<Message> iterator() {
+        return contents.iterator();
+    }
 }
