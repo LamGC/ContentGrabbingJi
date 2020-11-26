@@ -37,6 +37,8 @@ public abstract class Framework extends Plugin {
      * <p>不要在构造方法内做任何处理. 如果你需要, 请在 {@link #initial()} 进行初始化.
      *
      * @param wrapper 包含框架运行期间需要使用对象的包装器.
+     * @param context 框架运行上下文, 由不同 ContentGrabbingJi 实例加载的 Framework 所获得的的 Context 是不一样的.
+     * @param dataFolder 框架专属的数据存取目录.
      */
     public Framework(PluginWrapper wrapper, File dataFolder, FrameworkContext context) {
         super(wrapper);
