@@ -68,4 +68,12 @@ public interface BotCode extends Message {
      */
     Set<String> getPropertiesKeys();
 
+    /**
+     * 检查指定参数是否存在.
+     * @param key 待检查的参数名.
+     * @return 如果存在, 返回 {@code true}.
+     * @throws NullPointerException 当 key 为 {@code null} 时抛出.
+     */
+    boolean hasProperty(String key);
+
 }

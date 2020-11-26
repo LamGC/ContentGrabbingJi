@@ -133,4 +133,8 @@ public abstract class AbstractBotCode implements BotCode {
         return Collections.unmodifiableSet(functionProperties.keySet());
     }
 
+    @Override
+    public boolean hasProperty(String key) {
+        return functionProperties.containsKey(Objects.requireNonNull(key));
+    }
 }
