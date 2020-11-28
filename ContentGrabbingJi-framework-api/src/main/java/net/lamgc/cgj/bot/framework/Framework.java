@@ -65,7 +65,7 @@ public abstract class Framework extends Plugin {
      *
      * @return 返回数据存储目录.
      */
-    public File getDataFolder() {
+    public final File getDataFolder() {
         if (!dataFolder.exists() && !dataFolder.mkdirs()) {
             log.warn("框架 {} 数据目录创建失败.", getDescriptor().getPluginId());
         }
@@ -76,7 +76,7 @@ public abstract class Framework extends Plugin {
      * 获取框架描述对象.
      * @return 返回框架描述对象.
      */
-    public FrameworkDescriptor getDescriptor() {
+    public final FrameworkDescriptor getDescriptor() {
         PluginDescriptor descriptor = getWrapper().getDescriptor();
         if (descriptor instanceof FrameworkDescriptor) {
             return (FrameworkDescriptor) descriptor;
@@ -90,7 +90,7 @@ public abstract class Framework extends Plugin {
      *      <pre> {@link #getDescriptor()}.{@link FrameworkDescriptor#getPlatform() getPlatform()}
      * @return 返回平台对象.
      */
-    public Platform getPlatform() {
+    public final Platform getPlatform() {
         return getDescriptor().getPlatform();
     }
 
@@ -100,7 +100,7 @@ public abstract class Framework extends Plugin {
      *     除特殊情况外请不要混用(甚至在任何情况下都不要混用).
      * @return 返回上下文对象.
      */
-    protected FrameworkContext getContext() {
+    protected final FrameworkContext getContext() {
         return context;
     }
 
@@ -110,7 +110,7 @@ public abstract class Framework extends Plugin {
      * @param name 资源名称.
      * @return 返回资源输入流, 如果资源不存在时返回 {@code null}.
      */
-    protected InputStream getFrameworkResourceAsStream(String name) {
+    protected final InputStream getFrameworkResourceAsStream(String name) {
         return getWrapper().getPluginClassLoader().getResourceAsStream(name);
     }
 
