@@ -22,6 +22,7 @@ import org.pf4j.PluginDescriptor;
 import org.pf4j.PluginWrapper;
 
 import java.io.File;
+import java.io.InputStream;
 
 /**
  * 框架抽象类.
@@ -95,9 +96,22 @@ public abstract class Framework extends Plugin {
 
     /**
      * 获取当前框架对象与所属 ContentGrabbingJiBot 的上下文.
+     * <p> 不同的 ContentGrabbingJiBot 实例所对应的 Context 是不一样的,
+     *     除特殊情况外请不要混用(甚至在任何情况下都不要混用).
      * @return 返回上下文对象.
      */
     protected FrameworkContext getContext() {
         return context;
     }
+
+    /**
+     * 通过 Framework 所属 ClassLoader 从框架本体(比如 Jar, Zip 或者文件夹内)获取框架资源.
+     * <p> 如需获取资源请使用本方法, 单纯使用 {@link ClassLoader#getSystemClassLoader()} 来获取资源会导致无法获取.
+     * @param name 资源名称.
+     * @return 返回资源输入流, 如果资源不存在时返回 {@code null}.
+     */
+    protected InputStream getFrameworkResourceAsStream(String name) {
+        return getWrapper().getPluginClassLoader().getResourceAsStream(name);
+    }
+
 }
