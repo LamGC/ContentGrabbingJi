@@ -17,12 +17,11 @@
 
 package net.lamgc.cgj.bot.framework;
 
-import net.lamgc.cgj.bot.cache.CacheStoreBuilder;
-import net.lamgc.cgj.bot.event.EventExecutor;
 import org.pf4j.*;
 
 import java.io.File;
 import java.nio.file.Path;
+import java.util.Objects;
 
 /**
  * 框架管理器.
@@ -30,15 +29,27 @@ import java.nio.file.Path;
  */
 public class FrameworkManager extends JarPluginManager {
 
-    private final CacheStoreBuilder cacheStoreBuilder;
-    private final EventExecutor eventExecutor;
+    private final boolean initialed;
+    private final CloneableFrameworkContext parentContext;
 
-    public FrameworkManager(String systemVersion, File frameworksDirectory,
-                            CacheStoreBuilder cacheStoreBuilder, EventExecutor eventExecutor) {
+    public FrameworkManager(String systemVersion, File frameworksDirectory, CloneableFrameworkContext context) {
         super(frameworksDirectory.toPath());
-        this.cacheStoreBuilder = cacheStoreBuilder;
-        this.eventExecutor = eventExecutor;
         setSystemVersion(systemVersion);
+        this.parentContext = Objects.requireNonNull(context);
+
+        // 在 super() 中会调用一次 initialize(), 但此时 FrameworkManager 内的成员变量尚未初始化,
+        // 此时 super.initialize() 调用到 FrameworkManager 中的 createPluginFactory 时, context 传递为 null
+        // 导致 FrameworkFactory 抛出 NPE, 故覆写 initialize() 阻止 super() 过早调用 initialize().
+        initialed = true;
+        initialize();
+    }
+
+    @Override
+    protected void initialize() {
+        if (!initialed) {
+            return;
+        }
+        super.initialize();
     }
 
     @Override
@@ -69,7 +80,6 @@ public class FrameworkManager extends JarPluginManager {
 
     @Override
     protected PluginFactory createPluginFactory() {
-        return new FrameworkFactory(getPluginsRoot().getParent().resolve("frameworkData").toFile(),
-                cacheStoreBuilder, eventExecutor);
+        return new FrameworkFactory(getPluginsRoot().getParent().resolve("frameworkData").toFile(), parentContext);
     }
 }

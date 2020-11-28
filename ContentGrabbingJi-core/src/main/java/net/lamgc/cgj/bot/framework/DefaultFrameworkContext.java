@@ -24,7 +24,7 @@ import net.lamgc.cgj.bot.event.EventExecutor;
  * 框架上下文的默认实现.
  * @author LamGC
  */
-class DefaultFrameworkContext implements FrameworkContext {
+class DefaultFrameworkContext extends CloneableFrameworkContext {
 
     private final EventExecutor eventExecutor;
     private final CacheStoreBuilder cacheStoreBuilder;
@@ -43,5 +43,10 @@ class DefaultFrameworkContext implements FrameworkContext {
     @Override
     public CacheStoreBuilder getCacheStoreBuilder() {
         return cacheStoreBuilder;
+    }
+
+    @Override
+    protected FrameworkContext cloneContext() {
+        return new DefaultFrameworkContext(this.eventExecutor, this.cacheStoreBuilder);
     }
 }

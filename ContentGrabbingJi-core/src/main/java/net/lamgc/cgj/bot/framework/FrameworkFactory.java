@@ -17,8 +17,6 @@
 
 package net.lamgc.cgj.bot.framework;
 
-import net.lamgc.cgj.bot.cache.CacheStoreBuilder;
-import net.lamgc.cgj.bot.event.EventExecutor;
 import org.pf4j.Plugin;
 import org.pf4j.PluginFactory;
 import org.pf4j.PluginWrapper;
@@ -28,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.Objects;
 
 /**
  * 经过调整的, 针对 Framework 的实例工厂类.
@@ -38,16 +37,14 @@ final class FrameworkFactory implements PluginFactory {
     private final static Logger log = LoggerFactory.getLogger(FrameworkFactory.class);
 
     private final File dataRootFolder;
-    private final CacheStoreBuilder cacheStoreBuilder;
-    private final EventExecutor eventExecutor;
+    private final CloneableFrameworkContext parentContext;
 
-    public FrameworkFactory(File dataRootFolder, CacheStoreBuilder cacheStoreBuilder, EventExecutor eventExecutor) {
-        this.dataRootFolder = dataRootFolder;
-        this.cacheStoreBuilder = cacheStoreBuilder;
-        this.eventExecutor = eventExecutor;
+    public FrameworkFactory(File dataRootFolder, CloneableFrameworkContext context) {
+        this.dataRootFolder = Objects.requireNonNull(dataRootFolder);
         if (!this.dataRootFolder.exists() && !this.dataRootFolder.mkdirs()) {
             log.warn("框架数据目录创建异常, 可能会导致后续框架存取数据失败!");
         }
+        this.parentContext = Objects.requireNonNull(context);
     }
 
     @Override
@@ -81,7 +78,7 @@ final class FrameworkFactory implements PluginFactory {
                     .getConstructor(PluginWrapper.class, File.class, FrameworkContext.class);
             Framework instance = (Framework) constructor.newInstance(pluginWrapper,
                     new File(dataRootFolder, pluginWrapper.getPluginId()),
-                    new DefaultFrameworkContext(eventExecutor, cacheStoreBuilder));
+                    parentContext.cloneContext());
             try {
                 instance.initial();
             } catch (Throwable e) {
