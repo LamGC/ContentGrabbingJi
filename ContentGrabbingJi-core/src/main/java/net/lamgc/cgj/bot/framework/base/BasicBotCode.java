@@ -20,6 +20,7 @@ package net.lamgc.cgj.bot.framework.base;
 import net.lamgc.cgj.bot.framework.Platform;
 import net.lamgc.cgj.bot.framework.message.AbstractBotCode;
 import net.lamgc.cgj.bot.framework.message.BotCode;
+import net.lamgc.cgj.bot.framework.message.BotCodeFunction;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -34,16 +35,16 @@ public class BasicBotCode extends AbstractBotCode {
 
     private final static Platform PLATFORM = new Platform("ContentGrabbingJi", "CGJ");
 
-    public BasicBotCode(String functionName) {
-        super(functionName);
+    public BasicBotCode(BotCodeFunction function) {
+        super(function);
     }
 
     public BasicBotCode(BotCode botCode) {
         super(botCode);
     }
 
-    public BasicBotCode(String functionName, Map<String, String> functionProperties) {
-        super(functionName, functionProperties);
+    public BasicBotCode(BotCodeFunction function, Map<String, String> functionProperties) {
+        super(function, functionProperties);
     }
 
     @Override
@@ -53,7 +54,7 @@ public class BasicBotCode extends AbstractBotCode {
 
     @Override
     public String contentToString() {
-        StringBuilder builder = new StringBuilder('[' + getFunctionName());
+        StringBuilder builder = new StringBuilder('[' + getFunction().getFunctionName());
         if (getPropertiesKeys().size() == 0) {
             return builder.append(']').toString();
         } else {

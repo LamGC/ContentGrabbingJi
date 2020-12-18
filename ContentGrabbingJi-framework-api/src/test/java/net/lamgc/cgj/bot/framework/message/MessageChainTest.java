@@ -75,7 +75,7 @@ public class MessageChainTest {
     @Test
     public void plusBotCodeTest() {
         MessageChain chain = new MessageChain("BotCode: ");
-        chain.plus(new AbstractBotCode("test") {
+        chain.plus(new AbstractBotCode(StandardBotCodeFunction.AT) {
             @Override
             public Platform getPlatform() {
                 return null;
@@ -83,11 +83,11 @@ public class MessageChainTest {
 
             @Override
             public String contentToString() {
-                return "[test:arg=value]";
+                return "[at:arg=value]";
             }
         });
         chain.plus(".");
-        Assert.assertEquals("BotCode: [test:arg=value].", chain.contentToString());
+        Assert.assertEquals("BotCode: [at:arg=value].", chain.contentToString());
     }
 
     @Test

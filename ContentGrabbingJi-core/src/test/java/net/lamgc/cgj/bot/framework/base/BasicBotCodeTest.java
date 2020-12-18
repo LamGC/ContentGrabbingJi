@@ -20,6 +20,8 @@ package net.lamgc.cgj.bot.framework.base;
 import net.lamgc.cgj.bot.framework.Platform;
 import net.lamgc.cgj.bot.framework.message.AbstractBotCode;
 import net.lamgc.cgj.bot.framework.message.BotCode;
+import net.lamgc.cgj.bot.framework.message.BotCodeFunction;
+import net.lamgc.cgj.bot.framework.message.StandardBotCodeFunction;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -33,7 +35,7 @@ public class BasicBotCodeTest {
 
     @Test
     public void getPlatform() {
-        BotCode botCode = new BasicBotCode("test");
+        BotCode botCode = new BasicBotCode(StandardBotCodeFunction.AT);
 
         Assert.assertEquals("ContentGrabbingJi", botCode.getPlatform().getPlatformName());
         Assert.assertEquals("CGJ", botCode.getPlatform().getPlatformIdentify());
@@ -41,9 +43,9 @@ public class BasicBotCodeTest {
 
     @Test
     public void contentToStringWithoutParameter() {
-        BotCode botCode = new BasicBotCode("test");
+        BotCode botCode = new BasicBotCode(StandardBotCodeFunction.FILE);
 
-        Assert.assertEquals("[test]", botCode.contentToString());
+        Assert.assertEquals("[file]", botCode.contentToString());
     }
 
     @Test
@@ -53,16 +55,16 @@ public class BasicBotCodeTest {
         argumentsMap.put("arg2", "Hello World.");
         argumentsMap.put("arg3", "测试");
 
-        BotCode botCode = new BasicBotCode("test", argumentsMap);
-        Assert.assertEquals("[test:arg3=%E6%B5%8B%E8%AF%95&arg2=Hello+World.&arg1=value1]", botCode.contentToString());
+        BotCode botCode = new BasicBotCode(StandardBotCodeFunction.EMOJI, argumentsMap);
+        Assert.assertEquals("[emoji:arg3=%E6%B5%8B%E8%AF%95&arg2=Hello+World.&arg1=value1]", botCode.contentToString());
     }
 
     @Test
     public void createInstanceByBotCode() {
         class TestBotCode extends AbstractBotCode {
 
-            public TestBotCode(String functionName, Map<String, String> functionProperties) {
-                super(functionName, functionProperties);
+            public TestBotCode(BotCodeFunction function, Map<String, String> functionProperties) {
+                super(function, functionProperties);
             }
 
             @Override
@@ -81,10 +83,10 @@ public class BasicBotCodeTest {
         argumentsMap.put("arg2", "Hello World.");
         argumentsMap.put("arg3", "测试");
 
-        BotCode expectBotCode = new TestBotCode("function", argumentsMap);
+        BotCode expectBotCode = new TestBotCode(StandardBotCodeFunction.AUDIO, argumentsMap);
         BotCode botCode = new BasicBotCode(expectBotCode);
 
-        Assert.assertEquals(expectBotCode.getFunctionName(), botCode.getFunctionName());
+        Assert.assertEquals(expectBotCode.getFunction(), botCode.getFunction());
         Assert.assertTrue(expectBotCode.getPropertiesKeys().containsAll(botCode.getPropertiesKeys()));
 
         for (String key : expectBotCode.getPropertiesKeys()) {

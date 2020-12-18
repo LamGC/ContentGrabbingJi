@@ -38,13 +38,13 @@ public interface BotCode extends Message {
      * 取功能函数名.
      * @return 返回功能函数名.
      */
-    String getFunctionName();
+    BotCodeFunction getFunction();
 
     /**
      * 设置功能函数名
-     * @param functionName 新的功能函数名.
+     * @param function 新的功能函数名.
      */
-    void setFunctionName(String functionName);
+    void setFunction(BotCodeFunction function);
 
     /**
      * 设置功能参数

@@ -33,27 +33,27 @@ public class AbstractBotCodeTest {
 
     @Test
     public void createBotCodeWithoutParameterTest() {
-        final String functionName = "function";
-        BotCode botCode = new TestBotCode(functionName);
-        Assert.assertEquals(functionName, botCode.getFunctionName());
+        final BotCodeFunction function = new CustomBotCodeFunction("function", false);
+        BotCode botCode = new TestBotCode(function);
+        Assert.assertEquals(function, botCode.getFunction());
         Assert.assertNotNull(botCode.getPropertiesKeys());
         Assert.assertEquals(0, botCode.getPropertiesKeys().size());
 
-        botCode = new TestBotCode(functionName, new HashMap<>());
-        Assert.assertEquals(functionName, botCode.getFunctionName());
+        botCode = new TestBotCode(function, new HashMap<>());
+        Assert.assertEquals(function, botCode.getFunction());
         Assert.assertNotNull(botCode.getPropertiesKeys());
         Assert.assertEquals(0, botCode.getPropertiesKeys().size());
     }
 
     @Test
     public void createBotCodeWithParameterTest() {
-        final String functionName = "function";
+        final BotCodeFunction function = new CustomBotCodeFunction("function", false);
         final Map<String, String> argumentsMap = new HashMap<>();
         argumentsMap.put("arg1", "value1");
         argumentsMap.put("arg2", "value2");
 
-        BotCode botCode = new TestBotCode(functionName, argumentsMap);
-        Assert.assertEquals(functionName, botCode.getFunctionName());
+        BotCode botCode = new TestBotCode(function, argumentsMap);
+        Assert.assertEquals(function, botCode.getFunction());
         Assert.assertTrue(argumentsMap.keySet().containsAll(botCode.getPropertiesKeys()));
 
         for (String key : argumentsMap.keySet()) {
@@ -70,37 +70,37 @@ public class AbstractBotCodeTest {
 
     @Test
     public void createByBotCodeTest() {
-        final String functionName = "function";
+        final BotCodeFunction function = new CustomBotCodeFunction("function", false);
         final Map<String, String> argumentsMap = new HashMap<>();
         argumentsMap.put("arg1", "value1");
         argumentsMap.put("arg2", "value2");
 
-        BotCode botCode = new TestBotCode(functionName, argumentsMap);
+        BotCode botCode = new TestBotCode(function, argumentsMap);
 
         BotCode newBotCode = new TestBotCode(botCode);
-        Assert.assertEquals(botCode.getFunctionName(), newBotCode.getFunctionName());
+        Assert.assertEquals(botCode.getFunction(), newBotCode.getFunction());
         Assert.assertEquals(botCode.getPropertiesKeys().size(), newBotCode.getPropertiesKeys().size());
         Assert.assertTrue(botCode.getPropertiesKeys().containsAll(newBotCode.getPropertiesKeys()));
     }
 
     @Test(expected = UnsupportedOperationException.class)
     public void propertiesKeysUnmodifiedTest() {
-        final String functionName = "function";
+        final BotCodeFunction function = new CustomBotCodeFunction("function", false);
         final Map<String, String> argumentsMap = new HashMap<>();
         argumentsMap.put("arg1", "value1");
         argumentsMap.put("arg2", "value2");
 
-        BotCode botCode = new TestBotCode(functionName, argumentsMap);
+        BotCode botCode = new TestBotCode(function, argumentsMap);
 
         botCode.getPropertiesKeys().clear();
     }
 
     @Test
     public void functionNameChangeTest() {
-        final String newFunctionName = "functionB";
+        final BotCodeFunction newFunction = new CustomBotCodeFunction("functionB", false);
         BotCode botCode = new TestBotCode("functionA");
-        botCode.setFunctionName(newFunctionName);
-        Assert.assertEquals(newFunctionName, botCode.getFunctionName());
+        botCode.setFunction(newFunction);
+        Assert.assertEquals(newFunction, botCode.getFunction());
     }
 
     @SuppressWarnings("unchecked")
@@ -139,15 +139,19 @@ public class AbstractBotCodeTest {
     private final static class TestBotCode extends AbstractBotCode {
 
         public TestBotCode(String functionName) {
-            super(functionName);
+            this(new CustomBotCodeFunction(functionName, false));
+        }
+
+        public TestBotCode(BotCodeFunction function) {
+            super(function);
         }
 
         public TestBotCode(BotCode botCode) {
             super(botCode);
         }
 
-        public TestBotCode(String functionName, Map<String, String> functionProperties) {
-            super(functionName, functionProperties);
+        public TestBotCode(BotCodeFunction function, Map<String, String> functionProperties) {
+            super(function, functionProperties);
         }
 
         @Override

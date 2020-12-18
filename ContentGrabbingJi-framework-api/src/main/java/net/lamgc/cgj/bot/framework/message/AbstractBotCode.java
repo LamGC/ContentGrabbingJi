@@ -29,11 +29,11 @@ import java.util.*;
  */
 public abstract class AbstractBotCode implements BotCode {
 
-    private String functionName;
+    private BotCodeFunction function;
     private final Map<String, String> functionProperties = new Hashtable<>();
 
-    public AbstractBotCode(String functionName) {
-        this(functionName, null);
+    public AbstractBotCode(BotCodeFunction function) {
+        this(function, null);
     }
 
     /**
@@ -41,19 +41,19 @@ public abstract class AbstractBotCode implements BotCode {
      * @param botCode 待转换的 BotCode.
      */
     public AbstractBotCode(BotCode botCode) {
-        this(botCode.getFunctionName(), CollectionUtils.toMap(botCode.getPropertiesKeys(), botCode::getProperty));
+        this(botCode.getFunction(), CollectionUtils.toMap(botCode.getPropertiesKeys(), botCode::getProperty));
     }
 
     /**
      * 根据给定的功能名和参数 Map 构造 BotCode.
-     * @param functionName 功能名
+     * @param function 功能名
      * @param functionProperties 参数集 Map. 如果不需要可传入 null.
      */
-    public AbstractBotCode(String functionName, Map<String, String> functionProperties) {
-        if (Strings.isNullOrEmpty(functionName)) {
+    public AbstractBotCode(BotCodeFunction function, Map<String, String> functionProperties) {
+        if (Strings.isNullOrEmpty(function.getFunctionName())) {
             throw new IllegalArgumentException("functionName is null or empty");
         }
-        this.functionName = functionName;
+        this.function = function;
         if(functionProperties != null && !functionProperties.isEmpty()) {
             this.functionProperties.putAll(functionProperties);
         }
@@ -73,7 +73,7 @@ public abstract class AbstractBotCode implements BotCode {
         }
         return this.getClass().getSimpleName() + '@' + Integer.toHexString(this.hashCode()) + '{' +
                 "Platform=" + getPlatform() + ", " +
-                "functionName='" + functionName + '\'' +
+                "functionName='" + function.getFunctionName() + '\'' +
                 ", functionProperties={" + mapString.toString() + '}' +
                 '}';
     }
@@ -83,17 +83,17 @@ public abstract class AbstractBotCode implements BotCode {
      * @return 返回功能函数名.
      */
     @Override
-    public String getFunctionName() {
-        return functionName;
+    public BotCodeFunction getFunction() {
+        return function;
     }
 
     /**
      * 设置功能函数名
-     * @param functionName 新的功能函数名.
+     * @param function 新的功能函数名.
      */
     @Override
-    public void setFunctionName(String functionName) {
-        this.functionName = functionName;
+    public void setFunction(BotCodeFunction function) {
+        this.function = function;
     }
 
     /**
