@@ -13,12 +13,19 @@
 ## Usage ##
 
 ## Contributing ##
+> 本项目遵循[语义化版本控制 SemVer](https://semver.org/) 规范，
+>不同版本号之间的兼容性将依照 SemVer 规范得到保证（不会出现 1.0.1 版本不兼容 1.0.0 版本，或 1.2.0 版本不支持 1.1.0 版本的情况）。  
 
+欢迎你为 ContentGrabbingJi 项目作出贡献！  
+在开始作出贡献前，请阅读 [贡献者公约 （Code of conduct）](./CODE_OF_CONDUCT.md)，
+一旦你开始为本项目作出贡献（无论通过何种形式），将会视你为同意遵守贡献者公约，并接受因违反贡献者公约而带来的后果。  
+
+如果你准备好开始为本项目做出贡献（或正在做出贡献）时，请阅读并遵守[贡献准则](.github/CONTRIBUTING.md)。  
 
 ## License ##
-ContentGrabbingJi 是遵循 GNU Affero General Public License v3.0 协议开源的，
-完全免费的项目（软件），任何人（或组织）不允许违反开源协议来使用本项目。  
->通过使用本项目为用户提供服务时，请注意遵守服务使用者所在地的法律法规，因违规使用本项目而带来的后果自行负责。
+ContentGrabbingJi 是遵循 GNU Affero General Public License v3.0 协议（下称 AGPLv3）开源的，
+完全免费的项目（软件），任何人（或组织）不允许违反 AGPLv3 开源协议来使用本项目。  
+> 使用者通过使用本项目为用户提供服务时，请注意遵守服务使用者所在地的法律法规，因违规使用本项目而带来的后果由使用者自行负责。
 
 ```
 Copyright (C) 2020  LamGC
