@@ -38,6 +38,8 @@
         <module>ContentGrabbingJi-Event</module>
         <module>ContentGrabbingJi-Command-api</module>
         <module>ContentGrabbingJi-Command-pixiv</module>
+        <module>ContentGrabbingJi-framework-telegrambots</module>
+        <module>ContentGrabbingJi-Template</module>
     </modules>
 
     <developers>
