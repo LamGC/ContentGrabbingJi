@@ -2,6 +2,7 @@
 *.class
 
 # Log file
+/logs/
 */logs/
 *.log
 
@@ -30,3 +31,6 @@ hs_err_pid*
 # maven build directory
 target/
 
+# Test run directory
+/test/
+*/test/
