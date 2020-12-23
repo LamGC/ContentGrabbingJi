@@ -7,6 +7,14 @@
 ![Unit test confirmation of commit](https://github.com/LamGC/ContentGrabbingJi/workflows/Unit%20test%20confirmation%20of%20commit/badge.svg?branch=3.0.0&event=push)
 [![codecov](https://codecov.io/gh/LamGC/ContentGrabbingJi/branch/3.0.0/graph/badge.svg)](https://codecov.io/gh/LamGC/ContentGrabbingJi)
 
+### ContentGrabbingJi 3 重构开发计划 ###
+> 本次项目重构以增强项目可维护性，增加项目灵活性，增加服务效率为目标。
+
+目前 ContentGrabbingJi 版本发布计划如下：
+- `3.0.0-alpha`：第一个可用的预览版，本项目官方账号正式上线（Telegram 平台开放使用）；
+- `[3.0.0~3.1.0)`：专注于改进问题的预览版；
+- `3.1.0`：正式版，将移除在该版本以已标记为废弃的所有API，项目整体稳定；
+
 ## Install ##
 待 3.0.0-alpha 版发布后将会更新！
 
