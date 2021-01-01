@@ -21,6 +21,9 @@ import net.lamgc.cgj.bot.framework.Platform;
 import net.lamgc.cgj.bot.framework.message.exception.UploadImageException;
 
 import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLConnection;
 
 /**
  * 消息发送者.
@@ -68,18 +71,11 @@ public interface MessageSender {
     int sendMessage(Message message);
 
     /**
-     * 获取消息标识, 用于回复/撤回功能
-     * @param msgId 消息Id, 通过 {@link #sendMessage(Message)} 发送消息获得, 或从 MessageEvent 中获得.
-     * @return 如果成功获取, 返回非null值, 如果不存在或无法获取, 返回 null.
-     */
-    String getMessageIdentify(int msgId);
-
-    /**
      * 获取图片Url
      * @param imageIdentify 图片标识
      * @return 返回图片Url
      */
-    String getImageUrl(String imageIdentify);
+    URL getImageUrl(String imageIdentify);
 
     /**
      * 获取图片输入流
@@ -87,7 +83,26 @@ public interface MessageSender {
      * @return 返回图片输入流.
      * @throws IOException 当输入流获取发生异常时可抛出.
      */
-    InputStream getImageAsInputStream(String imageIdentify) throws IOException;
+    default InputStream getImageAsInputStream(String imageIdentify) throws IOException {
+        URL imageUrl = getImageUrl(imageIdentify);
+        if (imageUrl == null) {
+            return null;
+        }
+        URLConnection connection = imageUrl.openConnection();
+        connection.setDoInput(true);
+        if(connection instanceof HttpURLConnection) {
+            HttpURLConnection httpConnection = (HttpURLConnection) connection;
+            httpConnection.connect();
+            if(httpConnection.getResponseCode() != HttpURLConnection.HTTP_OK) {
+                throw new IOException("Http response error: " +
+                        httpConnection.getResponseCode() + " " + httpConnection.getResponseMessage());
+            }
+            return httpConnection.getInputStream();
+        } else {
+            connection.connect();
+            return connection.getInputStream();
+        }
+    }
 
     /**
      * 上传图片.
