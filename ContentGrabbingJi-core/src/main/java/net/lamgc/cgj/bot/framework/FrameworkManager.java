@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.framework;
 
+import com.google.common.base.Strings;
 import org.pf4j.*;
 
 import java.io.File;
@@ -81,5 +82,27 @@ public class FrameworkManager extends JarPluginManager {
     @Override
     protected PluginFactory createPluginFactory() {
         return new FrameworkFactory(getPluginsRoot().getParent().resolve("frameworkData").toFile(), parentContext);
+    }
+
+    @Override
+    protected void validatePluginDescriptor(PluginDescriptor descriptor) {
+        if (!(descriptor instanceof FrameworkDescriptor)) {
+            throw new PluginRuntimeException("Unsupported framework description specification");
+        }
+        super.validatePluginDescriptor(descriptor);
+
+        if (Strings.isNullOrEmpty(descriptor.getPluginClass())) {
+            throw new PluginRuntimeException("Field 'frameworkClass' cannot be empty");
+        }
+
+        Platform platform = ((FrameworkDescriptor) descriptor).getPlatform();
+        if (platform == null) {
+            throw new PluginRuntimeException("Field 'platform' cannot be empty");
+        } else if (Strings.isNullOrEmpty(platform.getPlatformIdentify())) {
+            throw new PluginRuntimeException("Field 'platform.platformIdentify' cannot be empty");
+        } else if (Strings.isNullOrEmpty(platform.getPlatformName())) {
+            throw new PluginRuntimeException("Field 'platform.platformName' cannot be empty");
+        }
+
     }
 }
