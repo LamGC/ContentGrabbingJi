@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.local;
 
+import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SingleCacheStore;
 import org.junit.Assert;
@@ -68,7 +69,9 @@ public class HashSingleCacheStoreTest {
         final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
         final String value2 = "testValue02";
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
+        Assert.assertFalse(cacheStore.exists(key));
+        Assert.assertTrue("The key does not exist but an unexpected result was returned!",
+                cacheStore.setIfNotExist(key, value));
 
         Assert.assertFalse(cacheStore.setIfNotExist(key, value2));
         Assert.assertEquals(value, cacheStore.get(key));
@@ -140,6 +143,34 @@ public class HashSingleCacheStoreTest {
         expectedMap.forEach((key, value) -> cacheStore.set(new CacheKey(key), value));
         Assert.assertEquals(expectedMap.size(), cacheStore.size());
         Assert.assertTrue(expectedMap.keySet().containsAll(cacheStore.keySet()));
+    }
+
+    @Test
+    public void cleanTest() throws InterruptedException {
+        SingleCacheStore<String> cacheStore = new HashSingleCacheStore<>();
+
+        final CacheKey persistenceKey = new CacheKey("persistenceKey");
+        final CacheKey expireKey = new CacheKey("expireKey");
+        final String value = "testValue";
+
+        // 过期键与持久键
+        cacheStore.set(persistenceKey, value);
+        cacheStore.set(expireKey, value);
+        cacheStore.setTimeToLive(expireKey, 50);
+
+        Thread.sleep(100L);
+
+        Cleanable cleanableStore = (Cleanable) cacheStore;
+        try {
+            cleanableStore.clean();
+        } catch (Exception e) {
+            Assert.fail("Cleaning up expired keys is an exception\n" +
+                    Throwables.getStackTraceAsString(e));
+            return;
+        }
+
+        Assert.assertTrue(cacheStore.exists(persistenceKey));
+        Assert.assertFalse(cacheStore.exists(expireKey));
     }
 
 }
