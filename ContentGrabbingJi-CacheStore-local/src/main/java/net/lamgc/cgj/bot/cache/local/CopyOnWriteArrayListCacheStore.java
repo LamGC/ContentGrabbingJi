@@ -28,7 +28,10 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @param <E> 元素类型.
  * @author LamGC
  */
-public class CopyOnWriteArrayListCacheStore<E> extends LocalCollectionCacheStore<E, List<E>> implements ListCacheStore<E> {
+public class CopyOnWriteArrayListCacheStore<E>
+        extends LocalCollectionCacheStore<E, List<E>>
+        implements ListCacheStore<E>
+{
 
     @Override
     public E getElement(CacheKey key, int index) {
