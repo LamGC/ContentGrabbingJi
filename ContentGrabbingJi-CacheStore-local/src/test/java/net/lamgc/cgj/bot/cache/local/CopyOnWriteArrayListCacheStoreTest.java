@@ -31,7 +31,7 @@ import java.util.Random;
  * @see CopyOnWriteArrayListCacheStore
  * @see LocalCollectionCacheStore
  */
-public class ListCacheStoreTest {
+public class CopyOnWriteArrayListCacheStoreTest {
 
     @Test
     public void nullThrowTest() {
