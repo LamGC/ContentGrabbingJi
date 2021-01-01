@@ -1,10 +1,10 @@
 /*
- * Copyright (C) 2020  LamGC
+ * Copyright (C) 2021  LamGC
  *
  * ContentGrabbingJi is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as
  * published by the Free Software Foundation, either version 3 of the
- * License, or (at your option) any later version.
+ * License.
  *
  * ContentGrabbingJi is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -24,8 +24,6 @@ import net.lamgc.cgj.bot.framework.message.BotCode;
  * 当出现某些原因导致无法继续构造 BotCode 时可抛出.
  * 需要说明原因.
  * @author LamGC
- * @see BotCode#fromBotCodeString(String)
- * @see BotCode#toBotCodeString()
  */
 public class BuildBotCodeException extends Exception {
 
