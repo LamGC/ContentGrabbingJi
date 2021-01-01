@@ -35,7 +35,7 @@ public abstract class Framework extends Plugin {
 
     /**
      * 由 FrameworkManager 执行的构造方法.
-     * <p>不要在构造方法内做任何处理. 如果你需要, 请在 {@link #initial()} 进行初始化.
+     * <p> 不要在构造方法内做任何处理. 如果你需要, 请在 {@link #initial()} 进行初始化.
      *
      * @param wrapper 包含框架运行期间需要使用对象的包装器.
      * @param context 框架运行上下文, 由不同 ContentGrabbingJi 实例加载的 Framework 所获得的的 Context 是不一样的.
@@ -60,14 +60,14 @@ public abstract class Framework extends Plugin {
     /**
      * 获取仅属于该框架的数据存储目录.
      *
-     * <p>调用本方法将会检查目录是否存在, 并在目录不存在时尝试创建.
-     * <p>请不要在除数据存储目录外的其他位置存储数据, 这将使用户感到困扰!
+     * <p> 调用本方法将会检查目录是否存在, 并在目录不存在时尝试创建.
+     * <p> 请不要在除数据存储目录外的其他位置存储数据, 这将使用户感到困扰!
      *
      * @return 返回数据存储目录.
      */
     public final File getDataFolder() {
         if (!dataFolder.exists() && !dataFolder.mkdirs()) {
-            log.warn("框架 {} 数据目录创建失败.", getDescriptor().getPluginId());
+            log.warn("框架 {} 数据目录创建失败, 请检查是否为应用数据目录提供了读写权限.", getDescriptor().getPluginId());
         }
         return dataFolder;
     }
@@ -81,7 +81,7 @@ public abstract class Framework extends Plugin {
         if (descriptor instanceof FrameworkDescriptor) {
             return (FrameworkDescriptor) descriptor;
         }
-        throw new IllegalStateException("无法转换 Descriptor 的类型, 框架管理器可能遭到修改!");
+        throw new ClassCastException("无法转换 Descriptor 的类型, 框架管理器可能遭到修改!");
     }
 
     /**
