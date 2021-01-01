@@ -25,7 +25,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  * 默认的事件处理注册器.
  * @author LamGC
  */
-public class DefaultEventHandlerRegistry implements EventHandlerRegistry {
+public class DefaultHandlerRegistry implements HandlerRegistry {
 
     private final Map<Method, Object> instanceMap = new Hashtable<>();
     private final Map<Class<? extends EventObject>, Set<Method>> eventHandlerMap = new Hashtable<>();

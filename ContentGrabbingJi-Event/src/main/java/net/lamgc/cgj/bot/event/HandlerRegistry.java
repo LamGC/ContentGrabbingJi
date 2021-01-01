@@ -25,7 +25,7 @@ import java.util.Map;
  * <p> 实现了该接口的类将允许注册事件处理方法.
  * @author LamGC
  */
-public interface EventHandlerRegistry {
+public interface HandlerRegistry {
 
     /**
      * 注册对象中的事件处理方法.
@@ -37,7 +37,7 @@ public interface EventHandlerRegistry {
     /**
      * 获取能处理指定事件的所有方法.
      * @param event 待匹配的事件对象.
-     * @return 返回一个集合, 集合存储了可处理该事件的所有方法.
+     * @return 返回一个集合, 集合存储了可处理该事件的所有方法和它所属类的对象.
      */
     Map<Method, Object> getMatchedHandlerMethod(EventObject event);
 
