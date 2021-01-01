@@ -109,7 +109,7 @@ public abstract class HashCacheStore<V> implements CacheStore<V>, Cleanable {
         AtomicLong cleanCount = new AtomicLong(0);
         cacheMap.keySet().removeIf(key -> {
             CacheItem<V> item = cacheMap.get(key);
-            if (item != null && item.isExpire(currentDate)) {
+            if (item.isExpire(currentDate)) {
                 cleanCount.incrementAndGet();
                 return true;
             }
