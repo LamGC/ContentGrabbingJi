@@ -36,12 +36,12 @@ ContentGrabbingJi 是遵循 GNU Affero General Public License v3.0 协议（下�
 > 使用者通过使用本项目为用户提供服务时，请注意遵守服务使用者所在地的法律法规，因违规使用本项目而带来的后果由使用者自行负责。
 
 ```
-Copyright (C) 2020  LamGC
+Copyright (C) 2021  LamGC
 
 ContentGrabbingJi is free software: you can redistribute it and/or modify
 it under the terms of the GNU Affero General Public License as
 published by the Free Software Foundation, either version 3 of the
-License, or (at your option) any later version.
+License.
 
 ContentGrabbingJi is distributed in the hope that it will be useful,
 but WITHOUT ANY WARRANTY; without even the implied warranty of
