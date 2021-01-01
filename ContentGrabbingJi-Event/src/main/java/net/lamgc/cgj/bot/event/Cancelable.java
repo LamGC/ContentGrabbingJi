@@ -22,19 +22,22 @@ import java.util.Observer;
 /**
  * 可取消接口.
  * <p> 实现了该接口的事件可对其处理进行取消.
- * <p> 取消状态不可撤回.
+ * <p> 注意: 取消操作是不可逆的!
  * @author LamGC
  */
 public interface Cancelable {
 
     /**
      * 取消该事件.
-     * <p> 该操作不可取消.
+     * <p> 该操作不可逆.
+     * <p> 调用本方法后, 将会触发所有已通过 {@link #registerCancelObserver(Observer)} 注册的 {@link Observer} 事件取消的状态变更.
+     * @see #registerCancelObserver(Observer)
      */
     void cancel();
 
     /**
      * 检查事件是否已被取消.
+     * <p> 注意: 本方法不同于 {@link Thread#interrupted()} 方法, 即使调用本方法, 也不会清除取消状态(取消操作是不可逆的).
      * @return 如果事件已被取消, 返回 true.
      */
     boolean canceled();
@@ -46,7 +49,9 @@ public interface Cancelable {
      * @throws UnsupportedOperationException 当该可取消对象不支持 {@link java.util.Observable} 时抛出,
      *         既然不支持观察取消事件, 那么 {@link #observableCancel()} 应当返回 {@code false}, 否则该方法不允许抛出该异常.
      */
-    void registerCancelObserver(Observer cancelObserver) throws UnsupportedOperationException;
+    default void registerCancelObserver(Observer cancelObserver) throws UnsupportedOperationException {
+        throw new UnsupportedOperationException("This operation is not supported by this event.");
+    }
 
     /**
      * 是否可观察取消事件.
@@ -54,6 +59,8 @@ public interface Cancelable {
      * 那么 {@link #registerCancelObserver(Observer)} 不允许抛出 {@link UnsupportedOperationException} 异常.
      * @return 如果可以, 返回 true.
      */
-    boolean observableCancel();
+    default boolean observableCancel() {
+        return false;
+    }
 
 }
