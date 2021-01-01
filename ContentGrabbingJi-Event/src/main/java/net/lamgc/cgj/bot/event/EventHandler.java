@@ -24,7 +24,7 @@ import java.lang.annotation.Target;
 
 /**
  * 事件处理器注解.
- * <p> 标记了该注解的方法, 如符合处理方法条件, 则会被 {@link EventHandlerRegistry} 注册为事件处理方法.
+ * <p> 标记了该注解的方法, 如符合处理方法条件, 则会被 {@link HandlerRegistry} 注册为事件处理方法.
  * @author LamGC
  */
 @Target(ElementType.METHOD)

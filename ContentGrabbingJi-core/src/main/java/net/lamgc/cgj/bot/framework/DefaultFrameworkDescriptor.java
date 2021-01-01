@@ -27,12 +27,12 @@ import java.util.List;
  * 默认框架描述对象.
  * @author LamGC
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "FieldMayBeFinal", "FieldCanBeLocal"})
 class DefaultFrameworkDescriptor implements FrameworkDescriptor {
 
     private String id;
     private String description;
-    private String version;
+    private String version = "0.0.1";
     private String requiresVersion;
     private String provider;
     private String license;
