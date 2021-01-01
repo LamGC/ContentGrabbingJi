@@ -25,7 +25,7 @@ public enum MessageSource {
     /**
      * 好友/联系人 私聊消息
      */
-    FRIENDS,
+    PRIVATE,
     /**
      * 临时私聊事件
      */
@@ -37,12 +37,5 @@ public enum MessageSource {
     /**
      * 讨论组消息
      */
-    DISCUSS,
-    /**
-     * 未知来源.
-     * <p> 虽然 MessageSource 提供了这个类型, 但是请不要在实际运行中使用该值.
-     * @deprecated 意义不明的不可使用类型.
-     */
-    @Deprecated
-    UNKNOWN
+    DISCUSS
 }
