@@ -35,6 +35,10 @@ ContentGrabbingJi 是遵循 GNU Affero General Public License v3.0 协议（下�
 完全免费的项目（软件），任何人（或组织）不允许违反 AGPLv3 开源协议来使用本项目。  
 > 使用者通过使用本项目为用户提供服务时，请注意遵守服务使用者所在地的法律法规，因违规使用本项目而带来的后果由使用者自行负责。
 
+> 为保障服务使用者（通过任何形式使用本项目或本项目衍生品所提供服务的）和用户（通过本项目或本项目衍生品为他人提供服务的）的合法权益，
+> 防范账户窃取、欺诈等非法使用的情况，本项目使用 `GNU Affero General Public License v3.0` 协议开源，本项目的衍生品
+> （定义以 AGPLv3 协议为准）必须依据协议规定开源，且确保服务使用者可以通过任意渠道获得为其提供服务的衍生品版本完整代码。
+
 ```
 Copyright (C) 2021  LamGC
 
@@ -49,7 +53,7 @@ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 GNU Affero General Public License for more details.
 
 You should have received a copy of the GNU Affero General Public License
-along with this program.  If not, see <https://www.gnu.org/licenses/>.
+along with this program.  If not, see <https://www.gnu.org/licenses/agpl-3.0.html>.
 ```
 
 [![FOSSA Status](https://app.fossa.com/api/projects/git%2Bgithub.com%2FLamGC%2FContentGrabbingJi.svg?type=large)](https://app.fossa.com/projects/git%2Bgithub.com%2FLamGC%2FContentGrabbingJi?ref=badge_large)
