@@ -135,6 +135,9 @@ public class RedisMapCacheStoreTest {
         Assert.assertTrue("clearMap operation failed!", cacheStore.clearMap(key));
 
         // putAll
+        // empty map
+        Assert.assertTrue(cacheStore.putAll(key, new HashMap<>()));
+        // non-empty map
         Assert.assertTrue(cacheStore.putAll(key, expectedMap));
         Assert.assertTrue(expectedMap.keySet().containsAll(cacheStore.mapFieldSet(key)));
         Assert.assertTrue(expectedMap.values().containsAll(cacheStore.mapValueSet(key)));

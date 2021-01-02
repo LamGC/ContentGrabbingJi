@@ -110,7 +110,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     public boolean putAll(CacheKey key, Map<String, V> map) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(map);
-        if (map.size() == 0 && exists(key)) {
+        if (map.size() == 0) {
             return true;
         }
 
