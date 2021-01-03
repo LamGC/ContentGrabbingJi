@@ -2,7 +2,7 @@ local key = tostring(KEYS[1])
 local index = tonumber(ARGV[1])
 
 if (key == nil) or (index == nil) then
-    return -1
+    return 0
 end
 
 local function getRandom(n)
@@ -21,7 +21,7 @@ end;
 local flag = getRandom(24)
 
 if (redis.call("llen", key) <= index) or redis.call("lIndex", key, index) == nil then
-    return -1
+    return 0
 else
     redis.call("lSet", key, index, flag);
     return redis.call("lRem", key, 0, flag);
