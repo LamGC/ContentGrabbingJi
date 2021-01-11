@@ -111,7 +111,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
         Objects.requireNonNull(key);
         Objects.requireNonNull(map);
         if (map.size() == 0) {
-            return true;
+            return exists(key);
         }
 
         final Map<String, String> targetMap = new HashMap<>(map.size());

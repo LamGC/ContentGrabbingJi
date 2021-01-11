@@ -54,7 +54,7 @@ public class RedisMapCacheStoreTest {
         }
     }
 
-    private final static MapCacheStore<String> cacheStore = factory.newMapCacheStore("test", new StringToStringConverter());
+    private final static MapCacheStore<String> cacheStore = factory.newMapCacheStore("test:map", new StringToStringConverter());
 
     @Before
     public void before() {
@@ -135,12 +135,14 @@ public class RedisMapCacheStoreTest {
         Assert.assertTrue("clearMap operation failed!", cacheStore.clearMap(key));
 
         // putAll
-        // empty map
-        Assert.assertTrue(cacheStore.putAll(key, new HashMap<>()));
+        // empty map, key no exist
+        Assert.assertFalse(cacheStore.putAll(key, new HashMap<>()));
         // non-empty map
         Assert.assertTrue(cacheStore.putAll(key, expectedMap));
         Assert.assertTrue(expectedMap.keySet().containsAll(cacheStore.mapFieldSet(key)));
         Assert.assertTrue(expectedMap.values().containsAll(cacheStore.mapValueSet(key)));
+        // empty map, key exist
+        Assert.assertTrue(cacheStore.putAll(key, new HashMap<>()));
     }
 
     @Test
