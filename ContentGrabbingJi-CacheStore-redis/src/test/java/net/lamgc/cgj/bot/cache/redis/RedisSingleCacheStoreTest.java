@@ -53,7 +53,7 @@ public class RedisSingleCacheStoreTest {
         }
     }
 
-    private final static SingleCacheStore<String> cacheStore = factory.newSingleCacheStore("test", new StringToStringConverter());
+    private final static SingleCacheStore<String> cacheStore = factory.newSingleCacheStore("test:single", new StringToStringConverter());
 
     @Before
     public void before() {
@@ -62,7 +62,7 @@ public class RedisSingleCacheStoreTest {
 
     @Test
     public void nullThrowTest() {
-        final SingleCacheStore<String> tempCacheStore = factory.newSingleCacheStore("test" + RedisUtils.KEY_SEPARATOR, new StringToStringConverter());
+        final SingleCacheStore<String> tempCacheStore = factory.newSingleCacheStore("test:single" + RedisUtils.KEY_SEPARATOR, new StringToStringConverter());
         final CacheKey key = new CacheKey("testKey");
 
         // RedisSingleCacheStore
@@ -140,14 +140,18 @@ public class RedisSingleCacheStoreTest {
 
     @Test
     public void clearTest() {
+        final SingleCacheStore<String> secondSingleCacheStore =
+                factory.newSingleCacheStore("test:single_b", new StringToStringConverter());
         final CacheKey key = new CacheKey("testKey");
         final String value = "testValue";
 
         Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
+        Assert.assertTrue("Set operation failed!", secondSingleCacheStore.set(key, value));
 
         Assert.assertTrue(cacheStore.exists(key));
         Assert.assertTrue("Clear operation failed!", cacheStore.clear());
         Assert.assertFalse(cacheStore.exists(key));
+        Assert.assertTrue(secondSingleCacheStore.exists(key));
     }
 
     @Test
@@ -160,9 +164,11 @@ public class RedisSingleCacheStoreTest {
         expectedMap.put("test05", "testValue05");
         expectedMap.put("test06", "testValue06");
 
+        Assert.assertEquals(0, cacheStore.size());
         expectedMap.forEach((key, value) -> cacheStore.set(new CacheKey(key), value));
         Assert.assertEquals(expectedMap.size(), cacheStore.size());
         Assert.assertTrue(expectedMap.keySet().containsAll(cacheStore.keySet()));
+        Assert.assertTrue(cacheStore.keySet().containsAll(expectedMap.keySet()));
     }
     
 }

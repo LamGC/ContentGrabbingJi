@@ -19,9 +19,10 @@ package net.lamgc.cgj.bot.cache.redis;
 
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.CacheStore;
-import redis.clients.jedis.Jedis;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -62,7 +63,7 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
             } else {
                 result = jedis.persist(keyString);
             }
-            return result == RedisUtils.RETURN_CODE_OK;
+            return result.intValue() == RedisUtils.RETURN_CODE_OK;
         });
     }
 
@@ -76,12 +77,15 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
 
     @Override
     public long size() {
-        return connectionPool.executeRedis(Jedis::dbSize);
+        return (long) connectionPool.executeRedis(jedis -> jedis.keys(getKeyString(RedisUtils.CACHE_KEY_ALL)).size());
     }
 
     @Override
     public boolean clear() {
-        return connectionPool.executeRedis(jedis -> RedisUtils.isOk(jedis.flushDB()));
+        List<String> keys = new ArrayList<>(1);
+        keys.add(getKeyString(RedisUtils.CACHE_KEY_ALL));
+        connectionPool.executeScript(LuaScript.STORE_REMOVE_KEYS_BY_PREFIX, keys, null);
+        return true;
     }
 
     @Override
@@ -96,7 +100,8 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
 
     @Override
     public Set<String> keySet() {
-        Set<String> keys = connectionPool.executeRedis(jedis -> jedis.keys(RedisUtils.KEY_PATTERN_ALL));
+        Set<String> keys = connectionPool.executeRedis(jedis ->
+                jedis.keys(getKeyString(RedisUtils.CACHE_KEY_ALL)));
         final int prefixLength = getKeyPrefix().length();
         Set<String> newKeys = new HashSet<>();
         for (String key : keys) {
