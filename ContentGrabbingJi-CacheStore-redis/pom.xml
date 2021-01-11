@@ -28,6 +28,18 @@
 
     <artifactId>ContentGrabbingJi-CacheStore-redis</artifactId>
 
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/lua/</directory>
+                <includes>
+                    <include>*.lua</include>
+                </includes>
+                <targetPath>${project.build.outputDirectory}/lua/</targetPath>
+            </resource>
+        </resources>
+    </build>
+
     <dependencies>
         <dependency>
             <groupId>net.lamgc</groupId>
