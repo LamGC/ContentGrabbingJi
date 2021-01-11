@@ -67,7 +67,7 @@ public interface MapCacheStore<V> extends CacheStore<Map<String, V>> {
      * @return 如果成功返回 true.
      * @throws NullPointerException 当 key/map 为 null 时抛出, 缓存存储容器不允许出现 null 值.
      */
-    boolean putAll(CacheKey key, Map<String, V> map);
+    boolean putAll(CacheKey key, Map<? extends String, ? extends V> map);
 
     /**
      * 如果字段不存在, 则会将指定的值与此映射中的指定字段关联.

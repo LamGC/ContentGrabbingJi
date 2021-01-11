@@ -107,7 +107,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     }
 
     @Override
-    public boolean putAll(CacheKey key, Map<String, V> map) {
+    public boolean putAll(CacheKey key, Map<? extends String, ? extends V> map) {
         Objects.requireNonNull(key);
         Objects.requireNonNull(map);
         if (map.size() == 0) {

@@ -56,7 +56,7 @@ public class HashMapCacheStore<V> extends HashCacheStore<Map<String, V>> impleme
     }
 
     @Override
-    public boolean putAll(CacheKey key, Map<String, V> map) {
+    public boolean putAll(CacheKey key, Map<? extends String, ? extends V> map) {
         return getMap(key, true, keyMap -> {
             keyMap.putAll(Objects.requireNonNull(map));
             return true;
