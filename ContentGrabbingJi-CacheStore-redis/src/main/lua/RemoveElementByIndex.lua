@@ -1,10 +1,3 @@
-local key = tostring(KEYS[1])
-local index = tonumber(ARGV[1])
-
-if (key == nil) or (index == nil) then
-    return 0
-end
-
 local function getRandom(n)
     local t = {
         "0","1","2","3","4","5","6","7","8","9",
@@ -16,13 +9,23 @@ local function getRandom(n)
         s = s .. t[math.random(#t)]
     end;
     return s
-end;
+end
 
-local flag = getRandom(24)
+local key = tostring(KEYS[1])
+local index = tonumber(ARGV[1])
 
-if (redis.call("llen", key) <= index) or redis.call("lIndex", key, index) == nil then
+if (key == nil) or (index == nil) or (redis.call("exists", key) == false) then
+    return 0
+end
+
+local listLength = redis.call("llen", key)
+if listLength == 0 then
+    return 0
+end
+if (index < 0) or (index >= listLength) or redis.call("lIndex", key, index) == nil then
     return 0
 else
+    local flag = getRandom(24)
     redis.call("lSet", key, index, flag);
     return redis.call("lRem", key, 0, flag);
 end
