@@ -17,6 +17,8 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
+import net.lamgc.cgj.bot.cache.CacheKey;
+
 /**
  * @author LamGC
  */
@@ -33,9 +35,14 @@ public class RedisUtils {
     public final static int RETURN_CODE_FAILED = 0;
 
     /**
-     * Key匹配规则 - 所有Key
+     * Key 匹配规则 - 所有 Key
      */
     public final static String KEY_PATTERN_ALL = "*";
+
+    /**
+     * 特殊缓存键 - 所有 Key.
+     */
+    public final static CacheKey CACHE_KEY_ALL = new CacheKey("*");
 
     /**
      * Key 分隔符
@@ -49,6 +56,17 @@ public class RedisUtils {
      */
     public static boolean isOk(String result) {
         return "OK".equalsIgnoreCase(result);
+    }
+
+    /**
+     * 将 {@link CacheKey} 转换为 Redis 的标准 key 格式.
+     * @param keyPrefix Key 前缀.
+     * @param cacheKey 缓存键对象.
+     * @return 返回格式化后的 Key.
+     */
+    public static String toRedisCacheKey(String keyPrefix, CacheKey cacheKey) {
+        return (keyPrefix.endsWith(KEY_SEPARATOR) ? keyPrefix : (keyPrefix + KEY_SEPARATOR)) +
+                cacheKey.join(RedisUtils.KEY_SEPARATOR);
     }
 
 }

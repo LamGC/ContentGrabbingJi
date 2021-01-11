@@ -44,7 +44,7 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
      * @return 返回 Key 前缀.
      */
     protected String getKeyString(CacheKey cacheKey) {
-        return getKeyPrefix() + cacheKey.join(RedisUtils.KEY_SEPARATOR);
+        return RedisUtils.toRedisCacheKey(getKeyPrefix(), cacheKey);
     }
 
     /**
