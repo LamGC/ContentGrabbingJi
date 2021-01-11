@@ -23,7 +23,13 @@ import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Function;
 
@@ -37,6 +43,8 @@ class RedisConnectionPool {
 
     private final AtomicReference<JedisPool> POOL = new AtomicReference<>();
     private final AtomicReference<URL> CONNECTION_URL = new AtomicReference<>();
+
+    private final Map<LuaScript, String> scriptMap = new HashMap<>();
 
     public synchronized void setConnectionUrl(URL connectionUrl) {
         if(CONNECTION_URL.get() != null) {
@@ -60,6 +68,7 @@ class RedisConnectionPool {
                     connectionUrl.getPath().toLowerCase().contains("ssl=true"));
         }
         POOL.set(jedisPool);
+        loadScript();
     }
 
     /**
@@ -110,10 +119,83 @@ class RedisConnectionPool {
                 return "pong".equalsIgnoreCase(jedis.ping());
             } catch (Exception e) {
                 log.error("Redis 连接测试时发生异常", e);
+                return false;
             }
-            return false;
         }
         return true;
     }
+
+    /**
+     * 获取指定脚本的 Sha.
+     * @param script 脚本.
+     * @return 如果存在, 返回 Sha, 否则返回 null.
+     */
+    public String getScriptSha(LuaScript script) {
+        return scriptMap.get(script);
+    }
+
+    /**
+     * 加载脚本.
+     */
+    private void loadScript() {
+        for (LuaScript script : LuaScript.values()) {
+            InputStream scriptStream = this.getClass().
+                    getResourceAsStream("/" + LuaScript.PACKAGE_PATH + script.getScriptName() + ".lua");
+            if (scriptStream == null) {
+                log.warn("脚本 {} 获取失败, 相关操作将无法使用, 请检查缓存组件是否损坏.", script.getScriptName());
+                continue;
+            }
+
+            String scriptContent;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(scriptStream, StandardCharsets.UTF_8))) {
+                String line;
+                StringBuilder builder = new StringBuilder();
+                while((line = reader.readLine()) != null) {
+                    builder.append(line).append('\n');
+                }
+                scriptContent = builder.toString();
+            } catch (IOException e) {
+                log.error("读取脚本文件时发生异常.(Script: " + script.getScriptName() + ")", e);
+                continue;
+            }
+
+            try {
+                String scriptSha = executeRedis(jedis -> jedis.scriptLoad(scriptContent));
+                if (scriptSha != null) {
+                    scriptMap.put(script, scriptSha);
+                    log.debug("脚本 {} 已成功加载.(Sha: {})", script, scriptSha);
+                }
+            } catch (Exception e) {
+                log.error("加载脚本时发生异常.(Script: " + script.getScriptName() + ")", e);
+            }
+        }
+    }
+
+    /**
+     * 执行脚本.
+     * @param script Lua 脚本.
+     * @param keys 待传入脚本的键列表.
+     * @param args 待传入脚本的参数列表.
+     * @return 如果成功, 返回脚本所返回的数据, 需根据脚本实际返回转换对象.
+     * @throws NullPointerException 当 script 为 {@code null} 时抛出.
+     */
+    public Object executeScript(final LuaScript script, final List<String> keys, final List<String> args) {
+        String scriptSha = this.getScriptSha(Objects.requireNonNull(script));
+        if (scriptSha == null) {
+            StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
+            log.warn("脚本未加载, 方法 {}() 无法执行(方法存在于Class {}:{}). (所需脚本: {})",
+                    stackTraceElements[2].getMethodName(),
+                    stackTraceElements[2].getClassName(),
+                    stackTraceElements[2].getLineNumber(),
+                    script.getScriptName());
+            return false;
+        }
+        return executeRedis(jedis -> {
+            List<String> keysList = (keys == null) ? Collections.emptyList() : keys;
+            List<String> argsList = (args == null) ? Collections.emptyList() : args;
+            return jedis.evalsha(scriptSha, keysList, argsList);
+        });
+    }
+
 
 }
