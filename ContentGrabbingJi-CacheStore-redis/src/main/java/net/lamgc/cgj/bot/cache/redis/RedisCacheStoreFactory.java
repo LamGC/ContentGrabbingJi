@@ -90,7 +90,7 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
 
     @Override
     public <E> ListCacheStore<E> newListCacheStore(String identify, StringConverter<E> converter) {
-        throw new GetCacheStoreException("No corresponding implementation");
+        return new RedisListCacheStore<>(connectionPool, identify, converter);
     }
 
     @Override
