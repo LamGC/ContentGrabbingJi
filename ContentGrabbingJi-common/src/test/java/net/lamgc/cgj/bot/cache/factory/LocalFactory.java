@@ -80,7 +80,7 @@ public class LocalFactory implements CacheStoreFactory {
         }
 
         @Override
-        public boolean putAll(CacheKey key, Map<String, V> map) {
+        public boolean putAll(CacheKey key, Map<? extends String, ? extends V> map) {
             return false;
         }
 
