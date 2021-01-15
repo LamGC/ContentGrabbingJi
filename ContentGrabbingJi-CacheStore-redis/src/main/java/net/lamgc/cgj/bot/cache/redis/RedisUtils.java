@@ -42,7 +42,7 @@ public class RedisUtils {
     /**
      * 特殊缓存键 - 所有 Key.
      */
-    public final static CacheKey CACHE_KEY_ALL = new CacheKey("*");
+    public final static CacheKey CACHE_KEY_ALL = new CacheKey(KEY_PATTERN_ALL);
 
     /**
      * Key 分隔符
