@@ -21,10 +21,7 @@ import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.ListCacheStore;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.convert.StringToStringConverter;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.BeforeClass;
-import org.junit.Test;
+import org.junit.*;
 import redis.clients.jedis.Jedis;
 
 import java.lang.reflect.Field;
@@ -35,16 +32,24 @@ import java.util.*;
  */
 public class RedisListCacheStoreTest {
 
-    private final Jedis jedis = new Jedis();
+    private static Jedis jedis;
     private final static StringConverter<String> CONVERTER = new StringToStringConverter();
     private final static String IDENTIFY = "test:list";
     private static RedisConnectionPool connectionPool;
 
     @BeforeClass
     public static void beforeAllTest() {
+        jedis = new Jedis();
         connectionPool = new RedisConnectionPool();
         connectionPool.reconnectRedis();
         Assert.assertTrue("Redis is not connected.", connectionPool.available());
+    }
+
+    @AfterClass
+    public static void afterAllTest() {
+        if (jedis != null) {
+            jedis.close();
+        }
     }
 
     private ListCacheStore<String> newListCacheStore() {
@@ -72,10 +77,12 @@ public class RedisListCacheStoreTest {
         final Field prefixField = RedisListCacheStore.class.getDeclaredField("keyPrefix");
         prefixField.setAccessible(true);
         String prefix = (String) prefixField.get(new RedisListCacheStore<>(connectionPool, IDENTIFY, CONVERTER));
-        Assert.assertTrue(prefix.endsWith(RedisUtils.KEY_SEPARATOR));
+        Assert.assertTrue("The prefix does not contain a separator at the end.",
+                prefix.endsWith(RedisUtils.KEY_SEPARATOR));
         prefix = (String) prefixField.get(new RedisListCacheStore<>(connectionPool,
                 IDENTIFY + RedisUtils.KEY_SEPARATOR, CONVERTER));
-        Assert.assertTrue(prefix.endsWith(RedisUtils.KEY_SEPARATOR));
+        Assert.assertTrue("The separator at the end of the prefix is missing.",
+                prefix.endsWith(RedisUtils.KEY_SEPARATOR));
         prefixField.setAccessible(false);
     }
 
@@ -95,10 +102,14 @@ public class RedisListCacheStoreTest {
         final CacheKey listKey = new CacheKey("list_add_element");
         final String element = "test";
         final String listKeyStr = RedisUtils.toRedisCacheKey(IDENTIFY, listKey);
-        Assert.assertTrue(listCacheStore.addElement(listKey, element));
+        final int lastCount = jedis.llen(listKeyStr).intValue();
+        Assert.assertTrue("The operation to be tested failed.",
+                listCacheStore.addElement(listKey, element));
 
-        Assert.assertEquals(1, jedis.llen(listKeyStr).intValue());
-        Assert.assertEquals(element, jedis.lpop(listKeyStr));
+        Assert.assertEquals("The key value has no change to the quantity.",
+                lastCount + 1, jedis.llen(listKeyStr).intValue());
+        Assert.assertEquals("The value of pop is different from that of push.",
+                element, jedis.lpop(listKeyStr));
     }
 
     @Test
@@ -117,12 +128,14 @@ public class RedisListCacheStoreTest {
                 jedis.exists(listKeyStr),
                 listCacheStore.addElements(listKey, Collections.emptyList()));
 
+        Assert.assertTrue("The operation to be tested failed.",
+                listCacheStore.addElements(listKey, expectedElements));
 
-        Assert.assertTrue(listCacheStore.addElements(listKey, expectedElements));
-
-        Assert.assertEquals(expectedElements.size(), jedis.llen(listKeyStr).intValue());
+        Assert.assertEquals("The quantity is not as expected.",
+                expectedElements.size(), jedis.llen(listKeyStr).intValue());
         Set<String> actualElements = getListElements(listKeyStr);
-        Assert.assertTrue(actualElements.containsAll(expectedElements));
+        Assert.assertTrue("The added value is not as expected.",
+                actualElements.containsAll(expectedElements));
 
         Assert.assertEquals("Key does not exist, but adding empty collection failed.",
                 jedis.exists(listKeyStr),
@@ -146,7 +159,8 @@ public class RedisListCacheStoreTest {
 
         jedis.del(listKeyStr);
 
-        Assert.assertFalse(listCacheStore.removeElement(listKey, "NoExistElement"));
+        Assert.assertFalse("The operation to be tested failed.",
+                listCacheStore.removeElement(listKey, "NoExistElement"));
 
         Assert.assertNotEquals("The expected create operation failed.",
                 RedisUtils.RETURN_CODE_FAILED, jedis.lpush(listKeyStr, expectedElementsArr).intValue());
@@ -158,9 +172,11 @@ public class RedisListCacheStoreTest {
 
         expectedElements.remove(deletedIndex);
 
-        Assert.assertEquals(expectedElements.size(), jedis.llen(listKeyStr).intValue());
+        Assert.assertEquals("The quantity is not as expected.",
+                expectedElements.size(), jedis.llen(listKeyStr).intValue());
         Set<String> actualElements = getListElements(listKeyStr);
-        Assert.assertTrue(actualElements.containsAll(expectedElements));
+        Assert.assertTrue("The added value is not as expected.",
+                actualElements.containsAll(expectedElements));
     }
 
     @Test
@@ -180,10 +196,11 @@ public class RedisListCacheStoreTest {
 
         jedis.del(listKeyStr);
         // 尝试删除不存在的 Key
-        Assert.assertFalse(listCacheStore.removeElement(listKey, 0));
+        Assert.assertFalse("The attempt to delete a value that does not exist succeeded.",
+                listCacheStore.removeElement(listKey, 0));
         Assert.assertNotEquals("The expected create operation failed.",
                 RedisUtils.RETURN_CODE_FAILED, jedis.lpush(listKeyStr, expectedElementsArr).intValue());
-        Assert.assertFalse(
+        Assert.assertFalse("The attempt to delete the value of the illegal index succeeded.",
                 listCacheStore.removeElement(listKey, jedis.llen(listKeyStr).intValue()));
 
         Random random = new Random();
@@ -195,9 +212,11 @@ public class RedisListCacheStoreTest {
 
         expectedElements.remove(deletedElement);
 
-        Assert.assertEquals(expectedElements.size(), jedis.llen(listKeyStr).intValue());
+        Assert.assertEquals("The quantity is not as expected.",
+                expectedElements.size(), jedis.llen(listKeyStr).intValue());
         Set<String> actualElements = getListElements(listKeyStr);
-        Assert.assertTrue(actualElements.containsAll(expectedElements));
+        Assert.assertTrue("The added value is not as expected.",
+                actualElements.containsAll(expectedElements));
     }
 
     @Test
@@ -215,7 +234,7 @@ public class RedisListCacheStoreTest {
         final String[] expectedElementsArr = new String[expectedElements.size()];
         expectedElements.toArray(expectedElementsArr);
 
-        Assert.assertNotEquals(-1, jedis.lpush(listKeyStr, expectedElementsArr).intValue());
+        jedis.lpush(listKeyStr, expectedElementsArr);
 
         Set<String> actualElements = getListElements(listKeyStr);
         expectedElements.add("f");
@@ -224,7 +243,7 @@ public class RedisListCacheStoreTest {
         expectedElements.add("i");
 
         for (String expectedElement : expectedElements) {
-            Assert.assertEquals(String.format("Make a difference: '%s'", expectedElement),
+            Assert.assertEquals(String.format("Make a difference: '%s'.", expectedElement),
                     actualElements.contains(expectedElement),
                     listCacheStore.containsElement(listKey, expectedElement));
         }
@@ -236,9 +255,11 @@ public class RedisListCacheStoreTest {
         final CacheKey listKey = new CacheKey("list_is_empty");
         final String listKeyStr = RedisUtils.toRedisCacheKey(IDENTIFY, listKey);
 
-        Assert.assertEquals(!jedis.exists(listKeyStr), listCacheStore.isEmpty(listKey));
+        Assert.assertEquals("Key does not exist but returns 'true'",
+                !jedis.exists(listKeyStr), listCacheStore.isEmpty(listKey));
         jedis.lpush(listKeyStr, "test");
-        Assert.assertEquals(jedis.exists(listKeyStr), !listCacheStore.isEmpty(listKey));
+        Assert.assertEquals("Key does exist but returns 'false'.",
+                jedis.exists(listKeyStr), !listCacheStore.isEmpty(listKey));
     }
 
     @Test
@@ -257,15 +278,18 @@ public class RedisListCacheStoreTest {
 
         long beforeLength = jedis.llen(listKeyStr);
         if (jedis.llen(listKeyStr) == 0) {
-            Assert.assertEquals(-1, listCacheStore.elementsLength(listKey));
+            Assert.assertEquals("The list was empty but returned a value other than '-1' or '0'.",
+                    -1, listCacheStore.elementsLength(listKey));
         } else {
-            Assert.assertEquals(beforeLength, listCacheStore.elementsLength(listKey));
+            Assert.assertEquals("The length of the list is incorrect.",
+                    beforeLength, listCacheStore.elementsLength(listKey));
         }
 
         jedis.del(listKeyStr);
         jedis.lpush(listKeyStr, expectedElementsArr);
 
-        Assert.assertEquals(jedis.llen(listKeyStr).intValue(), listCacheStore.elementsLength(listKey));
+        Assert.assertEquals("The length of the list is incorrect.",
+                jedis.llen(listKeyStr).intValue(), listCacheStore.elementsLength(listKey));
     }
 
     @Test
@@ -282,13 +306,16 @@ public class RedisListCacheStoreTest {
         final String[] expectedElementsArr = new String[expectedElements.size()];
         expectedElements.toArray(expectedElementsArr);
 
-        Assert.assertEquals(jedis.exists(listKeyStr), listCacheStore.clearCollection(listKey));
+        Assert.assertEquals("The list does not exist but returns 'true'.",
+                jedis.exists(listKeyStr), listCacheStore.clearCollection(listKey));
 
         jedis.lpush(listKeyStr, expectedElementsArr);
 
-        Assert.assertTrue(listCacheStore.clearCollection(listKey));
-        Assert.assertEquals(0, jedis.llen(listKeyStr).intValue());
-        Assert.assertFalse(jedis.exists(listKeyStr));
+        Assert.assertTrue("The operation to be tested failed.",
+                listCacheStore.clearCollection(listKey));
+        Assert.assertEquals("The list is not empty after the clear operation",
+                0, jedis.llen(listKeyStr).intValue());
+        Assert.assertFalse("The list is still exist", jedis.exists(listKeyStr));
     }
 
     @Test
@@ -308,7 +335,7 @@ public class RedisListCacheStoreTest {
 
         Collections.reverse(expectedElements);
         for (int i = 0; i < expectedElements.size(); i++) {
-            Assert.assertEquals("index: " + i, expectedElements.get(i),
+            Assert.assertEquals("Wrong value, index: " + i, expectedElements.get(i),
                     listCacheStore.getElement(listKey, i));
         }
     }
@@ -342,7 +369,8 @@ public class RedisListCacheStoreTest {
         List<String> actualElements = listCacheStore.getElementsByRange(listKey, start, length);
 
         for (int i = 0; i < length; i++) {
-            Assert.assertEquals(expectedElements.get(start + i), actualElements.get(i));
+            Assert.assertEquals("Wrong value, index: " + i,
+                    expectedElements.get(start + i), actualElements.get(i));
         }
 
     }

@@ -20,10 +20,7 @@ package net.lamgc.cgj.bot.cache.redis;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.CacheStore;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  *
@@ -44,7 +41,7 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
      * @return 返回 Key 前缀.
      */
     protected String getKeyString(CacheKey cacheKey) {
-        return RedisUtils.toRedisCacheKey(getKeyPrefix(), cacheKey);
+        return RedisUtils.toRedisCacheKey(getKeyPrefix(), Objects.requireNonNull(cacheKey));
     }
 
     /**
@@ -105,7 +102,7 @@ public abstract class RedisCacheStore<V> implements CacheStore<V> {
         final int prefixLength = getKeyPrefix().length();
         Set<String> newKeys = new HashSet<>();
         for (String key : keys) {
-            newKeys.add(key.substring(prefixLength));
+            newKeys.add(key.substring(prefixLength + 1));
         }
         return newKeys;
     }

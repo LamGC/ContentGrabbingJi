@@ -17,7 +17,6 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
-import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SingleCacheStore;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
@@ -41,8 +40,11 @@ public class RedisSingleCacheStore<V> extends RedisCacheStore<V> implements Sing
     public RedisSingleCacheStore(RedisConnectionPool connectionPool, String keyPrefix, StringConverter<V> converter) {
         super(connectionPool);
         this.connectionPool = connectionPool;
-        keyPrefix = Strings.nullToEmpty(keyPrefix).trim();
-        if (!keyPrefix.isEmpty() && keyPrefix.endsWith(RedisUtils.KEY_SEPARATOR)) {
+        keyPrefix = Objects.requireNonNull(keyPrefix).trim();
+        if (keyPrefix.isEmpty()) {
+            throw new IllegalArgumentException("Key prefix cannot be empty.");
+        }
+        if (keyPrefix.endsWith(RedisUtils.KEY_SEPARATOR)) {
             this.keyPrefix = keyPrefix;
         } else {
             this.keyPrefix = keyPrefix + RedisUtils.KEY_SEPARATOR;

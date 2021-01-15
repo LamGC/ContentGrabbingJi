@@ -17,7 +17,6 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
-import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.MapCacheStore;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
@@ -38,8 +37,11 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     public RedisMapCacheStore(RedisConnectionPool connectionPool, String keyPrefix, StringConverter<V> converter) {
         super(connectionPool);
         this.connectionPool = connectionPool;
-        keyPrefix = Strings.nullToEmpty(keyPrefix).trim();
-        if (!keyPrefix.isEmpty() && keyPrefix.endsWith(RedisUtils.KEY_SEPARATOR)) {
+        keyPrefix = Objects.requireNonNull(keyPrefix).trim();
+        if (keyPrefix.isEmpty()) {
+            throw new IllegalArgumentException("Key prefix cannot be empty.");
+        }
+        if (keyPrefix.endsWith(RedisUtils.KEY_SEPARATOR)) {
             this.keyPrefix = keyPrefix;
         } else {
             this.keyPrefix = keyPrefix + RedisUtils.KEY_SEPARATOR;
@@ -100,10 +102,11 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
     public boolean put(CacheKey key, String field, V value) {
         Objects.requireNonNull(field);
         Objects.requireNonNull(value);
-        return connectionPool.executeRedis(jedis -> {
+        connectionPool.executeRedis(jedis -> {
             String keyString = getKeyString(key);
-            return jedis.hset(keyString, field, converter.to(value)) == RedisUtils.RETURN_CODE_OK;
+            return jedis.hset(keyString, field, converter.to(value));
         });
+        return true;
     }
 
     @Override
@@ -162,17 +165,7 @@ public class RedisMapCacheStore<V> extends RedisCacheStore<Map<String, V>> imple
 
     @Override
     public boolean clearMap(CacheKey key) {
-        Set<String> fields = mapFieldSet(key);
-        if (fields == null) {
-            return false;
-        } else if (fields.size() == 0) {
-            return true;
-        }
-
-        String[] fieldsArray = new String[fields.size()];
-        fields.toArray(fieldsArray);
-        return connectionPool.executeRedis(jedis ->
-                jedis.hdel(getKeyString(key), fieldsArray) != RedisUtils.RETURN_CODE_FAILED);
+        return remove(key);
     }
 
 }

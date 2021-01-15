@@ -17,18 +17,16 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
-import com.google.common.base.Throwables;
 import net.lamgc.cgj.bot.cache.CacheKey;
 import net.lamgc.cgj.bot.cache.SingleCacheStore;
+import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.convert.StringToStringConverter;
-import org.junit.Assert;
-import org.junit.Before;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.*;
+import redis.clients.jedis.Jedis;
 
-import java.io.IOException;
-import java.util.HashMap;
-import java.util.Map;
+import java.lang.reflect.Field;
+
+import static net.lamgc.cgj.bot.cache.redis.util.RedisTestUtils.*;
 
 /**
  * @see RedisCacheStore
@@ -36,139 +34,109 @@ import java.util.Map;
  */
 public class RedisSingleCacheStoreTest {
 
-    private final static RedisCacheStoreFactory factory;
-    private final static TemporaryFolder tempFolder = TemporaryFolder.builder().build();
+    private final static String KEY_PREFIX = "test:single";
+    private final static StringConverter<String> CONVERTER = new StringToStringConverter();
 
-    static {
-        try {
-            tempFolder.create();
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-        }
-        factory = new RedisCacheStoreFactory();
-        try {
-            factory.initial(tempFolder.newFolder("cache-redis"));
-        } catch (IOException e) {
-            Assert.fail(Throwables.getStackTraceAsString(e));
-        }
+    private static Jedis jedis;
+    private final RedisConnectionPool connectionPool = new RedisConnectionPool();
+    private final SingleCacheStore<String> cacheStore =
+            new RedisSingleCacheStore<>(connectionPool, KEY_PREFIX, CONVERTER);
+
+    @BeforeClass
+    public static void beforeAllTest() {
+        jedis = new Jedis();
     }
 
-    private final static SingleCacheStore<String> cacheStore = factory.newSingleCacheStore("test:single", new StringToStringConverter());
+    @AfterClass
+    public static void afterAllTest() {
+        if (jedis != null && jedis.isConnected()) {
+            jedis.close();
+        }
+    }
 
     @Before
     public void before() {
-        Assert.assertTrue(cacheStore.clear());
+        Assert.assertTrue("Clear execution failed before the test started.", cacheStore.clear());
+    }
+
+    @After
+    public void after() {
+        Assert.assertTrue("After the test, clear execution failed", cacheStore.clear());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void emptyPrefixTest() {
+        new RedisSingleCacheStore<>(connectionPool, "", CONVERTER);
+    }
+
+    @Test(expected = NullPointerException.class)
+    public void nullPrefixTest() {
+        new RedisSingleCacheStore<>(connectionPool, null, CONVERTER);
     }
 
     @Test
-    public void nullThrowTest() {
-        final SingleCacheStore<String> tempCacheStore = factory.newSingleCacheStore("test:single" + RedisUtils.KEY_SEPARATOR, new StringToStringConverter());
-        final CacheKey key = new CacheKey("testKey");
-
-        // RedisSingleCacheStore
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.set(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.set(key, null));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.get(null));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.setIfNotExist(null, "testValue"));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.setIfNotExist(key, null));
-
-        // RedisCacheStore
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.exists(null));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.getTimeToLive(null));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.setTimeToLive(null, 0));
-        Assert.assertThrows(NullPointerException.class, () -> tempCacheStore.remove(null));
+    public void prefixCheck() throws NoSuchFieldException, IllegalAccessException {
+        final Field prefixField = RedisSingleCacheStore.class.getDeclaredField("keyPrefix");
+        prefixField.setAccessible(true);
+        String prefix = (String) prefixField.get(new RedisSingleCacheStore<>(connectionPool, KEY_PREFIX, CONVERTER));
+        Assert.assertTrue("The prefix does not contain a separator at the end.",
+                prefix.endsWith(RedisUtils.KEY_SEPARATOR));
+        prefix = (String) prefixField.get(new RedisSingleCacheStore<>(connectionPool,
+                KEY_PREFIX + RedisUtils.KEY_SEPARATOR, CONVERTER));
+        Assert.assertTrue("The separator at the end of the prefix is missing.",
+                prefix.endsWith(RedisUtils.KEY_SEPARATOR));
+        prefixField.setAccessible(false);
     }
 
-    @Test
-    public void setAndGetTest() {
-        final CacheKey key = new CacheKey("testKey");
-        final String value = "testValue";
 
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertEquals(value, cacheStore.get(key));
-        Assert.assertTrue("Remove operation failed!", cacheStore.remove(key));
-        Assert.assertNull("Set operation failed!", cacheStore.get(key));
+    @Test
+    public void setTest() {
+        final CacheKey key = new CacheKey("test_set");
+        final String keyString = RedisUtils.toRedisCacheKey(KEY_PREFIX, key);
+        String value = randomString(10);
+        assertDeleteIfExist(jedis, keyString);
+
+        Assert.assertTrue("Failed to set value on specified key.", cacheStore.set(key, value));
+        Assert.assertEquals("The value set does not match the expected value.",
+                value, jedis.get(keyString));
+
+        value = randomString(12);
+        Assert.assertTrue("Cannot rewritten the value of an existing key.", cacheStore.set(key, value));
+        Assert.assertEquals("The rewritten value does not match the expected value.",
+                value, jedis.get(keyString));
     }
 
     @Test
     public void setIfNotExistTest() {
-        final CacheKey key = new CacheKey("testKey");
-        final String value = "testValue";
-        final String value2 = "testValue02";
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
+        final CacheKey key = new CacheKey("test_set_if_not_exist");
+        final String keyString = RedisUtils.toRedisCacheKey(KEY_PREFIX, key);
+        String value = randomString(10);
+        assertDeleteIfExist(jedis, keyString);
 
-        Assert.assertFalse(cacheStore.setIfNotExist(key, value2));
-        Assert.assertEquals(value, cacheStore.get(key));
+        Assert.assertTrue("Failed to set value on specified key.", cacheStore.setIfNotExist(key, value));
+        Assert.assertEquals("The value set does not match the expected value.",
+                value, jedis.get(keyString));
+
+        value = randomString(12);
+        Assert.assertFalse("Write value to existing key succeeded.", cacheStore.setIfNotExist(key, value));
+        Assert.assertNotEquals("The key value is modified and the method setIfNotExist() returns 'false'.",
+                value, jedis.get(keyString));
     }
 
     @Test
-    public void expireTest() throws InterruptedException {
-        final CacheKey key = new CacheKey("testKey");
-        final String value = "testValue";
+    public void getTest() {
+        final CacheKey key = new CacheKey("test_get");
+        final String keyString = RedisUtils.toRedisCacheKey(KEY_PREFIX, key);
+        String value = randomString(10);
+        assertDeleteIfExist(jedis, keyString);
 
-        // Cache
-        Assert.assertFalse(cacheStore.setTimeToLive(key, 300));
-        Assert.assertEquals(-1, cacheStore.getTimeToLive(key));
+        Assert.assertNull("The get() method returned a non null value for a nonexistent key.",
+                cacheStore.get(key));
 
-        // TTL 到期被动检查测试: 使用 exists 经 expire 检查失败后返回 false.
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertTrue("SetTTL operation failed!", cacheStore.setTimeToLive(key, 200));
-        Assert.assertNotEquals(-1, cacheStore.getTimeToLive(key));
-        Thread.sleep(300);
-        Assert.assertFalse(cacheStore.exists(key));
+        Assert.assertTrue("Failed to set test key.", RedisUtils.isOk(jedis.set(keyString, value)));
 
-        // 取消 TTL 测试
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertTrue("SetTTL operation failed!", cacheStore.setTimeToLive(key, 200));
-        Assert.assertTrue("SetTTL operation failed!", cacheStore.setTimeToLive(key, -1));
-        Thread.sleep(300);
-        Assert.assertTrue(cacheStore.exists(key));
-        Assert.assertEquals(-1, cacheStore.getTimeToLive(key));
+        Assert.assertEquals("The value obtained does not match the expected value.",
+                value, cacheStore.get(key));
     }
 
-    @Test
-    public void removeTest() {
-        final CacheKey key = new CacheKey("testKey");
-        final String value = "testValue";
-
-        // 删除不存在Cache测试
-        Assert.assertFalse(cacheStore.remove(key));
-        // 删除存在的Cache测试
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertTrue(cacheStore.remove(key));
-    }
-
-    @Test
-    public void clearTest() {
-        final SingleCacheStore<String> secondSingleCacheStore =
-                factory.newSingleCacheStore("test:single_b", new StringToStringConverter());
-        final CacheKey key = new CacheKey("testKey");
-        final String value = "testValue";
-
-        Assert.assertTrue("Set operation failed!", cacheStore.set(key, value));
-        Assert.assertTrue("Set operation failed!", secondSingleCacheStore.set(key, value));
-
-        Assert.assertTrue(cacheStore.exists(key));
-        Assert.assertTrue("Clear operation failed!", cacheStore.clear());
-        Assert.assertFalse(cacheStore.exists(key));
-        Assert.assertTrue(secondSingleCacheStore.exists(key));
-    }
-
-    @Test
-    public void sizeAndKeySetTest() {
-        Map<String, String> expectedMap = new HashMap<>();
-        expectedMap.put("test01", "testValue01");
-        expectedMap.put("test02", "testValue02");
-        expectedMap.put("test03", "testValue03");
-        expectedMap.put("test04", "testValue04");
-        expectedMap.put("test05", "testValue05");
-        expectedMap.put("test06", "testValue06");
-
-        Assert.assertEquals(0, cacheStore.size());
-        expectedMap.forEach((key, value) -> cacheStore.set(new CacheKey(key), value));
-        Assert.assertEquals(expectedMap.size(), cacheStore.size());
-        Assert.assertTrue(expectedMap.keySet().containsAll(cacheStore.keySet()));
-        Assert.assertTrue(cacheStore.keySet().containsAll(expectedMap.keySet()));
-    }
-    
 }

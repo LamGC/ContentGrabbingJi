@@ -68,17 +68,6 @@ public class RedisListCacheStore<E> extends RedisCacheStore<List<E>> implements 
         return result;
     }
 
-    /**
-     * {@inheritDoc}
-     *
-     * <p>注意: 在 Redis 实现中, 该功能通过一段 Lua 脚本实现,
-     * 由于 Redis 并没有原生支持该功能, 所以只能用脚本遍历查找.
-     * 如果 List 元素过多, 可能会导致执行缓慢且影响后续操作, 谨慎使用.
-     * @param key 待操作的缓存项键名.
-     * @param index 欲删除元素的索引, 从 0 开始.
-     * @return 如果元素存在且删除成功, 返回 true.
-     * @throws NullPointerException 当 key 为 null 时抛出.
-     */
     @Override
     public boolean removeElement(CacheKey key, int index) {
         List<String> keys = new ArrayList<>(1);
@@ -98,8 +87,9 @@ public class RedisListCacheStore<E> extends RedisCacheStore<List<E>> implements 
     @Override
     public boolean addElement(CacheKey key, E element) {
         Objects.requireNonNull(element);
-        return connectionPool.executeRedis(jedis ->
+        connectionPool.executeRedis(jedis ->
                 jedis.lpush(getKeyString(key), converter.to(element)) != RedisUtils.RETURN_CODE_FAILED);
+        return true;
     }
 
     @Override
@@ -115,14 +105,15 @@ public class RedisListCacheStore<E> extends RedisCacheStore<List<E>> implements 
             valueStrings[i] = converter.to(values.get(i));
         }
 
-        return connectionPool.executeRedis(jedis ->
+        connectionPool.executeRedis(jedis ->
                 jedis.lpush(getKeyString(key), valueStrings) != RedisUtils.RETURN_CODE_FAILED);
+        return true;
     }
 
     /**
      * {@inheritDoc}
      *
-     * <p>注意: 在 Redis 实现中, 该功能通过一段 Lua 脚本实现,
+     * <p> 注意: 在 Redis 实现中, 该功能通过一段 Lua 脚本实现,
      * 由于 Redis 并没有原生支持该功能, 所以只能用脚本遍历查找.
      * 如果 List 元素过多, 可能会导致执行缓慢且影响后续操作, 谨慎使用.
      * @param key 待检查的缓存项键名.
