@@ -50,6 +50,11 @@ public class RedisUtils {
     public final static String KEY_SEPARATOR = ":";
 
     /**
+     * Redis 组件配置文件名.
+     */
+    public final static String PROPERTIES_FILE_NAME = "redis.properties.json";
+
+    /**
      * 检查字符串返回结果是否为操作成功.
      * @param result 字符串返回结果.
      * @return 如果为操作成功, 返回 true.

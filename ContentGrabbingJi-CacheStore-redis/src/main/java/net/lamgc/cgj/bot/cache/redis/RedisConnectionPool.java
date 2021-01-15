@@ -17,17 +17,14 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
+import com.google.common.base.Strings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.net.URL;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
@@ -42,13 +39,18 @@ class RedisConnectionPool {
     private final static Logger log = LoggerFactory.getLogger(RedisConnectionPool.class);
 
     private final AtomicReference<JedisPool> POOL = new AtomicReference<>();
-    private final AtomicReference<URL> CONNECTION_URL = new AtomicReference<>();
+    private final AtomicReference<RedisConnectionProperties> connectionProperties = new AtomicReference<>();
 
     private final Map<LuaScript, String> scriptMap = new HashMap<>();
 
-    public synchronized void setConnectionUrl(URL connectionUrl) {
-        if(CONNECTION_URL.get() != null) {
-            CONNECTION_URL.set(connectionUrl);
+    public RedisConnectionPool() {
+        Runtime.getRuntime().addShutdownHook(new Thread(this::close,
+                "Shutdown-RedisConnectionPool@" + Integer.toHexString(this.hashCode())));
+    }
+
+    public synchronized void setConnectionProperties(RedisConnectionProperties properties) {
+        if(connectionProperties.get() != null) {
+            connectionProperties.set(properties);
         }
     }
 
@@ -60,12 +62,35 @@ class RedisConnectionPool {
         JedisPoolConfig config = new JedisPoolConfig();
         config.setTestOnBorrow(true);
         config.setTestOnReturn(true);
-        URL connectionUrl = CONNECTION_URL.get();
-        if (connectionUrl == null) {
+        RedisConnectionProperties properties = connectionProperties.get();
+        if (properties == null) {
             jedisPool = new JedisPool(config);
         } else {
-            jedisPool = new JedisPool(config, connectionUrl.getHost(), connectionUrl.getPort(),
-                    connectionUrl.getPath().toLowerCase().contains("ssl=true"));
+            String userName = properties.getUserName();
+            if (Strings.isNullOrEmpty(userName)) {
+                jedisPool = new JedisPool(config,
+                        properties.getHost(),
+                        properties.getPort(),
+                        properties.getConnectionTimeout(),
+                        properties.getSocketTimeout(),
+                        properties.getPassword(),
+                        properties.getDatabaseId(),
+                        properties.getClientName(),
+                        properties.enableSsl()
+                );
+            } else {
+                jedisPool = new JedisPool(config,
+                        properties.getHost(),
+                        properties.getPort(),
+                        properties.getConnectionTimeout(),
+                        properties.getSocketTimeout(),
+                        userName,
+                        properties.getPassword(),
+                        properties.getDatabaseId(),
+                        properties.getClientName(),
+                        properties.enableSsl()
+                );
+            }
         }
         POOL.set(jedisPool);
         loadScript();
@@ -198,4 +223,10 @@ class RedisConnectionPool {
     }
 
 
+    public void close() {
+        JedisPool jedisPool = POOL.get();
+        if (jedisPool != null && !jedisPool.isClosed()) {
+            jedisPool.close();
+        }
+    }
 }

@@ -17,7 +17,7 @@
 
 package net.lamgc.cgj.bot.cache.redis;
 
-import com.google.common.base.Strings;
+import com.google.gson.Gson;
 import net.lamgc.cgj.bot.cache.*;
 import net.lamgc.cgj.bot.cache.convert.StringConverter;
 import net.lamgc.cgj.bot.cache.exception.GetCacheStoreException;
@@ -25,10 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.Properties;
 
 /**
  *
@@ -39,19 +36,11 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
 
     private final static Logger log = LoggerFactory.getLogger(RedisCacheStoreFactory.class);
 
-    private final static String PROP_HOST = "redis.host";
-    private final static String PROP_PORT = "redis.port";
-    private final static String PROP_USE_SSL = "redis.useSSL";
-    private final static String PROP_USERNAME = "redis.username";
-    private final static String PROP_PASSWORD = "redis.password";
-    private final static String PROP_DATABASE = "redis.databaseId";
-    private final static String PROP_CLIENT_NAME = "redis.clientName";
-
     private final RedisConnectionPool connectionPool = new RedisConnectionPool();
 
     @Override
     public void initial(File dataDirectory) {
-        final File propertiesFile = new File(dataDirectory, "redis.properties");
+        final File propertiesFile = new File(dataDirectory, RedisUtils.PROPERTIES_FILE_NAME);
         if (!propertiesFile.exists()) {
             log.warn("未找到 Redis 配置文件, 使用默认配置.");
             return;
@@ -59,27 +48,14 @@ public class RedisCacheStoreFactory implements CacheStoreFactory {
             log.warn("Redis 配置文件不是一个文件, 使用默认配置.");
             return;
         }
-        Properties properties = new Properties();
         try (Reader propertiesReader = new BufferedReader(
                 new InputStreamReader(new FileInputStream(propertiesFile), StandardCharsets.UTF_8))) {
-            properties.load(propertiesReader);
+            RedisConnectionProperties properties = new Gson()
+                    .fromJson(propertiesReader, RedisConnectionProperties.class);
+            connectionPool.setConnectionProperties(properties);
+            log.debug("Redis 配置文件已成功读取: {}", properties);
         } catch (IOException e) {
-            log.error("读取 Redis 配置文件时发生异常", e);
-        }
-        try {
-            String queryString = "/?" + "ssl=" + properties.getProperty(PROP_USE_SSL, "false") + '&' +
-                    "user=" + Strings.nullToEmpty(properties.getProperty(PROP_USERNAME)) + '&' +
-                    "passwd=" + Strings.nullToEmpty(properties.getProperty(PROP_PASSWORD)) + '&' +
-                    "database=" + properties.getProperty(PROP_DATABASE, "0") + '&' +
-                    "clientName=" + Strings.nullToEmpty(properties.getProperty(PROP_CLIENT_NAME));
-            URL url = new URL("redis",
-                    properties.getProperty(PROP_HOST, "localhost"),
-                    Integer.parseInt(properties.getProperty(PROP_PORT, "6379")),
-                    queryString);
-
-            connectionPool.setConnectionUrl(url);
-        } catch (MalformedURLException e) {
-            log.error("构造连接 URL 时发生异常", e);
+            log.error("读取 Redis 配置文件时发生异常, 将使用默认配置连接 Redis.", e);
         }
     }
 
