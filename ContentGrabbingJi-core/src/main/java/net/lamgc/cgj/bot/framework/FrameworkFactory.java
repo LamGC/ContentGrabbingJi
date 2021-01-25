@@ -72,11 +72,10 @@ final class FrameworkFactory implements PluginFactory {
         }
 
         try {
-            // <init>(PluginWrapper, DataFolder)
             Class<? extends Framework> frameworkClass = pluginClass.asSubclass(Framework.class);
-            Constructor<?> constructor = frameworkClass
+            Constructor<? extends Framework> constructor = frameworkClass
                     .getConstructor(PluginWrapper.class, File.class, FrameworkContext.class);
-            Framework instance = (Framework) constructor.newInstance(pluginWrapper,
+            Framework instance = constructor.newInstance(pluginWrapper,
                     new File(dataRootFolder, pluginWrapper.getPluginId()),
                     parentContext.cloneContext());
             try {
