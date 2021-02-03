@@ -17,8 +17,6 @@
 
 package net.lamgc.cgj.bot.framework.message;
 
-import net.lamgc.cgj.bot.framework.Platform;
-
 import java.util.Set;
 
 /**
@@ -27,12 +25,6 @@ import java.util.Set;
  */
 @SuppressWarnings("AlibabaAbstractMethodOrInterfaceMethodMustUseJavadoc")
 public interface BotCode extends Message {
-
-    /**
-     * 获取 BotCode 实现所属平台.
-     * @return 返回所属平台.
-     */
-    Platform getPlatform();
 
     /**
      * 取功能函数名.

@@ -17,7 +17,6 @@
 
 package net.lamgc.cgj.bot.framework.message;
 
-import net.lamgc.cgj.bot.framework.Platform;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -125,13 +124,13 @@ public class AbstractBotCodeTest {
     public void toStringTest() {
         BotCode botCode = new TestBotCode("function");
         String objectStr = botCode.getClass().getSimpleName() + '@' + Integer.toHexString(botCode.hashCode());
-        Assert.assertEquals(objectStr + "{Platform=null, functionName='function', " +
+        Assert.assertEquals(objectStr + "{functionName='function', " +
                 "functionProperties={Hashtable}}", botCode.toString());
 
         botCode.setProperty("arg1", "value1");
         botCode.setProperty("arg2", "测试");
         botCode.setProperty("arg3", "Hello World.");
-        Assert.assertEquals(objectStr + "{Platform=null, functionName='function', " +
+        Assert.assertEquals(objectStr + "{functionName='function', " +
                 "functionProperties={Hashtable{\"arg1\"='value1', \"arg2\"='测试', \"arg3\"='Hello World.'}}",
                 botCode.toString());
     }
@@ -152,11 +151,6 @@ public class AbstractBotCodeTest {
 
         public TestBotCode(BotCodeFunction function, Map<String, String> functionProperties) {
             super(function, functionProperties);
-        }
-
-        @Override
-        public Platform getPlatform() {
-            return null;
         }
 
         @Override

@@ -48,11 +48,6 @@ public class BasicBotCode extends AbstractBotCode {
     }
 
     @Override
-    public Platform getPlatform() {
-        return PLATFORM;
-    }
-
-    @Override
     public String contentToString() {
         StringBuilder builder = new StringBuilder('[' + getFunction().getFunctionName());
         if (getPropertiesKeys().size() == 0) {

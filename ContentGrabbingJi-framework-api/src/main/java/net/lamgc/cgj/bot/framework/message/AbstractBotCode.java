@@ -72,7 +72,6 @@ public abstract class AbstractBotCode implements BotCode {
             mapString.delete(mapString.length() - 2, mapString.length());
         }
         return this.getClass().getSimpleName() + '@' + Integer.toHexString(this.hashCode()) + '{' +
-                "Platform=" + getPlatform() + ", " +
                 "functionName='" + function.getFunctionName() + '\'' +
                 ", functionProperties={" + mapString.toString() + '}' +
                 '}';

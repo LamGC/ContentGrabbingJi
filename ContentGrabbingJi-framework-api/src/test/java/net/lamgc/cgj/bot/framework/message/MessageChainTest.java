@@ -77,11 +77,6 @@ public class MessageChainTest {
         MessageChain chain = new MessageChain("BotCode: ");
         chain.plus(new AbstractBotCode(StandardBotCodeFunction.AT) {
             @Override
-            public Platform getPlatform() {
-                return null;
-            }
-
-            @Override
             public String contentToString() {
                 return "[at:arg=value]";
             }

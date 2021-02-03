@@ -17,7 +17,6 @@
 
 package net.lamgc.cgj.bot.framework.base;
 
-import net.lamgc.cgj.bot.framework.Platform;
 import net.lamgc.cgj.bot.framework.message.AbstractBotCode;
 import net.lamgc.cgj.bot.framework.message.BotCode;
 import net.lamgc.cgj.bot.framework.message.BotCodeFunction;
@@ -32,14 +31,6 @@ import java.util.Map;
  * @see BasicBotCode
  */
 public class BasicBotCodeTest {
-
-    @Test
-    public void getPlatform() {
-        BotCode botCode = new BasicBotCode(StandardBotCodeFunction.AT);
-
-        Assert.assertEquals("ContentGrabbingJi", botCode.getPlatform().getPlatformName());
-        Assert.assertEquals("CGJ", botCode.getPlatform().getPlatformIdentify());
-    }
 
     @Test
     public void contentToStringWithoutParameter() {
@@ -65,11 +56,6 @@ public class BasicBotCodeTest {
 
             public TestBotCode(BotCodeFunction function, Map<String, String> functionProperties) {
                 super(function, functionProperties);
-            }
-
-            @Override
-            public Platform getPlatform() {
-                return null;
             }
 
             @Override
