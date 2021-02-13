@@ -46,7 +46,7 @@
         </dependency>
         <dependency>
             <groupId>net.lamgc</groupId>
-            <artifactId>ContentGrabbingJi-Event</artifactId>
+            <artifactId>ContentGrabbingJi-Event-api</artifactId>
             <version>3.0.0-alpha-SNAPSHOT</version>
         </dependency>
         <dependency>

@@ -26,7 +26,21 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ContentGrabbingJi-Event</artifactId>
+    <artifactId>ContentGrabbingJi-Template-api</artifactId>
+
+    <properties>
+        <maven.compiler.source>8</maven.compiler.source>
+        <maven.compiler.target>8</maven.compiler.target>
+    </properties>
+
+    <dependencies>
+        <dependency>
+            <groupId>net.lamgc</groupId>
+            <artifactId>ContentGrabbingJi-framework-api</artifactId>
+            <version>3.0.0-alpha-SNAPSHOT</version>
+        </dependency>
+
+    </dependencies>
 
 
 </project>

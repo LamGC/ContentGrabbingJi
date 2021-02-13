@@ -35,11 +35,11 @@
         <module>ContentGrabbingJi-CacheStore-redis</module>
         <module>ContentGrabbingJi-CacheStore-local</module>
         <module>ContentGrabbingJi-common</module>
-        <module>ContentGrabbingJi-Event</module>
+        <module>ContentGrabbingJi-Event-api</module>
         <module>ContentGrabbingJi-Command-api</module>
         <module>ContentGrabbingJi-Command-pixiv</module>
         <module>ContentGrabbingJi-framework-telegrambots</module>
-        <module>ContentGrabbingJi-Template</module>
+        <module>ContentGrabbingJi-Template-api</module>
         <module>ContentGrabbingJi-framework-OneBot</module>
     </modules>
 

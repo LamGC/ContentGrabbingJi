@@ -20,6 +20,7 @@ package net.lamgc.cgj.bot.framework.message;
 import net.lamgc.cgj.bot.event.AbstractEventObject;
 import net.lamgc.cgj.bot.framework.Platform;
 
+import java.util.Locale;
 import java.util.Objects;
 import java.util.ResourceBundle;
 
@@ -50,7 +51,7 @@ public abstract class AbstractMessageEvent extends AbstractEventObject {
      * <p> 如果激活 i18n 的话就会使用到该属性, Bot 将使用对应的消息模板构建回复消息内容.
      * <p> 当 Framework 不提供时将使用内置默认语言包.
      */
-    private ResourceBundle resourceBundle = null;
+    private Locale locale = null;
 
     protected AbstractMessageEvent(
             Platform fromPlatform,
@@ -87,12 +88,12 @@ public abstract class AbstractMessageEvent extends AbstractEventObject {
         return content;
     }
 
-    public ResourceBundle getResourceBundle() {
-        return resourceBundle;
+    public Locale getLocale() {
+        return locale;
     }
 
-    public void setResourceBundle(ResourceBundle resourceBundle) {
-        this.resourceBundle = resourceBundle;
+    public void setLocale(Locale locale) {
+        this.locale = locale;
     }
 
     public MessageSender getSender() {
