@@ -39,8 +39,8 @@ public interface SenderFactory extends ExtensionPoint {
      * @param source 消息源类型.
      * @param id 消息源 Id.
      * @return 返回消息发送器, 本方法不允许返回 null.
-     * @throws NoFoundSenderException 当无法获取对应的消息源发送器时, 将抛出该异常.
+     * @throws NotFoundSenderException 当无法获取对应的消息源发送器时, 将抛出该异常.
      */
-    MessageSender getSender(MessageSource source, long id) throws NoFoundSenderException;
+    MessageSender getSender(MessageSource source, long id) throws NotFoundSenderException;
 
 }

@@ -17,6 +17,7 @@
 
 package net.lamgc.cgj.bot.framework;
 
+import com.google.common.base.Strings;
 import net.lamgc.cgj.bot.framework.message.MessageSource;
 
 /**
@@ -24,7 +25,7 @@ import net.lamgc.cgj.bot.framework.message.MessageSource;
  * <p> 当 {@link SenderFactory} 无法通过传入的 {@link MessageSource} 和 Id 找到对应消息源时, 将抛出本异常.
  * @see SenderFactory
  */
-public class NoFoundSenderException extends RuntimeException {
+public class NotFoundSenderException extends RuntimeException {
 
     private final MessageSource source;
     private final long id;
@@ -34,8 +35,19 @@ public class NoFoundSenderException extends RuntimeException {
      * @param source 传入的消息源类型.
      * @param id 传入的消息源 Id.
      */
-    public NoFoundSenderException(MessageSource source, long id) {
-        super("Source Type: " + source + ", id: " + id);
+    public NotFoundSenderException(MessageSource source, long id) {
+        this(source, id, null);
+    }
+
+    /**
+     * 构造异常.
+     * @param source 传入的消息源类型.
+     * @param id 传入的消息源 Id.
+     */
+    public NotFoundSenderException(MessageSource source, long id, String message) {
+        super(Strings.isNullOrEmpty(message) ?
+                "Source Type: " + source + ", id: " + id :
+                message + " (" + "Source Type: " + source + ", id: " + id + ")");
         this.source = source;
         this.id = id;
     }
