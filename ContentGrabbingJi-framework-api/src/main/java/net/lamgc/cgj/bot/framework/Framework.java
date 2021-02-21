@@ -32,6 +32,11 @@ public abstract class Framework extends Plugin {
 
     private final File dataFolder;
     private final FrameworkContext context;
+    /**
+     * 这个变量是防止原 {@link Plugin#wrapper} 遭到修改而存在.
+     * <p> 很迷惑为什么 {@link Plugin#getWrapper()} 加了 {@code final} 关键字而 {@link Plugin#wrapper} 却不添加 {@code final} 关键字.
+     */
+    private final PluginWrapper _wrapper;
 
     /**
      * 由 FrameworkManager 执行的构造方法.
@@ -43,6 +48,7 @@ public abstract class Framework extends Plugin {
      */
     public Framework(PluginWrapper wrapper, File dataFolder, FrameworkContext context) {
         super(wrapper);
+        this._wrapper = wrapper;
         this.context = context;
         if (!(wrapper.getDescriptor() instanceof FrameworkDescriptor)) {
             throw new IllegalStateException("Invalid description object");
@@ -77,11 +83,12 @@ public abstract class Framework extends Plugin {
      * @return 返回框架描述对象.
      */
     public final FrameworkDescriptor getDescriptor() {
-        PluginDescriptor descriptor = getWrapper().getDescriptor();
+        PluginDescriptor descriptor = _wrapper.getDescriptor();
         if (descriptor instanceof FrameworkDescriptor) {
             return (FrameworkDescriptor) descriptor;
         }
-        throw new ClassCastException("无法转换 Descriptor 的类型, 框架管理器可能遭到修改!");
+        throw new ClassCastException("无法转换 Descriptor 的类型, " +
+                "可能是第三方 FrameworkManager 并未传入 FrameworkDescriptor 或 FrameworkManager 遭到修改!");
     }
 
     /**
@@ -111,7 +118,7 @@ public abstract class Framework extends Plugin {
      * @return 返回资源输入流, 如果资源不存在时返回 {@code null}.
      */
     protected final InputStream getFrameworkResourceAsStream(String name) {
-        return getWrapper().getPluginClassLoader().getResourceAsStream(name);
+        return _wrapper.getPluginClassLoader().getResourceAsStream(name);
     }
 
 }
