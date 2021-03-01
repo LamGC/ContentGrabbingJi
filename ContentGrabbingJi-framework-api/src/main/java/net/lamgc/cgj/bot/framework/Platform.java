@@ -28,6 +28,9 @@ import java.util.Objects;
  * <p> {@link #platformIdentify PlatformIdentify}
  * 遵循 Camel-Case (骆峰命名法, 每个单词之间无空格, 单词首字母大写),
  * 对于平台标识由少量字母组成的则全大写(例如腾讯QQ的平台标识则为 'QQ' 而不是 'qq' 或 'Qq').
+ *
+ * <p> 希望各框架组件开发者能够遵循以上规则, 如出现平台识别信息混乱的情况, 不排除会有将 Platform 枚举化(固定 Platform 类型)的情况.
+ *
  * @author LamGC
  */
 public final class Platform {
@@ -86,4 +89,42 @@ public final class Platform {
     public int hashCode() {
         return Objects.hash(platformIdentify);
     }
+
+    /**
+     * 标准化平台信息.
+     * <p> 暂不公开, 仅用于 Platform 实例唯一化.
+     */
+    private enum Standard {
+        /**
+         * 腾讯 QQ
+         */
+        Tencent_QQ(new Platform("Tencent QQ", "QQ")),
+        /**
+         * 腾讯微信
+         */
+        Tencent_WeChat(new Platform("Tencent WeChat", "WeChat")),
+        /**
+         * Telegram(电报)
+         */
+        Telegram(new Platform("Telegram", "Telegram")),
+        /**.
+         * Discord
+         */
+        Discord(new Platform("Discord", "Discord")),
+        /**
+         * OneBot
+         */
+        OneBot(new Platform("OneBot Http API", "OneBot"))
+        ;
+        private final Platform platform;
+
+        Standard(Platform platform) {
+            this.platform = platform;
+        }
+
+        public Platform getPlatform() {
+            return platform;
+        }
+    }
+
 }
