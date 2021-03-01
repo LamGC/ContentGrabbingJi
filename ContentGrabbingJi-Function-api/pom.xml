@@ -26,20 +26,7 @@
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
-    <artifactId>ContentGrabbingJi-Command-pixiv</artifactId>
+    <artifactId>ContentGrabbingJi-Function-api</artifactId>
 
-    <dependencies>
-        <dependency>
-            <groupId>net.lamgc</groupId>
-            <artifactId>ContentGrabbingJi-Command-api</artifactId>
-            <version>3.0.0-alpha-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>net.lamgc</groupId>
-            <artifactId>ContentGrabbingJi-pixiv</artifactId>
-            <version>3.0.0-alpha-SNAPSHOT</version>
-        </dependency>
-
-    </dependencies>
 
 </project>
