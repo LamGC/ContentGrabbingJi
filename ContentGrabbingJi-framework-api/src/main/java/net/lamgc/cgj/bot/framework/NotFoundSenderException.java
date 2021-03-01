@@ -36,7 +36,7 @@ public class NotFoundSenderException extends RuntimeException {
      * @param id 传入的消息源 Id.
      */
     public NotFoundSenderException(MessageSource source, long id) {
-        this(source, id, null);
+        this(source, id, (String) null);
     }
 
     /**
@@ -48,6 +48,30 @@ public class NotFoundSenderException extends RuntimeException {
         super(Strings.isNullOrEmpty(message) ?
                 "Source Type: " + source + ", id: " + id :
                 message + " (" + "Source Type: " + source + ", id: " + id + ")");
+        this.source = source;
+        this.id = id;
+    }
+
+    /**
+     * 构造异常.
+     * @param source 传入的消息源类型.
+     * @param id 传入的消息源 Id.
+     */
+    public NotFoundSenderException(MessageSource source, long id, Throwable cause) {
+        super("Source Type: " + source + ", id: " + id, cause);
+        this.source = source;
+        this.id = id;
+    }
+
+    /**
+     * 构造异常.
+     * @param source 传入的消息源类型.
+     * @param id 传入的消息源 Id.
+     */
+    public NotFoundSenderException(MessageSource source, long id, String message, Throwable cause) {
+        super(Strings.isNullOrEmpty(message) ?
+                "Source Type: " + source + ", id: " + id :
+                message + " (" + "Source Type: " + source + ", id: " + id + ")", cause);
         this.source = source;
         this.id = id;
     }
