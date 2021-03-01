@@ -21,12 +21,21 @@ import net.lamgc.cgj.bot.framework.message.MessageSender;
 import net.lamgc.cgj.bot.framework.message.MessageSource;
 import org.pf4j.ExtensionPoint;
 
+import java.util.UUID;
+
 /**
  * 消息源发送器构造工厂.
  * <p> 该接口实现将由对应框架实现, 每个框架仅允许实现一个.
  * @author LamGC
  */
 public interface SenderFactory extends ExtensionPoint {
+
+    /**
+     * 获取 Bot 唯一识别码.
+     * <p> Bot 账户相同时, Bot 的 UUID 应唯一且不变.
+     * @return 返回 Bot 唯一识别码.
+     */
+    UUID getBotUUID();
 
     /**
      * 获取所属平台.
