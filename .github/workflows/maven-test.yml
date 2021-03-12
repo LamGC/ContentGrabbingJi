@@ -28,12 +28,12 @@ jobs:
     - name: Build with Maven
       run: mvn -B test --file pom.xml
 
-    - name: Upload Coverage Report to Codecov
-      uses: codecov/codecov-action@v1
-      with:
-        token: ${{ secrets.CODECOV_TOKEN }}
-        file: .*?/target/jacoco.exec$
-        flags: Unit tests
-        name: Jacoco-Converage-Report
-        fail_ci_if_error: true
-        verbose: true
+#    - name: Upload Coverage Report to Codecov
+#      uses: codecov/codecov-action@v1
+#      with:
+#        token: ${{ secrets.CODECOV_TOKEN }}
+#        file: .*?/target/jacoco.exec$
+#        flags: Unit tests
+#        name: Jacoco-Converage-Report
+#        fail_ci_if_error: true
+#        verbose: true
