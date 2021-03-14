@@ -22,7 +22,6 @@ import net.lamgc.cgj.bot.framework.Platform;
 
 import java.util.Locale;
 import java.util.Objects;
-import java.util.ResourceBundle;
 
 /**
  * 消息事件.
@@ -43,6 +42,10 @@ public abstract class AbstractMessageEvent extends AbstractEventObject {
      * <p> 当 Sender 为消息来源时, SenderId 与 {@link MessageSender#getId()} 一致.
      */
     private final long senderId;
+    /**
+     * 已被转换为 FAL 形式的消息对象.
+     * <p> 注意判断类型, 可能是 {@link MessageChain} 也可能是 {@link CharSequenceMessage} 或者 {@link BotCode}.
+     */
     private final Message content;
     private final MessageSender sender;
 
