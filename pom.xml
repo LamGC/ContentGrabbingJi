@@ -41,6 +41,8 @@
         <module>ContentGrabbingJi-framework-telegrambots</module>
         <module>ContentGrabbingJi-Template-api</module>
         <module>ContentGrabbingJi-framework-OneBot</module>
+        <module>ContentGrabbingJi-Template-Velocity</module>
+        <module>ContentGrabbingJi-core-Function</module>
     </modules>
 
     <developers>
@@ -107,7 +109,7 @@
         <dependency>
             <groupId>com.google.guava</groupId>
             <artifactId>guava</artifactId>
-            <version>29.0-jre</version>
+            <version>30.0-jre</version>
         </dependency>
 
         <dependency>
